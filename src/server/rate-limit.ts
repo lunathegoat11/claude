@@ -42,6 +42,7 @@ export function setRateLimitStore(s: RateLimitStore) {
 export const LIMITS = {
   signIn: { limit: 10, windowMs: 15 * 60_000 },
   signUp: { limit: 5, windowMs: 60 * 60_000 },
+  passwordReset: { limit: 5, windowMs: 60 * 60_000 },
   ai: { limit: 30, windowMs: 60 * 60_000 },
   upload: { limit: 60, windowMs: 60 * 60_000 },
   api: { limit: 300, windowMs: 60_000 },

@@ -36,6 +36,7 @@ describe("registration and sign-in", () => {
       email: `  ${email.toUpperCase()} `,
       password: "valid-pass-123",
       acceptTerms: "on",
+      healthDataConsent: "on",
     });
     const user = await registerUser(input);
     created.push(user.id);

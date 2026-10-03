@@ -35,8 +35,19 @@ export function withApi<C = Record<string, string>>(
 export function assertSameOrigin(req: NextRequest) {
   const origin = req.headers.get("origin");
   if (!origin) return; // non-browser clients; cookies are SameSite=Lax so cross-site browsers always send Origin
-  const allowed = new Set([new URL(env().APP_URL).origin, req.nextUrl.origin]);
-  if (!allowed.has(origin)) throw new AppError("FORBIDDEN", "Request origin not allowed.");
+  let originHost: string;
+  try {
+    originHost = new URL(origin).host;
+  } catch {
+    throw new AppError("FORBIDDEN", "Request origin not allowed.");
+  }
+  // Same check Next.js applies to Server Actions: the browser's Origin must match the
+  // host the request was addressed to (as seen through the hosting proxy) or APP_URL.
+  const forwarded = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const allowed = new Set(
+    [new URL(env().APP_URL).host, forwarded, req.headers.get("host")].filter(Boolean),
+  );
+  if (!allowed.has(originHost)) throw new AppError("FORBIDDEN", "Request origin not allowed.");
 }
 
 export function errorResponse(err: unknown) {

@@ -7,12 +7,13 @@ import { UserMenu } from "./user-menu";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { LogoMark } from "@/components/shared/logo";
 import { Badge } from "@/components/ui/badge";
+import { VerifyEmailBanner } from "./verify-email-banner";
 
 export function AppShell({
   user,
   children,
 }: {
-  user: { name: string; email: string; isDemo: boolean };
+  user: { name: string; email: string; isDemo: boolean; emailVerified: boolean };
   children: React.ReactNode;
 }) {
   return (
@@ -43,6 +44,7 @@ export function AppShell({
               <UserMenu name={user.name} email={user.email} />
             </div>
           </div>
+          {!user.emailVerified && <VerifyEmailBanner email={user.email} />}
         </header>
         <main
           id="main"

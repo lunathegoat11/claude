@@ -1,7 +1,20 @@
 "use server";
 import { redirect } from "next/navigation";
 import { runAction, formToObject, type ActionState } from "@/server/action-utils";
-import { signInSchema, signUpSchema, changePasswordSchema } from "@/lib/validation/auth";
+import {
+  signInSchema,
+  signUpSchema,
+  changePasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from "@/lib/validation/auth";
+import {
+  requestPasswordReset,
+  resetPasswordWithToken,
+  sendVerification,
+} from "@/server/auth/email-tokens";
+import { logger } from "@/server/logger";
+import { CONSENT_VERSION } from "@/lib/legal";
 import { authenticate, changePassword, registerUser } from "@/server/auth/service";
 import {
   createSession,
@@ -57,6 +70,15 @@ export async function signUpAction(_: ActionState, fd: FormData): Promise<Action
     const { token, expiresAt } = await createSession(user.id, meta.userAgent);
     await setSessionCookie(token, expiresAt);
     await audit(user.id, "auth.sign_up", undefined, meta);
+    await audit(user.id, "consent.given", { type: "User", id: user.id }, meta, {
+      version: CONSENT_VERSION,
+      terms: true,
+      healthData: true,
+    });
+    // A failed email must not block sign-up; the user can resend from the app.
+    await sendVerification(user.id).catch((err) =>
+      logger.error("email.verification_failed", { err }),
+    );
     return { ok: true };
   });
   if (result.ok) redirect("/dashboard?welcome=1");
@@ -110,5 +132,48 @@ export async function revokeOtherSessionsAction(): Promise<ActionState> {
     await invalidateOtherSessions(user.id);
     await audit(user.id, "auth.sessions_revoked", undefined, await requestMeta());
     return { ok: true, message: "Signed out of all other devices." };
+  });
+}
+
+export async function forgotPasswordAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  return runAction("forgotPassword", async () => {
+    const meta = await requestMeta();
+    const { email } = forgotPasswordSchema.parse(formToObject(fd));
+    await rateLimit("passwordReset", `ip:${meta.ip}`);
+    await rateLimit("passwordReset", `email:${email}`);
+    const res = await requestPasswordReset(email);
+    if (res) await audit(res.userId, "auth.password_reset_requested", undefined, meta);
+    // Same answer whether or not the account exists.
+    return {
+      ok: true,
+      message: "If an account exists for that email, we've sent a link to reset your password.",
+    };
+  });
+}
+
+export async function resetPasswordAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const res = await runAction("resetPassword", async () => {
+    const meta = await requestMeta();
+    await rateLimit("passwordReset", `ip:${meta.ip}`);
+    const input = resetPasswordSchema.parse(formToObject(fd));
+    const { userId } = await resetPasswordWithToken(input.token, input.password);
+    await audit(userId, "auth.password_reset", undefined, meta);
+    return { ok: true };
+  });
+  if (res.ok) redirect("/sign-in?reset=1");
+  return res;
+}
+
+export async function resendVerificationAction(): Promise<ActionState> {
+  return runAction("resendVerification", async () => {
+    const user = await requireUserOrThrow();
+    await rateLimit("passwordReset", `verify:${user.id}`);
+    const sent = await sendVerification(user.id);
+    return {
+      ok: true,
+      message: sent
+        ? `We've sent a confirmation link to ${user.email}.`
+        : "Your email is already confirmed.",
+    };
   });
 }

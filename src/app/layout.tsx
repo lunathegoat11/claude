@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   description:
     "Securely organise your medical records, track health measurements, understand your lab results, and see your health history over time.",
   applicationName: "Kosha",
+  appleWebApp: { capable: true, title: "Kosha", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
+  formatDetection: { telephone: false },
   robots: { index: true, follow: true },
 };
 

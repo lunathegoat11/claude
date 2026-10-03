@@ -71,26 +71,29 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
           ))}
         </nav>
         {filter.category !== "MEASUREMENT" && (
-          <label className="text-muted-foreground flex items-center gap-2 text-sm">
-            <Link
-              href={qs({ readings: includeRoutine ? undefined : "1", before: undefined })}
-              role="switch"
-              aria-checked={includeRoutine}
+          <Link
+            href={qs({ readings: includeRoutine ? undefined : "1", before: undefined })}
+            role="switch"
+            aria-checked={includeRoutine}
+            scroll={false}
+            className="text-muted-foreground hover:text-foreground -mx-2 inline-flex min-h-11 items-center gap-2.5 rounded-lg px-2 text-sm"
+          >
+            <span
+              aria-hidden
               className={cn(
-                "relative inline-flex h-5 w-9 shrink-0 rounded-full transition",
+                "relative inline-flex h-6 w-10 shrink-0 rounded-full transition",
                 includeRoutine ? "bg-primary" : "bg-input",
               )}
             >
               <span
                 className={cn(
-                  "absolute top-0.5 size-4 rounded-full bg-white shadow transition-all",
+                  "absolute top-0.5 size-5 rounded-full bg-white shadow transition-all",
                   includeRoutine ? "left-[18px]" : "left-0.5",
                 )}
               />
-              <span className="sr-only">Show individual readings</span>
-            </Link>
+            </span>
             Show individual readings
-          </label>
+          </Link>
         )}
       </div>
 

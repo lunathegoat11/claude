@@ -55,10 +55,7 @@ export function TimelineList({
           )}
           <ol className="relative space-y-1">
             {g.days.map((d) => (
-              <li
-                key={d.key}
-                className="grid grid-cols-[3.25rem_1fr] gap-3 sm:grid-cols-[4.5rem_1fr] sm:gap-5"
-              >
+              <li key={d.key} className="grid grid-cols-[3rem_1fr] gap-5 sm:grid-cols-[4.5rem_1fr]">
                 <div className="pt-3 text-right">
                   <div className="tabular text-[13px] leading-none font-semibold">
                     {formatDayMonth(d.date, timezone).split(" ")[0]}

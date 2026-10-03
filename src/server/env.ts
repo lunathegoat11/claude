@@ -34,6 +34,21 @@ const schema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_BASE_URL: z.string().url().default("https://api.openai.com/v1"),
   AI_VISION_EXTRACTION: bool,
+  // Email (password reset, verification)
+  EMAIL_PROVIDER: z.enum(["console", "resend"]).default("console"),
+  EMAIL_FROM: z.string().default("Kosha <no-reply@example.com>"),
+  RESEND_API_KEY: z.string().optional(),
+  // On-device OCR for photos of lab reports (no external service)
+  OCR_ENABLED: z
+    .string()
+    .optional()
+    .transform((v) => v !== "false"),
+  // Shown in the Privacy Policy / Terms
+  ORGANIZATION_NAME: z.string().optional(),
+  CONTACT_EMAIL: z.string().optional(),
+  GRIEVANCE_OFFICER_NAME: z.string().optional(),
+  GRIEVANCE_OFFICER_EMAIL: z.string().optional(),
+  LEGAL_REVIEWED: bool,
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 

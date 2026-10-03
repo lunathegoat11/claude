@@ -22,14 +22,19 @@ datasource db {
 // ───────────────────────────── Identity ─────────────────────────────
 
 model User {
-  id            String    @id @default(uuid()) @db.Uuid
-  email         String    @unique
-  passwordHash  String?
-  emailVerified DateTime?
-  isDemo        Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  lastLoginAt   DateTime?
+  id                  String    @id @default(uuid()) @db.Uuid
+  email               String    @unique
+  passwordHash        String?
+  emailVerified       DateTime?
+  isDemo              Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  lastLoginAt         DateTime?
+  /// Consent records (DPDP): when the user accepted the Terms/Privacy Policy and
+  /// gave explicit consent to process health data, and which version they saw.
+  termsAcceptedAt     DateTime?
+  healthDataConsentAt DateTime?
+  consentVersion      String?
 
   profile         Profile?
   accounts        Account[]
@@ -48,6 +53,7 @@ model User {
   aiConversations AIConversation[]
   auditLogs       AuditLog[]
   importJobs      ImportJob[]
+  authTokens      AuthToken[]
 }
 
 /// External identity providers (OAuth / OIDC). Present so Google, Apple or
@@ -78,6 +84,25 @@ model Session {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+enum AuthTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+/// Single-use tokens sent by email. Only a SHA-256 hash is stored.
+model AuthToken {
+  id        String        @id @default(uuid()) @db.Uuid
+  userId    String        @db.Uuid
+  type      AuthTokenType
+  tokenHash String        @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
 }
 
 enum Sex {

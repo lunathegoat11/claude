@@ -202,7 +202,7 @@ export default async function LabsPage({
                         <FlaskConical className="size-5" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className="truncate font-medium">{p.name}</div>
+                        <div className="line-clamp-2 leading-snug font-medium">{p.name}</div>
                         <div className="text-muted-foreground truncate text-sm">
                           {formatDate(p.collectedAt, tz)}
                           {p.labName && ` · ${p.labName}`}

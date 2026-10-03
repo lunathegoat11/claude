@@ -40,7 +40,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
     <div>
       <Link
         href="/documents"
-        className="text-muted-foreground hover:text-foreground mb-5 inline-flex items-center gap-1.5 text-sm"
+        className="text-muted-foreground hover:text-foreground -my-2 mb-3 inline-flex min-h-11 items-center gap-1.5 py-2 text-sm"
       >
         <ArrowLeft className="size-4" /> Documents
       </Link>
@@ -90,7 +90,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px] [&>*]:min-w-0">
         <div className="space-y-6">
           {doc.importJobs.length > 0 && (
             <Card className="border-primary/30 bg-accent/40">

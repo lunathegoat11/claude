@@ -43,6 +43,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
           {children}
         </div>
+        <nav aria-label="Legal" className="text-muted-foreground mx-auto mt-10 flex gap-4 text-xs">
+          <Link href="/privacy" className="hover:text-foreground hover:underline">
+            Privacy Policy
+          </Link>
+          <Link href="/terms" className="hover:text-foreground hover:underline">
+            Terms of Use
+          </Link>
+        </nav>
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ export default async function ImportReviewPage({ params }: { params: Promise<{ i
       {doc && (
         <Link
           href={`/documents/${doc.id}`}
-          className="text-muted-foreground hover:text-foreground mb-5 inline-flex items-center gap-1.5 text-sm"
+          className="text-muted-foreground hover:text-foreground -my-2 mb-3 inline-flex min-h-11 items-center gap-1.5 py-2 text-sm"
         >
           <ArrowLeft className="size-4" /> {doc.name}
         </Link>
@@ -58,6 +58,16 @@ export default async function ImportReviewPage({ params }: { params: Promise<{ i
           )}
         </p>
       </div>
+      {job.extractor === "ocr" && (
+        <p
+          role="note"
+          className="border-warning/50 bg-warning/8 mb-6 rounded-2xl border p-4 text-sm"
+        >
+          <strong>These values were read from a photo.</strong> Photo reading can miss decimal
+          points (for example reading 5.2 as 52) or confuse similar characters. Please compare every
+          value with the report.
+        </p>
+      )}
       <LabPanelForm
         mode="import"
         jobId={job.id}
@@ -84,6 +94,7 @@ export default async function ImportReviewPage({ params }: { params: Promise<{ i
             notes: "",
             confidence: c.confidence,
             sourceLine: c.sourceLine,
+            warnings: c.warnings,
           })),
         }}
       />

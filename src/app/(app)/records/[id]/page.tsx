@@ -40,7 +40,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
       </Suspense>
       <Link
         href="/records"
-        className="text-muted-foreground hover:text-foreground mb-5 inline-flex items-center gap-1.5 text-sm"
+        className="text-muted-foreground hover:text-foreground -my-2 mb-3 inline-flex min-h-11 items-center gap-1.5 py-2 text-sm"
       >
         <ArrowLeft className="size-4" /> Records
       </Link>

@@ -278,7 +278,7 @@ export function MeasurementDialog({
             <button
               type="button"
               onClick={() => setShowNote(true)}
-              className="text-primary text-sm font-medium"
+              className="text-primary -my-2 py-2 text-sm font-medium"
             >
               + Add a note
             </button>

@@ -34,7 +34,18 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
-  serverExternalPackages: ["@node-rs/argon2", "@prisma/client"],
+  // Lets you open the dev server from a phone on the same Wi-Fi (http://192.168.x.x:3000).
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*", "*.local"],
+  serverExternalPackages: ["@node-rs/argon2", "@prisma/client", "tesseract.js", "sharp"],
+  // OCR loads its worker, WebAssembly core and language data at runtime; make sure
+  // they are copied into the standalone production build.
+  outputFileTracingIncludes: {
+    "/**": [
+      "./node_modules/tesseract.js/**",
+      "./node_modules/tesseract.js-core/**",
+      "./node_modules/@tesseract.js-data/eng/4.0.0/**",
+    ],
+  },
   experimental: {
     serverActions: { bodySizeLimit: "2mb" },
   },

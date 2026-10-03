@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { AppError } from "@/server/errors";
 import { burnPasswordCheck, hashPassword, verifyPassword } from "./password";
 import { env } from "@/server/env";
+import { CONSENT_VERSION } from "@/lib/legal";
 
 /**
  * Pure account logic (no cookies) so it can be tested directly.
@@ -18,8 +19,16 @@ export async function registerUser(input: { name: string; email: string; passwor
     );
   }
   const passwordHash = await hashPassword(input.password);
+  const now = new Date();
   return db.user.create({
-    data: { email: input.email, passwordHash, profile: { create: { fullName: input.name } } },
+    data: {
+      email: input.email,
+      passwordHash,
+      termsAcceptedAt: now,
+      healthDataConsentAt: now,
+      consentVersion: CONSENT_VERSION,
+      profile: { create: { fullName: input.name } },
+    },
     select: { id: true, email: true },
   });
 }

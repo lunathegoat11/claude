@@ -300,7 +300,7 @@ export default async function SettingsPage({
 }
 
 async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: boolean; tz: string }) {
-  const [sessions, activity, jar] = await Promise.all([
+  const [sessions, activity, jar, account] = await Promise.all([
     listSessions(userId),
     db.auditLog.findMany({
       where: { userId },
@@ -309,6 +309,16 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
       select: { id: true, action: true, createdAt: true },
     }),
     cookies(),
+    db.user.findUnique({
+      where: { id: userId },
+      select: {
+        email: true,
+        emailVerified: true,
+        termsAcceptedAt: true,
+        healthDataConsentAt: true,
+        consentVersion: true,
+      },
+    }),
   ]);
   const current = jar.get(SESSION_COOKIE)?.value;
   const currentHash = current ? hashToken(current) : null;
@@ -335,6 +345,37 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
           <p className="text-muted-foreground text-xs">
             Kosha is not a government or ABDM-integrated service and does not share your records
             with any hospital, insurer or third party.
+          </p>
+          <dl className="grid gap-2 border-t pt-3 sm:grid-cols-2">
+            <div>
+              <dt className="text-muted-foreground text-xs">Email</dt>
+              <dd>
+                {account?.email} ·{" "}
+                {account?.emailVerified || isDemo ? (
+                  <span className="text-success">confirmed</span>
+                ) : (
+                  <span className="text-warning">not confirmed yet</span>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground text-xs">Your consent</dt>
+              <dd>
+                {account?.healthDataConsentAt
+                  ? `Given ${formatDate(account.healthDataConsentAt, tz)} (version ${account.consentVersion})`
+                  : "Given before consent records were kept"}
+              </dd>
+            </div>
+          </dl>
+          <p className="text-xs">
+            <Link href="/privacy" className="text-primary hover:underline">
+              Privacy Policy
+            </Link>{" "}
+            ·{" "}
+            <Link href="/terms" className="text-primary hover:underline">
+              Terms of Use
+            </Link>{" "}
+            · To withdraw consent, delete your account below.
           </p>
         </CardContent>
       </Card>

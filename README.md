@@ -34,13 +34,16 @@ Kosha is a personal health-record and health-monitoring web app built for people
 | **Medical records**    | Doctor visits, diagnoses, procedures, hospitalisations, prescriptions, vaccinations, allergies, conditions, family history, other. Search, filter by type/tag, sort, edit, soft-delete, tags, attachments, list and year-grouped timeline views. Progressive-disclosure form.                                                                      |
 | **Documents**          | Upload PDF/JPG/PNG/WebP/HEIC (magic-byte verified, size-limited). Name, type, date, provider, tags, notes, record link. Lazy preview, download, edit, delete (removes the file from storage). Text from PDFs is extracted for search and for the assistant.                                                                                        |
 | **Lab results**        | Manual entry with panel templates (CBC, sugar, lipid, LFT, KFT, thyroid) or any free-text test. Each result stores value (numeric or text), unit, the **reference range printed on that report**, date, lab, source and notes. "By test" and "By report" views, previous-value comparison, per-test history (`5.4 → 5.6 → 5.5 → 5.7`) with chart.  |
-| **Import pipeline**    | Upload → PDF text extraction (or AI-vision transcription of photos, if enabled) → line-based parser proposes values with confidence and the source line → **you review/correct/untick** → only then are values saved. Nothing extracted is ever saved silently.                                                                                    |
+| **Import pipeline**    | Upload → PDF text extraction, or **on-server OCR of photos** (Tesseract, no external service; AI-vision transcription if configured) → line-based parser proposes values with confidence and the source line → **you review/correct/untick** → only then are values saved. Nothing extracted is ever saved silently.                               |
 | **Health tracking**    | Built-in metrics (blood glucose, blood pressure, heart rate, SpO₂, temperature, weight, height, sleep, exercise) plus **user-defined custom metrics**. Glucose contexts: fasting, before meal, after meal, random, bedtime, custom. Unit conversion (mg/dL ↔ mmol/L, kg ↔ lb, °F ↔ °C). Plausibility checks catch typos. CSV import with preview.  |
 | **Charts**             | Interactive line charts with 7D/30D/3M/6M/1Y/All ranges, context filter, hover/tap tooltips (value, date, time, context, notes), BP as two series with a legend. Lab charts shade a range only when every point shares the same printed range. Recharts is lazy-loaded.                                                                            |
 | **AI assistant**       | Answers questions like "What were my glucose readings over the last month?", "What changed between my last two lab reports?", "What documents mention my blood pressure?". Retrieves only relevant records, cites them with clickable references (`[L3]`), labels calculated vs recorded vs general information. Works offline without an API key. |
 | **Timeline**           | Unified chronological feed grouped by month and day, filters by category, optional individual readings, cursor pagination.                                                                                                                                                                                                                         |
 | **Search**             | Global search across records, documents (including text inside PDFs), lab results, measurements and providers. Synonyms (sugar → glucose, BP, SGPT → ALT…), Indian date queries (`12/09/2026`, `Sep 2026`), numeric value search, type and date-range filters.                                                                                     |
 | **Profile & settings** | Optional profile (DOB, sex, blood group, height, Indian phone, city/state, emergency contact), conditions/medications/allergies, unit preferences, light/dark/system theme, password change, signed-in devices, sign out other devices, recent account activity, **full JSON data export**, permanent account deletion.                            |
+| **Accounts**           | Email/password sign-up with **explicit consent** (Terms + health-data processing, version and time recorded), **email verification**, **"forgot password" by email** (single-use, 1-hour links that sign out all devices).                                                                                                                         |
+| **Legal pages**        | Plain-language **Privacy Policy** and **Terms of Use** templates written around DPDP Act 2023 concepts, filled from environment variables and clearly marked as drafts until `LEGAL_REVIEWED=true`.                                                                                                                                                |
+| **Mobile**             | Phone-first layouts checked at 360/375 px, bottom navigation, bottom-sheet dialogs, 16 px form fields (no iOS zoom), **installable to the home screen** (web app manifest + icons).                                                                                                                                                                |
 | **India-first**        | IST time zone, day-month-year dates, Indian digit grouping (1,50,000), INR formatter, Indian phone validation, all states/UTs, city suggestions, Indian lab naming (SGPT, PPBS, TLC, lakh/µL…), emergency numbers 112/108 and Tele-MANAS 14416.                                                                                                    |
 
 A shared **demo account** with a clearly fictional patient (Ananya Sharma) is created by the seed script and is labelled as sample data everywhere.
@@ -88,40 +91,47 @@ To start without demo data: `SEED_DEMO=false npm run db:seed` (still creates the
 
 All variables are documented in [`.env.example`](.env.example) and validated at start-up (`src/server/env.ts`).
 
-| Variable                                                                                                   | Required        | Default                 | Purpose                                                                 |
-| ---------------------------------------------------------------------------------------------------------- | --------------- | ----------------------- | ----------------------------------------------------------------------- |
-| `DATABASE_URL`                                                                                             | yes             | —                       | PostgreSQL connection string                                            |
-| `APP_SECRET`                                                                                               | yes             | —                       | ≥ 32 chars. Keyed hash for pseudonymising IPs in the audit log          |
-| `APP_URL`                                                                                                  | no              | `http://localhost:3000` | Public origin, used for same-origin checks                              |
-| `ALLOW_SIGNUP`                                                                                             | no              | `true`                  | Set `false` to close registration                                       |
-| `DEMO_LOGIN_ENABLED`                                                                                       | no              | `false`                 | Shows the "Explore the demo account" button. **Keep off in production** |
-| `STORAGE_DRIVER`                                                                                           | no              | `local`                 | `local` or `s3`                                                         |
-| `STORAGE_LOCAL_DIR`                                                                                        | no              | `./storage`             | Directory for local files (created with 0700/0600 permissions)          |
-| `MAX_UPLOAD_MB`                                                                                            | no              | `15`                    | Upload size limit                                                       |
-| `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE` | for `s3`        | —                       | Any S3-compatible store (AWS `ap-south-1`, Cloudflare R2, MinIO…)       |
-| `AI_PROVIDER`                                                                                              | no              | `demo`                  | `demo` (offline), `anthropic`, or `openai`                              |
-| `AI_MODEL`                                                                                                 | no              | provider default        | e.g. `claude-opus-5-5` (Anthropic default)                              |
-| `ANTHROPIC_API_KEY`                                                                                        | for `anthropic` | —                       | Claude API key                                                          |
-| `OPENAI_API_KEY`, `OPENAI_BASE_URL`                                                                        | for `openai`    | —                       | Any OpenAI-compatible Chat Completions endpoint                         |
-| `AI_VISION_EXTRACTION`                                                                                     | no              | `false`                 | Let a vision-capable provider transcribe photos of lab reports          |
-| `LOG_LEVEL`                                                                                                | no              | `info`                  | `debug`/`info`/`warn`/`error`                                           |
+| Variable                                                                                                   | Required        | Default                 | Purpose                                                                                |
+| ---------------------------------------------------------------------------------------------------------- | --------------- | ----------------------- | -------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                                                             | yes             | —                       | PostgreSQL connection string                                                           |
+| `APP_SECRET`                                                                                               | yes             | —                       | ≥ 32 chars. Keyed hash for pseudonymising IPs in the audit log                         |
+| `APP_URL`                                                                                                  | no              | `http://localhost:3000` | Public origin, used for same-origin checks                                             |
+| `ALLOW_SIGNUP`                                                                                             | no              | `true`                  | Set `false` to close registration                                                      |
+| `DEMO_LOGIN_ENABLED`                                                                                       | no              | `false`                 | Shows the "Explore the demo account" button. **Keep off in production**                |
+| `STORAGE_DRIVER`                                                                                           | no              | `local`                 | `local` or `s3`                                                                        |
+| `STORAGE_LOCAL_DIR`                                                                                        | no              | `./storage`             | Directory for local files (created with 0700/0600 permissions)                         |
+| `MAX_UPLOAD_MB`                                                                                            | no              | `15`                    | Upload size limit                                                                      |
+| `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE` | for `s3`        | —                       | Any S3-compatible store (AWS `ap-south-1`, Cloudflare R2, MinIO…)                      |
+| `AI_PROVIDER`                                                                                              | no              | `demo`                  | `demo` (offline), `anthropic`, or `openai`                                             |
+| `AI_MODEL`                                                                                                 | no              | provider default        | e.g. `claude-opus-5-5` (Anthropic default)                                             |
+| `ANTHROPIC_API_KEY`                                                                                        | for `anthropic` | —                       | Claude API key                                                                         |
+| `OPENAI_API_KEY`, `OPENAI_BASE_URL`                                                                        | for `openai`    | —                       | Any OpenAI-compatible Chat Completions endpoint                                        |
+| `AI_VISION_EXTRACTION`                                                                                     | no              | `false`                 | Let a vision-capable provider transcribe photos of lab reports                         |
+| `EMAIL_PROVIDER`                                                                                           | no              | `console`               | `console` prints emails (with links) in the server terminal; `resend` sends real email |
+| `EMAIL_FROM`, `RESEND_API_KEY`                                                                             | for `resend`    | —                       | Sender address (must be on a domain verified with Resend) and API key                  |
+| `OCR_ENABLED`                                                                                              | no              | `true`                  | On-server OCR for photos of lab reports                                                |
+| `ORGANIZATION_NAME`, `CONTACT_EMAIL`, `GRIEVANCE_OFFICER_NAME`, `GRIEVANCE_OFFICER_EMAIL`                  | for launch      | —                       | Shown in the Privacy Policy and Terms                                                  |
+| `LEGAL_REVIEWED`                                                                                           | no              | `false`                 | Set `true` after a lawyer has reviewed the legal pages to remove the "draft" notice    |
+| `LOG_LEVEL`                                                                                                | no              | `info`                  | `debug`/`info`/`warn`/`error`                                                          |
 
 If `AI_PROVIDER` is set but its key is missing, the app logs a warning and uses the offline provider.
 
 ## Scripts
 
-| Command                       | Description                                                           |
-| ----------------------------- | --------------------------------------------------------------------- |
-| `npm run dev`                 | Development server                                                    |
-| `npm run build` / `npm start` | Production build / server (see deployment for the standalone server)  |
-| `npm run lint`                | ESLint (includes a `no-console` rule to keep health data out of logs) |
-| `npm run typecheck`           | `tsc --noEmit`                                                        |
-| `npm test`                    | Vitest (integration + unit)                                           |
-| `npm run format`              | Prettier                                                              |
-| `npm run db:migrate`          | Create/apply a migration in development                               |
-| `npm run db:deploy`           | Apply migrations (production)                                         |
-| `npm run db:seed`             | System metrics + demo account (`SEED_DEMO=false` to skip demo)        |
-| `npm run db:reset`            | Drop, re-migrate and re-seed the dev database                         |
+| Command                       | Description                                                                 |
+| ----------------------------- | --------------------------------------------------------------------------- |
+| `npm run dev`                 | Development server                                                          |
+| `npm run build` / `npm start` | Production build / server (see deployment for the standalone server)        |
+| `npm run setup`               | Install dependencies, apply database migrations, generate the Prisma client |
+| `npm run update`              | `git pull` + `npm run setup` — get the latest version of a git checkout     |
+| `npm run lint`                | ESLint (includes a `no-console` rule to keep health data out of logs)       |
+| `npm run typecheck`           | `tsc --noEmit`                                                              |
+| `npm test`                    | Vitest (integration + unit)                                                 |
+| `npm run format`              | Prettier                                                                    |
+| `npm run db:migrate`          | Create/apply a migration in development                                     |
+| `npm run db:deploy`           | Apply migrations (production)                                               |
+| `npm run db:seed`             | System metrics + demo account (`SEED_DEMO=false` to skip demo)              |
+| `npm run db:reset`            | Drop, re-migrate and re-seed the dev database                               |
 
 ## Testing
 
@@ -132,7 +142,7 @@ createdb -U kosha kosha_test   # once
 npm test
 ```
 
-70 tests across 8 files cover:
+Tests cover:
 
 - **Authentication** – Argon2id hashing, password policy, registration, duplicate emails, sign-in, password change, hashed session tokens, expiry.
 - **Authorization / ownership** – a second user cannot read, update, delete or link another user's records, lab panels, test history, measurements, custom metrics, conversations, medications or documents, even with valid IDs; soft-delete behaviour.
@@ -141,13 +151,33 @@ npm test
 - **Documents** – magic-byte verification, size limits, storage keys without PII, extraction creating an import job **without** saving values, owner-only review/confirm, corrected values saved exactly, searchable extracted text, owner-only file access, blob removed on delete.
 - **Search** – synonyms, Indian date formats, numeric search, type filters, user scoping.
 - **AI** – question analysis and time ranges, bounded retrieval scoped to the user, emergency/dosing/diagnosis detection, removal of invented citations and dosing advice, unverified-number flagging, provider failure fallback, "nothing found" behaviour.
+- **Account recovery & consent** – both consents required and recorded, single-use hashed email-verification and reset links, newest-link-only, expiry, all sessions revoked on reset, no account enumeration, no health data in emails.
+- **Photo reading** – OCR of a sample report photo offline, "double-check" confidence for photo values, missing-decimal and inverted-range warnings, HEIC handled gracefully.
+- **Upload origin check** – accepted behind a hosting proxy, rejected from other sites.
+- **Migrations** – the initial migration always sorts first.
 - **Unit** – lab-report text parser, Indian formatting and phone validation, Zod schemas, safe error messages, CSV parsing.
 
 CI (`.github/workflows/ci.yml`) runs lint, typecheck, tests and a production build against a Postgres service container.
 
 ## Production deployment
 
-### Option A — Docker
+### Option A — Railway (simplest)
+
+`railway.json` tells Railway to build the `Dockerfile` and health-check `/api/health`. In a Railway project: add **PostgreSQL**, add this repo (pick the branch), add a **Volume** mounted at `/app/storage`, generate a domain, and set variables:
+
+```
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+APP_URL=https://<your-domain>
+APP_SECRET=<openssl rand -hex 32>
+STORAGE_DRIVER=local
+STORAGE_LOCAL_DIR=/app/storage
+DEMO_LOGIN_ENABLED=false
+RAILWAY_RUN_UID=0
+```
+
+Migrations run automatically on every start.
+
+### Option B — Docker
 
 ```bash
 export APP_SECRET="$(openssl rand -base64 48)"
@@ -156,7 +186,7 @@ docker compose up --build
 
 The image (`Dockerfile`) uses Next.js standalone output, runs as a non-root user, applies `prisma migrate deploy` on start (`docker-entrypoint.sh`) and stores uploads in a volume. To create the built-in metrics without demo data you don't need to do anything — they are created on first use.
 
-### Option B — Node server / PaaS
+### Option C — Node server / PaaS
 
 ```bash
 npm ci
@@ -268,33 +298,36 @@ The assistant cannot modify records — it has no write path.
 - **Rate limiting:** sign-in (per IP and per email), sign-up, AI, uploads, export, API; pluggable store.
 - **Audit log:** sign-in/out, failures, record/lab/document/measurement changes, document views/downloads, exports, AI queries (metadata only), account deletion; IPs stored as keyed hashes.
 - **Logging & errors:** JSON logger redacts sensitive keys; users only ever see safe messages; client error boundary reports only an opaque digest; ESLint forbids `console.log` in app code.
+- **Account recovery:** reset and verification links are random, stored only as hashes, single-use, short-lived (1 h / 24 h), rate-limited, and never reveal whether an email is registered; a reset signs out every device.
+- **Consent:** Terms and health-data consent are required at sign-up and stored with a version and timestamp; withdrawing consent = deleting the account.
 - **Data rights:** full JSON export and permanent account deletion (including stored files).
 
 ## Compliance status
 
-Kosha includes technical controls that help towards health-data protection requirements, but **it has not been audited or certified**. It is **not** claimed to be compliant with HIPAA, India's DPDP Act 2023 and its Rules, ABDM/NDHM health data management policy, or any other regulation. Before production use with real patients you will need, at minimum: a privacy notice and consent flows meeting DPDP requirements, a data-processing and retention policy, grievance redressal, breach-notification procedures, vendor agreements (hosting, storage, AI provider), security testing, and legal review.
+Kosha includes technical controls that help towards health-data protection requirements, but **it has not been audited or certified**. It is **not** claimed to be compliant with HIPAA, India's DPDP Act 2023 and its Rules, ABDM/NDHM health data management policy, or any other regulation. Before production use with real patients you will need, at minimum: a lawyer-reviewed privacy notice and consent wording (draft templates and the consent flow are included), a data-processing and retention policy, grievance redressal, breach-notification procedures, vendor agreements (hosting, storage, AI provider), security testing, and legal review.
 
 **ABDM:** there is no ABDM, ABHA, PHR-app or Health Information Exchange integration. The data model (provider entities, `Account` for external identities, typed documents and lab panels with sources, consent-ready audit trail) was designed so that an ABDM-certified integration — including consent artefacts and HIP/HIU flows — could be added later, but none exists today.
 
 ## External services
 
-| Service               | Needed?      | Notes                                                     |
-| --------------------- | ------------ | --------------------------------------------------------- |
-| PostgreSQL            | **Required** | Any managed Postgres ≥ 13                                 |
-| S3-compatible storage | Optional     | Recommended for production; local disk otherwise          |
-| Anthropic API         | Optional     | `AI_PROVIDER=anthropic`, `ANTHROPIC_API_KEY`              |
-| OpenAI-compatible API | Optional     | `AI_PROVIDER=openai`, `OPENAI_API_KEY`, `OPENAI_BASE_URL` |
+| Service               | Needed?      | Notes                                                                                           |
+| --------------------- | ------------ | ----------------------------------------------------------------------------------------------- |
+| PostgreSQL            | **Required** | Any managed Postgres ≥ 13                                                                       |
+| S3-compatible storage | Optional     | Recommended for production; local disk otherwise                                                |
+| Anthropic API         | Optional     | `AI_PROVIDER=anthropic`, `ANTHROPIC_API_KEY`                                                    |
+| OpenAI-compatible API | Optional     | `AI_PROVIDER=openai`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`                                       |
+| Resend (email)        | Optional     | `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM` — needed for real password-reset emails |
 
-With none of the optional services, the full app — including the assistant (offline grounded mode) and PDF import — works.
+With none of the optional services, the full app — including the assistant (offline grounded mode), PDF import and photo OCR — works. Without an email service, reset/verification links are printed in the server terminal.
 
 ## Known limitations
 
-- **Scanned PDFs and photos:** text is only extracted from PDFs with a text layer. Photos/scans need `AI_VISION_EXTRACTION=true` with a vision-capable provider; otherwise values are entered manually (the document is still stored). There is no built-in OCR engine.
+- **Photo reading (OCR) is approximate.** It often drops decimal points on small print (e.g. 5.2 → 52). Every photo-read value is marked "Please double-check", likely missing decimals and broken ranges get explicit warnings, and nothing is saved without review. AI vision (`AI_VISION_EXTRACTION=true`) is more accurate. HEIC photos and scanned PDFs without a text layer are not read automatically.
 - **Lab parser** is heuristic and line-based; it handles common Indian report layouts but will miss values in complex tables. Every value is reviewed by the user before saving.
 - **Assistant retrieval** is keyword/intent-based rather than semantic (no embeddings). Unusual phrasing may retrieve less context; the assistant then says it couldn't find the information rather than guessing.
 - **Offline provider** produces structured summaries, not free-form conversation; follow-up questions are answered independently.
 - **Rate limiting** is in-memory per instance by default.
-- **No email verification / password reset email** — these need an email provider (the `emailVerified` field and account model are ready).
+- **Email** needs an email service (Resend) for real delivery; email verification is encouraged with a banner but not enforced.
 - **No OAuth providers configured** — the `Account` model is ready for them.
 - **Single-user accounts** — no family/caregiver sharing or doctor access yet.
 - **Units:** lab results keep the unit printed on each report; values in different units are listed but not charted together. No automatic lab unit conversion.

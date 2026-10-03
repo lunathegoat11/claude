@@ -31,6 +31,7 @@ export interface ResultRow {
   notes: string;
   confidence?: number;
   sourceLine?: string;
+  warnings?: string[];
 }
 
 export interface PanelFormInitial {
@@ -295,7 +296,7 @@ export function LabPanelForm({
                         type="checkbox"
                         checked={r.include}
                         onChange={(e) => update(r.key, { include: e.target.checked })}
-                        className="size-4 accent-[var(--primary)]"
+                        className="size-5 accent-[var(--primary)]"
                       />
                       Include this value
                     </label>
@@ -314,6 +315,15 @@ export function LabPanelForm({
                         “{r.sourceLine}”
                       </span>
                     )}
+                    {r.warnings?.map((w) => (
+                      <p
+                        key={w}
+                        role="alert"
+                        className="bg-warning/12 w-full rounded-lg px-2.5 py-1.5 text-[13px] font-medium"
+                      >
+                        ⚠ {w}
+                      </p>
+                    ))}
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
@@ -390,7 +400,7 @@ export function LabPanelForm({
                       return n;
                     })
                   }
-                  className="text-primary mt-3 inline-flex items-center gap-1 text-[13px] font-medium"
+                  className="text-primary mt-1 inline-flex min-h-9 items-center gap-1 text-[13px] font-medium"
                   aria-expanded={rangeOpen}
                 >
                   <ChevronDown
@@ -488,16 +498,20 @@ export function LabPanelForm({
         />
       </Field>
 
-      <div className="bg-card/95 sticky bottom-20 z-10 flex flex-col-reverse gap-2 rounded-2xl border p-3 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between lg:bottom-4">
-        <span className="text-muted-foreground px-1 text-sm">
+      <div className="bg-card/95 sticky bottom-20 z-10 flex items-center justify-between gap-2 rounded-2xl border p-2.5 shadow-lg backdrop-blur sm:p-3 lg:bottom-4">
+        <span className="text-muted-foreground hidden px-1 text-sm sm:inline">
           {included.length} result{included.length === 1 ? "" : "s"}{" "}
           {mode === "import" ? "selected" : ""}
         </span>
-        <div className="flex flex-col-reverse gap-2 sm:flex-row">
+        <div className="flex flex-1 items-center justify-end gap-2 sm:flex-none">
           <Button asChild variant="ghost">
             <Link href={panelId ? `/labs/reports/${panelId}` : "/labs"}>Cancel</Link>
           </Button>
-          <Button type="submit" disabled={pending || included.length === 0}>
+          <Button
+            type="submit"
+            className="flex-1 sm:flex-none"
+            disabled={pending || included.length === 0}
+          >
             {pending && <Loader2 className="animate-spin" />}
             {mode === "import"
               ? "Confirm & save values"

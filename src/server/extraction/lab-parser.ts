@@ -18,6 +18,8 @@ export interface LabCandidate {
   labFlag: "LOW" | "HIGH" | null;
   /** 0–1. Lower when the unit or range could not be found. */
   confidence: number;
+  /** Specific reasons to double-check this value, e.g. a likely missing decimal point. */
+  warnings?: string[];
   sourceLine: string;
 }
 
@@ -133,7 +135,43 @@ function findLabName(text: string): string | null {
   return hit ?? null;
 }
 
-export function parseLabText(text: string): ParsedReport {
+/**
+ * Detect a value that is ~10× or ~100× outside the printed range when a decimal point
+ * could have been lost (common with OCR: "5.2" read as "52").
+ */
+export function looksLikeMissingDecimal(value: string, low: number | null, high: number | null) {
+  if (value.includes(".") || high === null) return false;
+  const v = Number(value);
+  if (!Number.isFinite(v) || v <= high * 4) return false;
+  const lo = low ?? 0;
+  return [10, 100].some((d) => v / d >= lo * 0.5 && v / d <= high * 2);
+}
+
+/** Reasons a parsed value deserves a closer look. Never changes the value itself. */
+export function candidateWarnings(
+  value: string,
+  low: number | null,
+  high: number | null,
+  refText: string | null,
+  usualDecimals: number,
+  fromPhoto: boolean,
+): { warnings?: string[] } {
+  const w: string[] = [];
+  if (
+    looksLikeMissingDecimal(value, low, high) ||
+    (fromPhoto && usualDecimals > 0 && !value.includes(".") && Number(value) >= 10)
+  ) {
+    w.push("This value may be missing a decimal point — check the report.");
+  }
+  if (low !== null && high !== null && low > high) {
+    w.push("The reference range looks wrong (the low number is higher than the high number).");
+  } else if (refText && /(^|[^\d.])0\d/.test(refText)) {
+    w.push("The reference range may be missing a decimal point.");
+  }
+  return w.length ? { warnings: w } : {};
+}
+
+export function parseLabText(text: string, opts: { source?: "text" | "ocr" } = {}): ParsedReport {
   const candidates: LabCandidate[] = [];
   const seen = new Set<string>();
   const unitRe = new RegExp(`^${UNIT_PATTERN}(?![a-z])`, "i");
@@ -202,8 +240,12 @@ export function parseLabText(text: string): ParsedReport {
       refLow: low,
       refHigh: high,
       labFlag,
-      confidence: Math.max(0.1, Math.min(0.95, Number(confidence.toFixed(2)))),
+      confidence: Math.max(
+        0.1,
+        Math.min(opts.source === "ocr" ? 0.6 : 0.95, Number(confidence.toFixed(2))),
+      ),
       sourceLine: line.slice(0, 160),
+      ...candidateWarnings(value, low, high, refText, hit.def.decimals, opts.source === "ocr"),
     });
   }
 

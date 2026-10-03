@@ -26,7 +26,10 @@ export const signUpSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   acceptTerms: z.literal("on", {
-    errorMap: () => ({ message: "Please confirm you understand how this app works" }),
+    errorMap: () => ({ message: "Please accept the Terms of Use and Privacy Policy" }),
+  }),
+  healthDataConsent: z.literal("on", {
+    errorMap: () => ({ message: "Kosha needs your consent to store your health information" }),
   }),
 });
 
@@ -42,6 +45,19 @@ export const changePasswordSchema = z
     confirmPassword: z.string(),
   })
   .refine((v) => v.newPassword === v.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export const forgotPasswordSchema = z.object({ email: emailSchema });
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(10).max(200),
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((v) => v.password === v.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });

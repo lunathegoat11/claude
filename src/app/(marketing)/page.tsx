@@ -16,6 +16,7 @@ import { getCurrentUser } from "@/server/auth/session";
 import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { SiteFooter } from "@/components/legal/site-footer";
 
 const FEATURES = [
   {
@@ -223,16 +224,7 @@ export default async function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t">
-        <div className="text-muted-foreground mx-auto flex max-w-6xl flex-col gap-4 px-5 py-10 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <Logo className="text-foreground" />
-          <p className="max-w-xl text-[13px] leading-relaxed">
-            Kosha helps you organise health information. It does not provide medical diagnosis,
-            treatment or emergency services. Always consult a qualified healthcare professional. In
-            an emergency, call 112.
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -6,6 +6,35 @@ import { Field, FormError } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Input } from "@/components/ui/input";
 
+function ConsentBox({
+  name,
+  error,
+  children,
+}: {
+  name: string;
+  error?: string[];
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="text-muted-foreground flex items-start gap-3 text-sm leading-relaxed">
+        <input
+          type="checkbox"
+          name={name}
+          aria-invalid={!!error}
+          className="mt-1 size-5 shrink-0 rounded accent-[var(--primary)]"
+        />
+        <span>{children}</span>
+      </label>
+      {error && (
+        <p role="alert" className="text-destructive mt-1 pl-8 text-[13px]">
+          {error[0]}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function SignUpForm() {
   const { state, onSubmit, pending, err } = useActionForm(signUpAction);
   return (
@@ -40,24 +69,33 @@ export function SignUpForm() {
           aria-invalid={!!err("password")}
         />
       </Field>
-      <div className="space-y-1.5">
-        <label className="text-muted-foreground flex items-start gap-2.5 text-sm">
-          <input
-            type="checkbox"
-            name="acceptTerms"
-            className="mt-0.5 size-4 rounded accent-[var(--primary)]"
-          />
-          <span>
-            I understand Kosha organises my health information and does not provide medical
-            diagnosis or advice.
-          </span>
-        </label>
-        {err("acceptTerms") && (
-          <p role="alert" className="text-destructive text-[13px]">
-            {err("acceptTerms")![0]}
-          </p>
-        )}
-      </div>
+      <fieldset className="bg-card space-y-3 rounded-2xl border p-4">
+        <legend className="sr-only">Consent</legend>
+        <ConsentBox name="acceptTerms" error={err("acceptTerms")}>
+          I agree to the{" "}
+          <Link
+            href="/terms"
+            target="_blank"
+            className="text-primary font-medium underline-offset-2 hover:underline"
+          >
+            Terms of Use
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/privacy"
+            target="_blank"
+            className="text-primary font-medium underline-offset-2 hover:underline"
+          >
+            Privacy Policy
+          </Link>
+          , and I understand Kosha organises my information but does not give medical diagnosis or
+          advice.
+        </ConsentBox>
+        <ConsentBox name="healthDataConsent" error={err("healthDataConsent")}>
+          I consent to Kosha storing and processing the health information I add, only to provide
+          this service to me. I can download or delete it at any time.
+        </ConsentBox>
+      </fieldset>
       <SubmitButton pending={pending} className="w-full" size="lg" pendingLabel="Creating account…">
         Create account
       </SubmitButton>

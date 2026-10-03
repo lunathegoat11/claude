@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { signInAction, demoSignInAction } from "@/actions/auth";
 import { useActionForm } from "@/components/forms/use-action-form";
 import { Field, FormError } from "@/components/forms/field";
@@ -28,7 +29,16 @@ export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: 
             aria-invalid={!!err("email")}
           />
         </Field>
-        <Field label="Password" htmlFor="password" error={err("password")}>
+        <Field
+          label="Password"
+          htmlFor="password"
+          error={err("password")}
+          hint={
+            <Link href="/forgot-password" className="text-primary font-medium hover:underline">
+              Forgot password?
+            </Link>
+          }
+        >
           <Input
             id="password"
             name="password"

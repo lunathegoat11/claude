@@ -146,6 +146,16 @@
   }
 }
 
+/* iOS Safari zooms into any text field smaller than 16px when it is tapped.
+   Keep every field at 16px on phones so the page never jumps. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }

@@ -18,7 +18,7 @@ export function AssistantLayout({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
+    <div className="grid gap-6 lg:grid-cols-[240px_1fr] [&>*]:min-w-0">
       <aside className="hidden lg:block">
         <Button asChild variant="outline" className="mb-4 w-full justify-start">
           <Link href="/assistant">

@@ -21,6 +21,7 @@ import { upsertAllergy, upsertCondition, upsertMedication } from "@/server/servi
 import { ask } from "@/server/services/assistant";
 import { parseZonedInput, toDateInputValue, toDateTimeInputValue } from "@/lib/format";
 import { buildPdf, labReportPdf } from "./fixtures/simple-pdf";
+import { CONSENT_VERSION } from "@/lib/legal";
 
 const TZ = "Asia/Kolkata";
 export const DEMO_EMAIL = "demo@kosha.example";
@@ -65,6 +66,9 @@ async function resetDemoUser() {
       passwordHash: await hashPassword(DEMO_PASSWORD),
       isDemo: true,
       emailVerified: new Date(),
+      termsAcceptedAt: new Date(),
+      healthDataConsentAt: new Date(),
+      consentVersion: CONSENT_VERSION,
       profile: {
         create: {
           fullName: "Ananya Sharma",

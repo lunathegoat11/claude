@@ -46,7 +46,7 @@ function SectionLink({ href, children }: { href: string; children: React.ReactNo
   return (
     <Link
       href={href}
-      className="text-primary inline-flex items-center gap-1 text-[13px] font-medium hover:underline"
+      className="text-primary -my-2 inline-flex min-h-10 items-center gap-1 py-2 text-[13px] font-medium hover:underline"
     >
       {children} <ArrowRight className="size-3.5" />
     </Link>
@@ -183,7 +183,7 @@ export default async function DashboardPage({
             )}
           </section>
 
-          <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
+          <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr] [&>*]:min-w-0">
             <Card>
               <CardHeader className="flex-row items-baseline justify-between">
                 <CardTitle className="flex items-center gap-2">

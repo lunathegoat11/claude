@@ -16,6 +16,7 @@ export interface SessionUser {
   email: string;
   name: string;
   isDemo: boolean;
+  emailVerified: boolean;
   timezone: string;
   prefs: { glucoseUnit: "MG_DL" | "MMOL_L"; weightUnit: "KG" | "LB"; temperatureUnit: "C" | "F" };
 }
@@ -77,6 +78,7 @@ export async function validateSessionToken(token: string): Promise<SessionUser |
     email: session.user.email,
     name: p?.fullName ?? session.user.email.split("@")[0],
     isDemo: session.user.isDemo,
+    emailVerified: !!session.user.emailVerified || session.user.isDemo,
     timezone: p?.timezone ?? "Asia/Kolkata",
     prefs: {
       glucoseUnit: p?.glucoseUnit ?? "MG_DL",
