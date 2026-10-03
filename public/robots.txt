@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /dashboard
+Disallow: /records
+Disallow: /labs
+Disallow: /tracking
+Disallow: /assistant
+Disallow: /timeline
+Disallow: /documents
+Disallow: /search
+Disallow: /settings
+Disallow: /api

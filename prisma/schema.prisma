@@ -1,0 +1,615 @@
+// Kosha Health — PostgreSQL schema
+//
+// Conventions
+// - Every health-related row carries a `userId` foreign key; all service-layer
+//   queries are scoped by it. Deleting a user cascades to their data.
+// - Sensitive clinical rows use soft deletion (`deletedAt`) so accidental
+//   deletions are recoverable and audit trails remain consistent.
+// - Document binaries are NEVER stored in the database — only metadata and a
+//   storage key that points at the configured storage driver.
+// - Reference ranges are stored per lab result, exactly as printed on the
+//   report, because they vary by laboratory, method, age and sex.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────────── Identity ─────────────────────────────
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @unique
+  passwordHash  String?
+  emailVerified DateTime?
+  isDemo        Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+
+  profile         Profile?
+  accounts        Account[]
+  sessions        Session[]
+  providers       Provider[]
+  records         MedicalRecord[]
+  documents       MedicalDocument[]
+  labPanels       LabPanel[]
+  labResults      LabResult[]
+  customMetrics   HealthMetric[]
+  measurements    HealthMeasurement[]
+  medications     Medication[]
+  allergies       Allergy[]
+  conditions      Condition[]
+  timelineEvents  TimelineEvent[]
+  aiConversations AIConversation[]
+  auditLogs       AuditLog[]
+  importJobs      ImportJob[]
+}
+
+/// External identity providers (OAuth / OIDC). Present so Google, Apple or
+/// other OIDC sign-in can be added without changing the user model.
+model Account {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @db.Uuid
+  provider          String
+  providerAccountId String
+  createdAt         DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+/// Server-side sessions. Only a SHA-256 hash of the session token is stored,
+/// so a database leak does not yield usable session cookies.
+model Session {
+  id         String   @id @default(uuid()) @db.Uuid
+  tokenHash  String   @unique
+  userId     String   @db.Uuid
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+  userAgent  String?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+enum Sex {
+  FEMALE
+  MALE
+  INTERSEX
+  PREFER_NOT_TO_SAY
+}
+
+enum BloodGroup {
+  A_POS
+  A_NEG
+  B_POS
+  B_NEG
+  AB_POS
+  AB_NEG
+  O_POS
+  O_NEG
+  UNKNOWN
+}
+
+enum GlucoseUnit {
+  MG_DL
+  MMOL_L
+}
+
+enum WeightUnit {
+  KG
+  LB
+}
+
+enum TemperatureUnit {
+  C
+  F
+}
+
+model Profile {
+  id                       String          @id @default(uuid()) @db.Uuid
+  userId                   String          @unique @db.Uuid
+  fullName                 String
+  dateOfBirth              DateTime?       @db.Date
+  sex                      Sex?
+  phone                    String?
+  city                     String?
+  state                    String?
+  bloodGroup               BloodGroup?
+  heightCm                 Decimal?        @db.Decimal(5, 1)
+  emergencyContactName     String?
+  emergencyContactPhone    String?
+  emergencyContactRelation String?
+  glucoseUnit              GlucoseUnit     @default(MG_DL)
+  weightUnit               WeightUnit      @default(KG)
+  temperatureUnit          TemperatureUnit @default(F)
+  timezone                 String          @default("Asia/Kolkata")
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  user                     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ───────────────────────────── Providers ─────────────────────────────
+
+enum ProviderType {
+  DOCTOR
+  HOSPITAL
+  CLINIC
+  LABORATORY
+  PHARMACY
+  DIAGNOSTIC_CENTRE
+  OTHER
+}
+
+/// Healthcare providers are free-text entities owned by the user (Indian
+/// hospitals, labs and doctors). No external registry integration is implied.
+model Provider {
+  id        String       @id @default(uuid()) @db.Uuid
+  userId    String       @db.Uuid
+  name      String
+  type      ProviderType @default(OTHER)
+  specialty String?
+  city      String?
+  state     String?
+  phone     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  records   MedicalRecord[]
+  documents MedicalDocument[]
+  labPanels LabPanel[]
+
+  @@unique([userId, name, type])
+  @@index([userId, name])
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "Provider_name_trgm")
+}
+
+// ───────────────────────────── Medical records ─────────────────────────────
+
+enum RecordType {
+  DOCTOR_VISIT
+  DIAGNOSIS
+  PROCEDURE
+  HOSPITALIZATION
+  PRESCRIPTION
+  VACCINATION
+  ALLERGY
+  CONDITION
+  FAMILY_HISTORY
+  OTHER
+}
+
+model MedicalRecord {
+  id           String     @id @default(uuid()) @db.Uuid
+  userId       String     @db.Uuid
+  type         RecordType
+  title        String
+  date         DateTime
+  endDate      DateTime?
+  providerId   String?    @db.Uuid
+  doctorName   String?
+  facilityName String?
+  specialty    String?
+  notes        String?
+  tags         String[]   @default([])
+  isDemo       Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider  Provider?         @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  documents MedicalDocument[]
+
+  @@index([userId, deletedAt, date(sort: Desc)])
+  @@index([userId, type])
+  @@index([tags], type: Gin)
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "MedicalRecord_title_trgm")
+  @@index([notes(ops: raw("gin_trgm_ops"))], type: Gin, map: "MedicalRecord_notes_trgm")
+}
+
+// ───────────────────────────── Documents ─────────────────────────────
+
+enum DocumentType {
+  LAB_REPORT
+  PRESCRIPTION
+  DOCTOR_NOTE
+  DISCHARGE_SUMMARY
+  IMAGING_REPORT
+  VACCINATION_RECORD
+  INSURANCE
+  OTHER
+}
+
+enum ExtractionStatus {
+  NOT_APPLICABLE
+  PENDING
+  COMPLETED
+  FAILED
+  UNSUPPORTED
+}
+
+model MedicalDocument {
+  id               String           @id @default(uuid()) @db.Uuid
+  userId           String           @db.Uuid
+  name             String
+  type             DocumentType
+  documentDate     DateTime?
+  providerId       String?          @db.Uuid
+  providerName     String?
+  recordId         String?          @db.Uuid
+  /// Opaque key understood by the storage driver. Never a public URL.
+  storageKey       String           @unique
+  originalFilename String
+  mimeType         String
+  sizeBytes        Int
+  sha256           String
+  tags             String[]         @default([])
+  notes            String?
+  /// Text extracted from the document (PDF text layer / OCR) for search and
+  /// AI retrieval. Derived data only — the original stays in object storage.
+  extractedText    String?
+  extractionStatus ExtractionStatus @default(NOT_APPLICABLE)
+  isDemo           Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  deletedAt        DateTime?
+
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider   Provider?      @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  record     MedicalRecord? @relation(fields: [recordId], references: [id], onDelete: SetNull)
+  labPanels  LabPanel[]
+  importJobs ImportJob[]
+
+  @@index([userId, deletedAt, createdAt(sort: Desc)])
+  @@index([userId, type])
+  @@index([tags], type: Gin)
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "MedicalDocument_name_trgm")
+  @@index([extractedText(ops: raw("gin_trgm_ops"))], type: Gin, map: "MedicalDocument_extractedText_trgm")
+}
+
+// ───────────────────────────── Lab results ─────────────────────────────
+
+enum DataSource {
+  MANUAL
+  PDF_IMPORT
+  IMAGE_IMPORT
+  CSV_IMPORT
+  DEVICE
+  DEMO
+}
+
+enum LabFlag {
+  LOW
+  NORMAL
+  HIGH
+  ABNORMAL
+  UNKNOWN
+}
+
+/// A lab report / panel (e.g. "Complete Blood Count" from a specific lab on a
+/// specific date). Individual measurements are LabResult rows.
+model LabPanel {
+  id          String     @id @default(uuid()) @db.Uuid
+  userId      String     @db.Uuid
+  name        String
+  category    String?
+  collectedAt DateTime
+  reportedAt  DateTime?
+  labName     String?
+  providerId  String?    @db.Uuid
+  documentId  String?    @db.Uuid
+  source      DataSource @default(MANUAL)
+  notes       String?
+  isDemo      Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider Provider?        @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  document MedicalDocument? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  results  LabResult[]
+
+  @@index([userId, deletedAt, collectedAt(sort: Desc)])
+}
+
+model LabResult {
+  id            String     @id @default(uuid()) @db.Uuid
+  userId        String     @db.Uuid
+  panelId       String?    @db.Uuid
+  /// Optional link to the built-in biomarker catalogue (e.g. "HBA1C").
+  /// Free-text tests without a code are fully supported.
+  biomarkerCode String?
+  testName      String
+  valueNumeric  Decimal?   @db.Decimal(14, 4)
+  valueText     String?
+  unit          String?
+  /// Reference range exactly as reported by the lab for this result.
+  refLow        Decimal?   @db.Decimal(14, 4)
+  refHigh       Decimal?   @db.Decimal(14, 4)
+  refText       String?
+  /// Flag derived only from the stored, report-specific range (or the lab's own flag).
+  flag          LabFlag    @default(UNKNOWN)
+  observedAt    DateTime
+  labName       String?
+  source        DataSource @default(MANUAL)
+  notes         String?
+  isDemo        Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  panel LabPanel? @relation(fields: [panelId], references: [id], onDelete: Cascade)
+
+  @@index([userId, deletedAt, observedAt(sort: Desc)])
+  @@index([userId, biomarkerCode, observedAt])
+  @@index([userId, testName])
+  @@index([panelId])
+  @@index([testName(ops: raw("gin_trgm_ops"))], type: Gin, map: "LabResult_testName_trgm")
+}
+
+// ───────────────────────────── Health tracking ─────────────────────────────
+
+enum MetricValueType {
+  /// One numeric value (glucose, weight, SpO₂ …)
+  SINGLE
+  /// Two numeric values (systolic / diastolic)
+  DUAL
+}
+
+/// Definition of a trackable measurement. Rows with userId = NULL are the
+/// built-in system metrics; users can add their own custom metrics.
+model HealthMetric {
+  id             String          @id @default(uuid()) @db.Uuid
+  userId         String?         @db.Uuid
+  key            String
+  name           String
+  shortName      String?
+  unit           String
+  valueType      MetricValueType @default(SINGLE)
+  primaryLabel   String?
+  secondaryLabel String?
+  decimals       Int             @default(0)
+  /// Plausibility bounds used for input validation (not clinical ranges).
+  minValue       Decimal?        @db.Decimal(12, 3)
+  maxValue       Decimal?        @db.Decimal(12, 3)
+  /// Allowed measurement contexts, e.g. FASTING / AFTER_MEAL for glucose.
+  contexts       String[]        @default([])
+  category       String          @default("vitals")
+  sortOrder      Int             @default(100)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  user         User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  measurements HealthMeasurement[]
+
+  @@unique([userId, key])
+  @@index([key])
+}
+
+model HealthMeasurement {
+  id          String     @id @default(uuid()) @db.Uuid
+  userId      String     @db.Uuid
+  metricId    String     @db.Uuid
+  value       Decimal    @db.Decimal(12, 3)
+  value2      Decimal?   @db.Decimal(12, 3)
+  unit        String
+  measuredAt  DateTime
+  context     String?
+  contextNote String?
+  notes       String?
+  source      DataSource @default(MANUAL)
+  isDemo      Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  metric HealthMetric @relation(fields: [metricId], references: [id], onDelete: Restrict)
+
+  @@index([userId, metricId, deletedAt, measuredAt(sort: Desc)])
+  @@index([userId, deletedAt, measuredAt(sort: Desc)])
+}
+
+// ───────────────────────────── Health summary ─────────────────────────────
+
+model Medication {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  name         String
+  /// Dose exactly as written on the prescription. Recorded, never suggested.
+  dosage       String?
+  frequency    String?
+  startDate    DateTime? @db.Date
+  endDate      DateTime? @db.Date
+  prescribedBy String?
+  active       Boolean   @default(true)
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, active])
+}
+
+enum AllergySeverity {
+  MILD
+  MODERATE
+  SEVERE
+  UNKNOWN
+}
+
+model Allergy {
+  id        String          @id @default(uuid()) @db.Uuid
+  userId    String          @db.Uuid
+  allergen  String
+  reaction  String?
+  severity  AllergySeverity @default(UNKNOWN)
+  notes     String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum ConditionStatus {
+  ACTIVE
+  MANAGED
+  RESOLVED
+}
+
+model Condition {
+  id          String          @id @default(uuid()) @db.Uuid
+  userId      String          @db.Uuid
+  name        String
+  status      ConditionStatus @default(ACTIVE)
+  diagnosedOn DateTime?       @db.Date
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ───────────────────────────── Timeline ─────────────────────────────
+
+enum TimelineSource {
+  MEDICAL_RECORD
+  DOCUMENT
+  LAB_PANEL
+  MEASUREMENT
+  NOTE
+}
+
+enum TimelineCategory {
+  VISIT
+  DIAGNOSIS
+  PROCEDURE
+  HOSPITALIZATION
+  PRESCRIPTION
+  VACCINATION
+  LAB
+  MEASUREMENT
+  DOCUMENT
+  OTHER
+}
+
+/// Denormalised, chronological feed of health events. Written by the service
+/// layer in the same transaction as the source entity.
+model TimelineEvent {
+  id         String           @id @default(uuid()) @db.Uuid
+  userId     String           @db.Uuid
+  sourceType TimelineSource
+  sourceId   String           @db.Uuid
+  category   TimelineCategory
+  title      String
+  summary    String?
+  occurredAt DateTime
+  /// 1 = routine (e.g. a single reading), 2 = notable, 3 = major (hospitalisation)
+  importance Int              @default(2)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceType, sourceId])
+  @@index([userId, occurredAt(sort: Desc)])
+  @@index([userId, category])
+}
+
+// ───────────────────────────── AI assistant ─────────────────────────────
+
+model AIConversation {
+  id        String      @id @default(uuid()) @db.Uuid
+  userId    String      @db.Uuid
+  title     String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  AIMessage[]
+
+  @@index([userId, updatedAt(sort: Desc)])
+}
+
+enum AIRole {
+  USER
+  ASSISTANT
+}
+
+model AIMessage {
+  id             String         @id @default(uuid()) @db.Uuid
+  conversationId String         @db.Uuid
+  role           AIRole
+  content        String
+  /// Records the answer cites: [{ ref, type, id, label, href, date }]
+  citations      Json?
+  /// Safety annotations: grounding warnings, emergency notices, etc.
+  safety         Json?
+  provider       String?
+  model          String?
+  createdAt      DateTime       @default(now())
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+// ───────────────────────────── Imports ─────────────────────────────
+
+enum ImportStatus {
+  AWAITING_REVIEW
+  CONFIRMED
+  DISCARDED
+  FAILED
+}
+
+/// Holds machine-extracted candidate values until the user confirms them.
+/// Nothing in `candidates` is written to LabResult without explicit confirmation.
+model ImportJob {
+  id          String           @id @default(uuid()) @db.Uuid
+  userId      String           @db.Uuid
+  documentId  String?          @db.Uuid
+  kind        String
+  status      ImportStatus     @default(AWAITING_REVIEW)
+  extractor   String
+  candidates  Json
+  meta        Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  confirmedAt DateTime?
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document    MedicalDocument? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}
+
+// ───────────────────────────── Audit ─────────────────────────────
+
+/// Security audit trail. Stores who did what to which entity — never the
+/// clinical content itself.
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @db.Uuid
+  action     String
+  entityType String?
+  entityId   String?
+  ipHash     String?
+  userAgent  String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([action, createdAt])
+}

@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+storage
+storage-test
+coverage
+.env
+.env.*
+!.env.example
