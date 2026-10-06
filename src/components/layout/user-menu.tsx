@@ -1,6 +1,7 @@
 "use client";
+import { useTransition } from "react";
 import Link from "next/link";
-import { LogOut, Settings, User } from "lucide-react";
+import { Loader2, LogOut, Settings, User } from "lucide-react";
 import { signOutAction } from "@/actions/auth";
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import {
 import { initials } from "@/lib/utils";
 
 export function UserMenu({ name, email }: { name: string; email: string }) {
+  const [signingOut, startSignOut] = useTransition();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -38,13 +40,14 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <form action={signOutAction}>
-          <DropdownMenuItem asChild>
-            <button type="submit" className="w-full">
-              <LogOut /> Sign out
-            </button>
-          </DropdownMenuItem>
-        </form>
+        {/* Call the action directly: a <form> inside the menu is unmounted when the menu
+            closes on select, so its submit never fires. */}
+        <DropdownMenuItem
+          disabled={signingOut}
+          onSelect={() => startSignOut(() => signOutAction())}
+        >
+          {signingOut ? <Loader2 className="animate-spin" /> : <LogOut />} Sign out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
