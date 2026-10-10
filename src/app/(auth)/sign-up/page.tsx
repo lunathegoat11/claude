@@ -12,7 +12,7 @@ export default async function SignUpPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
+        <h1 className="text-2xl font-semibold">Create your account</h1>
         <p className="text-muted-foreground text-[15px]">
           Start organising your health records. It takes under a minute.
         </p>

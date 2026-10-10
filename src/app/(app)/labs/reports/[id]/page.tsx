@@ -6,12 +6,11 @@ import { getLabPanel, getPreviousResults, seriesKey } from "@/server/services/la
 import { or404 } from "@/server/page-utils";
 import { deleteLabPanelAction } from "@/actions/labs";
 import { ConfirmDelete } from "@/components/forms/confirm-delete";
-import { FlagBadge } from "@/components/labs/flag-badge";
+import { ResultLedger } from "@/components/labs/result-ledger";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SOURCE_LABELS } from "@/lib/catalog/labels";
-import { formatDate, formatNumber, formatSigned } from "@/lib/format";
-import { formatRange } from "@/lib/lab-range";
+import { formatDate, formatNumber } from "@/lib/format";
 import { toNum } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Lab report" };
@@ -44,17 +43,17 @@ export default async function LabReportPage({
       </Link>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
+          <h1 className="text-[1.75rem] font-semibold sm:text-[2.125rem]">{panel.name}</h1>
+          <p className="text-muted-foreground mt-1 flex flex-wrap items-center gap-2 text-[15px]">
             {formatDate(panel.collectedAt, tz)}
-            {panel.labName && ` · ${panel.labName}`}
+            {panel.labName && `, ${panel.labName}`}
             {panel.isDemo && <Badge variant="demo">Sample data</Badge>}
-          </div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{panel.name}</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            {panel.results.length} results ·{" "}
+          </p>
+          <p className="mt-2 text-[15px]">
+            {panel.results.length} results.{" "}
             {flagged
-              ? `${flagged} outside the ranges printed on this report`
-              : "all within the ranges printed on this report or no range given"}
+              ? `${flagged} outside the range printed on this report.`
+              : "All within the ranges printed on this report, or no range given."}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -84,7 +83,7 @@ export default async function LabReportPage({
       {imported && (justSaved || toCheck > 0) && (
         <div
           role="status"
-          className="bg-accent/60 text-accent-foreground mb-5 rounded-xl border px-4 py-3 text-sm"
+          className="bg-accent/60 text-accent-foreground mb-5 rounded-md border px-4 py-3 text-sm"
         >
           <p className="font-medium">
             {justSaved ? `Saved ${panel.results.length} results` : "Read automatically"}
@@ -108,89 +107,38 @@ export default async function LabReportPage({
         </div>
       )}
 
-      <div className="bg-card overflow-hidden rounded-2xl border">
-        <table className="w-full text-sm">
-          <caption className="sr-only">Results for {panel.name}</caption>
-          <thead className="bg-muted/50 text-muted-foreground border-b text-left text-xs">
-            <tr>
-              <th scope="col" className="px-4 py-3 font-medium sm:px-5">
-                Test
-              </th>
-              <th scope="col" className="px-3 py-3 text-right font-medium">
-                Result
-              </th>
-              <th scope="col" className="hidden px-3 py-3 font-medium md:table-cell">
-                Range on report
-              </th>
-              <th scope="col" className="hidden px-3 py-3 font-medium sm:table-cell">
-                Previous
-              </th>
-              <th scope="col" className="px-4 py-3 text-right font-medium sm:px-5">
-                <span className="sr-only">Status</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {panel.results.map((r) => {
-              const v = toNum(r.valueNumeric);
-              const p = prev.get(seriesKey(r));
-              const pv = p && p.unit === r.unit ? toNum(p.valueNumeric) : null;
-              const range = formatRange(toNum(r.refLow), toNum(r.refHigh), r.refText);
-              return (
-                <tr key={r.id} className="align-top">
-                  <td className="px-4 py-3.5 sm:px-5">
-                    <Link
-                      href={`/labs/tests/${encodeURIComponent(seriesKey(r))}`}
-                      className="hover:text-primary font-medium hover:underline"
-                    >
-                      {r.testName}
-                    </Link>
-                    <div className="text-muted-foreground mt-0.5 text-xs md:hidden">
-                      {range ? `Range ${range}` : "No range on report"}
-                    </div>
-                    {r.notes && (
-                      <div className="text-muted-foreground mt-0.5 text-xs">{r.notes}</div>
-                    )}
-                  </td>
-                  <td className="px-3 py-3.5 text-right">
-                    <span className="tabular font-semibold">
-                      {v !== null ? formatNumber(v, 2) : r.valueText}
-                    </span>{" "}
-                    <span className="text-muted-foreground">{r.unit}</span>
-                  </td>
-                  <td className="text-muted-foreground tabular hidden px-3 py-3.5 md:table-cell">
-                    {range || "—"}
-                  </td>
-                  <td className="text-muted-foreground tabular hidden px-3 py-3.5 sm:table-cell">
-                    {p ? (
-                      <>
-                        {pv !== null ? formatNumber(pv, 2) : (p.valueText ?? toNum(p.valueNumeric))}{" "}
-                        {pv !== null && v !== null && (
-                          <span className="text-xs">({formatSigned(v - pv, 2)})</span>
-                        )}
-                        <div className="text-xs">{formatDate(p.observedAt, tz)}</div>
-                      </>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="px-4 py-3.5 text-right sm:px-5">
-                    <FlagBadge flag={r.flag} compact />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="bg-card rounded-[var(--radius)] border">
+        <ResultLedger
+          label={`Results for ${panel.name}`}
+          results={panel.results.map((r) => {
+            const p = prev.get(seriesKey(r));
+            const pv = p ? toNum(p.valueNumeric) : null;
+            return {
+              id: r.id,
+              testName: r.testName,
+              href: `/labs/tests/${encodeURIComponent(seriesKey(r))}`,
+              value: toNum(r.valueNumeric),
+              valueText: r.valueText,
+              unit: r.unit,
+              refLow: toNum(r.refLow),
+              refHigh: toNum(r.refHigh),
+              refText: r.refText,
+              flag: r.flag,
+              notes: r.notes,
+              previous: p
+                ? `${pv !== null ? formatNumber(pv, 2) : (p.valueText ?? "")}${p.unit && p.unit !== r.unit ? ` ${p.unit}` : ""} on ${formatDate(p.observedAt, tz)}`
+                : null,
+            };
+          })}
+        />
       </div>
-      <div className="text-muted-foreground mt-4 space-y-1 text-xs">
+      <div className="text-muted-foreground mt-4 space-y-1 text-[13px]">
         <p>
           Status compares each value only with the reference range printed on this report. It is not
           a diagnosis — please discuss results with your doctor.
         </p>
         <p>
-          Source: {SOURCE_LABELS[panel.source]}
-          {panel.notes && ` · ${panel.notes}`}
+          {SOURCE_LABELS[panel.source]}.{panel.notes && ` ${panel.notes}`}
         </p>
       </div>
     </div>

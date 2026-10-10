@@ -13,8 +13,8 @@ export function ForgotPasswordForm() {
   });
   if (state.ok) {
     return (
-      <div className="bg-card space-y-4 rounded-2xl border p-5 text-center">
-        <span className="bg-accent text-accent-foreground mx-auto flex size-11 items-center justify-center rounded-2xl">
+      <div className="bg-card space-y-4 rounded-[var(--radius)] border p-5 text-center">
+        <span className="bg-accent text-accent-foreground mx-auto flex size-11 items-center justify-center rounded-[var(--radius)]">
           <MailCheck className="size-5" />
         </span>
         <p className="text-[15px]">{state.message}</p>

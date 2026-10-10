@@ -42,7 +42,7 @@ export function CsvImport({ timezone }: { timezone: string }) {
     start(async () => {
       const res = await importCsvAction(preview.csv);
       if (res.ok) {
-        toast.success(`${res.message}${res.data?.skipped ? ` · ${res.data.skipped} skipped` : ""}`);
+        toast.success(`${res.message}${res.data?.skipped ? `, ${res.data.skipped} skipped` : ""}`);
         router.push("/tracking");
         router.refresh();
       } else toast.error(res.error ?? "Import failed");
@@ -104,7 +104,7 @@ export function CsvImport({ timezone }: { timezone: string }) {
               </Button>
             </div>
           </div>
-          <div className="bg-card max-h-[60vh] overflow-auto rounded-2xl border">
+          <div className="bg-card max-h-[60vh] overflow-auto rounded-[var(--radius)] border">
             <table className="w-full text-sm">
               <thead className="bg-muted text-muted-foreground sticky top-0 border-b text-left text-xs">
                 <tr>
@@ -124,7 +124,7 @@ export function CsvImport({ timezone }: { timezone: string }) {
                       {r.context && (
                         <span className="text-muted-foreground">
                           {" "}
-                          · {CONTEXT_LABELS[r.context] ?? r.context}
+                          , {CONTEXT_LABELS[r.context] ?? r.context}
                         </span>
                       )}
                     </td>

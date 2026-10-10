@@ -18,7 +18,7 @@ export function MobileNav() {
     <>
       <nav
         aria-label="Main"
-        className="bg-card/90 safe-bottom fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur-lg lg:hidden"
+        className="bg-card safe-bottom fixed inset-x-0 bottom-0 z-40 border-t lg:hidden"
       >
         <ul className="mx-auto grid h-16 max-w-lg grid-cols-5">
           {primary.map((item) => {
@@ -29,8 +29,10 @@ export function MobileNav() {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex h-full flex-col items-center justify-center gap-1 text-[11px] font-medium",
-                    active ? "text-primary" : "text-muted-foreground",
+                    "flex h-full flex-col items-center justify-center gap-0.5 border-t-[3px] text-[12px] font-medium",
+                    active
+                      ? "border-primary text-primary"
+                      : "text-muted-foreground border-transparent",
                   )}
                 >
                   <item.icon className="size-[22px]" strokeWidth={active ? 2.2 : 1.8} />
@@ -45,8 +47,10 @@ export function MobileNav() {
               onClick={() => setOpen(true)}
               aria-haspopup="dialog"
               className={cn(
-                "flex h-full w-full flex-col items-center justify-center gap-1 text-[11px] font-medium",
-                moreActive ? "text-primary" : "text-muted-foreground",
+                "flex h-full w-full flex-col items-center justify-center gap-0.5 border-t-[3px] text-[12px] font-medium",
+                moreActive
+                  ? "border-primary text-primary"
+                  : "text-muted-foreground border-transparent",
               )}
             >
               <MoreHorizontal className="size-[22px]" />
@@ -59,14 +63,14 @@ export function MobileNav() {
         <DialogContent className="sm:max-w-sm">
           <DialogTitle>More</DialogTitle>
           <DialogDescription className="sr-only">Other sections</DialogDescription>
-          <ul className="grid grid-cols-2 gap-2">
+          <ul className="grid gap-2">
             {more.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
                   onClick={() => setOpen(false)}
                   className={cn(
-                    "hover:bg-muted flex flex-col gap-3 rounded-xl border p-4 text-sm font-medium transition-colors",
+                    "hover:bg-muted flex items-center gap-3 rounded-md border p-3.5 text-[15px] font-medium transition-colors",
                     isActive(pathname, item.href) &&
                       "border-primary/40 bg-accent text-accent-foreground",
                   )}

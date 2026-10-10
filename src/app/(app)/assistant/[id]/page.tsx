@@ -12,7 +12,7 @@ import { Chat } from "@/components/assistant/chat";
 import { ConfirmDelete } from "@/components/forms/confirm-delete";
 import type { Citation } from "@/server/ai/types";
 
-export const metadata: Metadata = { title: "AI Health Assistant" };
+export const metadata: Metadata = { title: "Ask Kosha" };
 
 export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();

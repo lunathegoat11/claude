@@ -91,7 +91,7 @@ export function MessageContent({ content, citations }: { content: string; citati
         blocks.push(
           <p
             key={k}
-            className="border-warning bg-warning/8 my-2 rounded-xl border-l-2 px-3 py-2 text-[14px]"
+            className="border-warning bg-warning/8 my-2 rounded-md border-l-2 px-3 py-2 text-[14px]"
           >
             {inline(t.replace(/^>\s?/, ""), cites, `q-${k}`)}
           </p>,

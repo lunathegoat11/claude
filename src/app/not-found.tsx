@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export default function NotFound() {
   return (
     <div className="flex min-h-[60dvh] flex-col items-center justify-center px-6 text-center">
-      <span className="bg-accent text-accent-foreground flex size-12 items-center justify-center rounded-2xl">
+      <span className="bg-accent text-accent-foreground flex size-12 items-center justify-center rounded-[var(--radius)]">
         <Compass className="size-6" />
       </span>
       <h1 className="mt-4 text-xl font-semibold">We couldn&apos;t find that</h1>

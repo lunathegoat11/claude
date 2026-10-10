@@ -25,9 +25,7 @@ export function AssistantLayout({
             <MessageSquarePlus /> New conversation
           </Link>
         </Button>
-        <h2 className="text-muted-foreground mb-2 px-2 text-xs font-medium tracking-wide uppercase">
-          Recent
-        </h2>
+        <h2 className="text-muted-foreground mb-2 px-2 text-xs font-medium">Recent</h2>
         <nav className="space-y-0.5" aria-label="Conversations">
           {conversations.length === 0 && (
             <p className="text-muted-foreground px-2 text-sm">No conversations yet.</p>
@@ -53,12 +51,7 @@ export function AssistantLayout({
       <div className="min-w-0">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              AI Health Assistant
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Grounded in your own records. Explains — never diagnoses.
-            </p>
+            <h1 className="text-[1.75rem] font-semibold sm:text-[2.125rem]">Ask Kosha</h1>
           </div>
           <div className="flex items-center gap-2">
             {actions}

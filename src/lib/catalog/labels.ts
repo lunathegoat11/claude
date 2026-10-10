@@ -53,12 +53,12 @@ export const LAB_FLAG_LABELS: Record<LabFlag, string> = {
 };
 
 export const SOURCE_LABELS: Record<DataSource, string> = {
-  MANUAL: "Entered manually",
-  PDF_IMPORT: "Imported from PDF",
-  IMAGE_IMPORT: "Imported from image",
-  CSV_IMPORT: "Imported from CSV",
-  DEVICE: "Device",
-  DEMO: "Demo data",
+  MANUAL: "Typed in",
+  PDF_IMPORT: "Read from a PDF",
+  IMAGE_IMPORT: "Read from a photo",
+  CSV_IMPORT: "Imported from a spreadsheet",
+  DEVICE: "From a device",
+  DEMO: "Sample data",
 };
 
 export const SEX_LABELS: Record<Sex, string> = {

@@ -16,15 +16,13 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between",
+        "mb-6 flex flex-col gap-4 border-b pb-5 sm:mb-8 sm:flex-row sm:items-end sm:justify-between",
         className,
       )}
     >
       <div className="min-w-0 space-y-1.5">
         {eyebrow && <div className="text-muted-foreground text-sm">{eyebrow}</div>}
-        <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-[28px]">
-          {title}
-        </h1>
+        <h1 className="text-[1.75rem] font-semibold text-balance sm:text-[2.125rem]">{title}</h1>
         {description && (
           <p className="text-muted-foreground max-w-2xl text-[15px] text-pretty">{description}</p>
         )}

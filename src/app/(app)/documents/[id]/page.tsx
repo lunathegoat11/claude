@@ -32,7 +32,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
     ["Uploaded", formatDateTime(doc.createdAt, tz)],
     [
       "File",
-      `${doc.mimeType === "application/pdf" ? "PDF" : doc.mimeType.replace("image/", "").toUpperCase()} · ${formatBytes(doc.sizeBytes)}`,
+      `${doc.mimeType === "application/pdf" ? "PDF" : doc.mimeType.replace("image/", "").toUpperCase()}, ${formatBytes(doc.sizeBytes)}`,
     ],
   ];
 
@@ -42,7 +42,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
         href="/documents"
         className="text-muted-foreground hover:text-foreground -my-2 mb-3 inline-flex min-h-11 items-center gap-1.5 py-2 text-sm"
       >
-        <ArrowLeft className="size-4" /> Documents
+        <ArrowLeft className="size-4" /> Reports & files
       </Link>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -50,7 +50,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
             {DOCUMENT_TYPE_LABELS[doc.type]}{" "}
             {doc.isDemo && <Badge variant="demo">Sample document</Badge>}
           </div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-balance">{doc.name}</h1>
+          <h1 className="mt-1 text-2xl font-semibold text-balance">{doc.name}</h1>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
@@ -110,7 +110,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
           )}
           <DocumentPreview id={doc.id} mimeType={doc.mimeType} name={doc.name} />
           {doc.extractedText && (
-            <details className="group bg-card rounded-2xl border">
+            <details className="group bg-card rounded-[var(--radius)] border">
               <summary className="flex cursor-pointer list-none items-center gap-2 px-5 py-4 text-sm font-medium">
                 <ScanText className="text-muted-foreground size-4" /> Text found in this document
                 <span className="text-muted-foreground ml-auto text-xs font-normal group-open:hidden">
@@ -178,7 +178,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
             </Card>
           ) : null}
           {doc.extractionStatus === "UNSUPPORTED" && doc.type === "LAB_REPORT" && (
-            <p className="bg-muted/40 text-muted-foreground rounded-xl border p-4 text-sm">
+            <p className="bg-muted/40 text-muted-foreground rounded-md border p-4 text-sm">
               We couldn&apos;t read text from this file automatically. You can{" "}
               <Link
                 href={`/labs/new?documentId=${doc.id}`}

@@ -49,7 +49,7 @@ export function TimelineList({
       {groups.map((g) => (
         <section key={g.month} aria-label={g.month}>
           {!compact && (
-            <h2 className="bg-background/90 sticky top-16 z-10 -mx-1 mb-3 px-1 py-2 text-sm font-semibold backdrop-blur">
+            <h2 className="bg-background sticky top-16 z-10 -mx-1 mb-3 border-b px-1 py-2 text-lg font-semibold">
               {g.month}
             </h2>
           )}
@@ -57,10 +57,10 @@ export function TimelineList({
             {g.days.map((d) => (
               <li key={d.key} className="grid grid-cols-[3rem_1fr] gap-5 sm:grid-cols-[4.5rem_1fr]">
                 <div className="pt-3 text-right">
-                  <div className="tabular text-[13px] leading-none font-semibold">
+                  <div className="figure text-lg leading-none font-semibold">
                     {formatDayMonth(d.date, timezone).split(" ")[0]}
                   </div>
-                  <div className="text-muted-foreground mt-1 text-[11px] tracking-wide uppercase">
+                  <div className="text-muted-foreground mt-1 text-[13px]">
                     {formatDayMonth(d.date, timezone).split(" ")[1]}
                   </div>
                 </div>
@@ -79,14 +79,14 @@ export function TimelineList({
                         </span>
                         <Link
                           href={timelineHref(e)}
-                          className="hover:bg-muted block rounded-xl px-3 py-2.5 transition-colors"
+                          className="hover:bg-muted block rounded-md px-3 py-2.5 transition-colors"
                         >
                           <div className="flex items-baseline justify-between gap-3">
                             <span
                               className={cn(
                                 "leading-snug font-medium",
                                 e.importance >= 3 && "text-foreground",
-                                e.importance === 1 && "text-[14px]",
+                                e.importance === 1 && "text-[15px]",
                               )}
                             >
                               {e.title}
@@ -98,7 +98,7 @@ export function TimelineList({
                             )}
                           </div>
                           {e.summary && (
-                            <p className="text-muted-foreground mt-0.5 line-clamp-2 text-[13.5px]">
+                            <p className="text-muted-foreground mt-0.5 line-clamp-2 text-[14px]">
                               {e.summary}
                             </p>
                           )}

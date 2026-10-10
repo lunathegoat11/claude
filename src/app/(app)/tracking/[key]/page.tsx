@@ -82,15 +82,15 @@ export default async function MetricPage({
         href="/tracking"
         className="text-muted-foreground hover:text-foreground -my-2 mb-3 inline-flex min-h-11 items-center gap-1.5 py-2 text-sm"
       >
-        <ArrowLeft className="size-4" /> Health tracking
+        <ArrowLeft className="size-4" /> Readings
       </Link>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-center gap-3">
-          <span className="bg-accent text-accent-foreground flex size-11 items-center justify-center rounded-2xl">
+          <span className="bg-accent text-accent-foreground flex size-11 items-center justify-center rounded-[var(--radius)]">
             <Icon className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{metric.name}</h1>
+            <h1 className="text-2xl font-semibold">{metric.name}</h1>
             {latest && (
               <p className="text-muted-foreground text-sm">
                 Latest:{" "}
@@ -105,7 +105,7 @@ export default async function MetricPage({
                   }{" "}
                   {sample.unit}
                 </span>{" "}
-                · {formatDate(latest.measuredAt, tz)}, {formatTime(latest.measuredAt, tz)}
+                , {formatDate(latest.measuredAt, tz)}, {formatTime(latest.measuredAt, tz)}
               </p>
             )}
           </div>
@@ -241,7 +241,7 @@ export default async function MetricPage({
 
           <section className="mt-8">
             <h2 className="mb-3 text-base font-semibold">All readings</h2>
-            <ul className="bg-card divide-y overflow-hidden rounded-2xl border">
+            <ul className="bg-card divide-y overflow-hidden rounded-[var(--radius)] border">
               {list.items.map((m) => {
                 const pres = presentMeasurement(
                   metric,

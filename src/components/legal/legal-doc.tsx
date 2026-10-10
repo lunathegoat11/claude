@@ -28,7 +28,7 @@ export function LegalDoc({
       {!reviewed && (
         <div
           role="note"
-          className="border-warning/50 bg-warning/8 flex gap-3 rounded-2xl border p-4 text-sm leading-relaxed"
+          className="border-warning/50 bg-warning/8 flex gap-3 rounded-[var(--radius)] border p-4 text-sm leading-relaxed"
         >
           <AlertTriangle className="text-warning mt-0.5 size-5 shrink-0" />
           <p>
@@ -39,7 +39,7 @@ export function LegalDoc({
         </div>
       )}
       <header className="space-y-3">
-        <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="text-3xl font-semibold">{title}</h1>
         <p className="text-muted-foreground text-sm">Last updated: {LEGAL_LAST_UPDATED}</p>
         <div className="text-muted-foreground text-[15px] leading-relaxed">{intro}</div>
       </header>

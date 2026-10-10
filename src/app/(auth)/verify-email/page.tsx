@@ -20,11 +20,11 @@ export default async function VerifyEmailPage({
   return (
     <div className="space-y-6 text-center">
       <span
-        className={`mx-auto flex size-12 items-center justify-center rounded-2xl ${result ? "bg-success/12 text-success" : "bg-destructive/10 text-destructive"}`}
+        className={`mx-auto flex size-12 items-center justify-center rounded-[var(--radius)] ${result ? "bg-success/12 text-success" : "bg-destructive/10 text-destructive"}`}
       >
         {result ? <CheckCircle2 className="size-6" /> : <XCircle className="size-6" />}
       </span>
-      <h1 className="text-2xl font-semibold tracking-tight">
+      <h1 className="text-2xl font-semibold">
         {result ? "Email confirmed" : "This link didn't work"}
       </h1>
       <p className="text-muted-foreground text-[15px]">

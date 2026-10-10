@@ -16,7 +16,7 @@ import { CONTEXT_LABELS } from "@/lib/catalog/metrics";
 import { presentMeasurement } from "@/lib/display";
 import { preferredInputUnits, toMetricOption } from "@/lib/tracking-helpers";
 
-export const metadata: Metadata = { title: "Health tracking" };
+export const metadata: Metadata = { title: "Readings" };
 
 export default async function TrackingPage() {
   const user = await requireUser();
@@ -31,8 +31,8 @@ export default async function TrackingPage() {
   return (
     <div>
       <PageHeader
-        title="Health tracking"
-        description="Blood sugar, blood pressure, weight and more — recorded over time."
+        title="Readings"
+        description="Blood sugar, blood pressure, weight and anything else you check at home."
         actions={
           <>
             <Button asChild variant="outline">
@@ -64,7 +64,7 @@ export default async function TrackingPage() {
               <Link
                 key={metric.id}
                 href={`/tracking/${metric.key}`}
-                className="group bg-card hover:border-primary/30 rounded-2xl border p-5 transition hover:shadow-sm"
+                className="group bg-card hover:border-primary/30 rounded-[var(--radius)] border p-5 transition hover:shadow-sm"
               >
                 <div className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
                   <span className="bg-accent text-accent-foreground flex size-7 items-center justify-center rounded-lg">
@@ -76,14 +76,14 @@ export default async function TrackingPage() {
                 <div className="mt-4 flex items-end justify-between gap-3">
                   <div>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="tabular text-[26px] leading-none font-semibold tracking-tight">
+                      <span className="tabular text-[26px] leading-none font-semibold">
                         {pres.text}
                       </span>
                       <span className="text-muted-foreground text-sm">{pres.unit}</span>
                     </div>
                     <div className="text-muted-foreground mt-2 text-[13px]">
                       {formatRelativeDateTime(last.at, new Date(), tz)}
-                      {last.context && ` · ${CONTEXT_LABELS[last.context] ?? last.context}`}
+                      {last.context && `, ${CONTEXT_LABELS[last.context] ?? last.context}`}
                     </div>
                   </div>
                   <Sparkline
@@ -109,7 +109,7 @@ export default async function TrackingPage() {
                   key={m.id}
                   href={`/tracking?add=1&metric=${m.key}`}
                   scroll={false}
-                  className="bg-card/50 hover:border-primary/40 hover:bg-card flex items-center gap-2.5 rounded-xl border border-dashed px-3 py-3 text-sm transition"
+                  className="bg-card/50 hover:border-primary/40 hover:bg-card flex items-center gap-2.5 rounded-md border border-dashed px-3 py-3 text-sm transition"
                 >
                   <Icon className="text-muted-foreground size-4" />
                   <span className="truncate">{m.name}</span>

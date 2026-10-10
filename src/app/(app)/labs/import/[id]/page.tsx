@@ -36,7 +36,7 @@ export default async function ImportReviewPage({ params }: { params: Promise<{ i
         description="These values were read automatically and may contain mistakes. Check each one against the original report, correct anything that's wrong, and untick values you don't want to save."
         actions={<DiscardImportButton jobId={job.id} />}
       />
-      <div className="bg-accent/40 mb-6 flex items-start gap-3 rounded-2xl border p-4 text-sm">
+      <div className="bg-accent/40 mb-6 flex items-start gap-3 rounded-[var(--radius)] border p-4 text-sm">
         <ShieldCheck className="text-primary mt-0.5 size-5 shrink-0" />
         <p>
           Nothing has been saved yet. Values are only added to your lab history after you press{" "}
@@ -61,7 +61,7 @@ export default async function ImportReviewPage({ params }: { params: Promise<{ i
       {job.extractor === "ocr" && (
         <p
           role="note"
-          className="border-warning/50 bg-warning/8 mb-6 rounded-2xl border p-4 text-sm"
+          className="border-warning/50 bg-warning/8 mb-6 rounded-[var(--radius)] border p-4 text-sm"
         >
           <strong>These values were read from a photo.</strong> Photo reading can miss decimal
           points (for example reading 5.2 as 52) or confuse similar characters. Please compare every

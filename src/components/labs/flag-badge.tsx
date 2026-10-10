@@ -6,13 +6,13 @@ export function FlagBadge({ flag, compact }: { flag: string; compact?: boolean }
   switch (flag) {
     case "HIGH":
       return (
-        <Badge variant="warning">
+        <Badge variant="danger">
           <ArrowUp /> {compact ? "High" : "Above report range"}
         </Badge>
       );
     case "LOW":
       return (
-        <Badge variant="warning">
+        <Badge variant="danger">
           <ArrowDown /> {compact ? "Low" : "Below report range"}
         </Badge>
       );

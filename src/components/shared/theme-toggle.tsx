@@ -49,7 +49,7 @@ export function ThemeSegmented() {
     { v: "system", label: "System", icon: Laptop },
   ];
   return (
-    <div role="radiogroup" aria-label="Theme" className="bg-muted inline-flex rounded-xl p-1">
+    <div role="radiogroup" aria-label="Theme" className="bg-muted inline-flex rounded-md p-1">
       {options.map((o) => (
         <button
           key={o.v}

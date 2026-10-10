@@ -4,83 +4,91 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Kosha design tokens.
- * Calm, neutral surfaces with a single restrained teal accent.
- * Status colours are used sparingly and always paired with text/icons.
+ * Kosha design tokens — "the family health file".
+ *
+ * Drawn from the things people already keep: the hospital file and the lab
+ * register. File-paper surfaces (a faint green-white, not cream), royal-blue
+ * fountain-pen ink for actions and emphasis, sindoor red and leaf green only
+ * for out-of-range / in-range results, and marigold only for "please check".
+ * Status colours always come with words.
  */
 :root {
-  --radius: 0.875rem;
+  --radius: 0.625rem;
 
-  --background: oklch(0.982 0.003 240);
-  --foreground: oklch(0.21 0.015 250);
-  --card: oklch(1 0 0);
+  --background: #eff2ec; /* file paper */
+  --foreground: #1a2238; /* blue-black ink */
+  --card: #fafbf8; /* a fresh sheet */
   --card-foreground: var(--foreground);
-  --popover: oklch(1 0 0);
+  --popover: #fdfdfb;
   --popover-foreground: var(--foreground);
-  --primary: oklch(0.5 0.085 195);
-  --primary-foreground: oklch(0.99 0.005 195);
-  --secondary: oklch(0.955 0.006 240);
-  --secondary-foreground: oklch(0.27 0.015 250);
-  --muted: oklch(0.962 0.005 240);
-  --muted-foreground: oklch(0.5 0.016 250);
-  --accent: oklch(0.955 0.02 195);
-  --accent-foreground: oklch(0.36 0.07 195);
-  --destructive: oklch(0.56 0.19 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.55 0.11 155);
-  --warning: oklch(0.68 0.13 70);
-  --info: oklch(0.55 0.1 245);
-  --border: oklch(0.915 0.006 245);
-  --input: oklch(0.89 0.008 245);
-  --ring: oklch(0.6 0.08 195);
+  --primary: #2a3f9d; /* royal-blue ink */
+  --primary-foreground: #f6f7fc;
+  --secondary: #e3e8df;
+  --secondary-foreground: #1f2840;
+  --muted: #e6eae2;
+  --muted-foreground: #566072;
+  --accent: #e3e8f7; /* ink wash */
+  --accent-foreground: #22357f;
+  --destructive: #b4361e; /* sindoor */
+  --destructive-foreground: #fdf6f4;
+  --success: #2b7552; /* leaf */
+  --warning: #9a6400; /* marigold, dark enough for text */
+  --marigold: #e9a21b;
+  --info: #2a6aa8;
+  --border: #d4dacf; /* ruled line */
+  --input: #c3cbbe;
+  --ring: #2a3f9d;
 
-  --chart-1: #007c99;
-  --chart-2: #cd5537;
-  --chart-3: oklch(0.68 0.12 70);
-  --chart-4: oklch(0.6 0.14 330);
-  --chart-5: oklch(0.6 0.1 145);
-  --chart-grid: oklch(0.93 0.004 245);
+  --chart-1: #2a3f9d;
+  --chart-2: #b4361e;
+  --chart-3: #c98908;
+  --chart-4: #2b7552;
+  --chart-5: #7a4fa0;
+  --chart-grid: #dce1d7;
 
-  --sidebar: oklch(0.99 0.002 240);
+  --sidebar: #e8ece4;
 }
 
 .dark {
-  --background: oklch(0.165 0.008 250);
-  --foreground: oklch(0.95 0.005 250);
-  --card: oklch(0.205 0.009 250);
+  --background: #11151f; /* the file at night */
+  --foreground: #e6e9f1;
+  --card: #181d29;
   --card-foreground: var(--foreground);
-  --popover: oklch(0.22 0.01 250);
+  --popover: #1c2230;
   --popover-foreground: var(--foreground);
-  --primary: oklch(0.74 0.09 192);
-  --primary-foreground: oklch(0.18 0.02 200);
-  --secondary: oklch(0.26 0.01 250);
-  --secondary-foreground: oklch(0.93 0.005 250);
-  --muted: oklch(0.25 0.009 250);
-  --muted-foreground: oklch(0.7 0.012 250);
-  --accent: oklch(0.28 0.03 195);
-  --accent-foreground: oklch(0.86 0.06 192);
-  --destructive: oklch(0.66 0.18 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.72 0.12 155);
-  --warning: oklch(0.79 0.12 75);
-  --info: oklch(0.72 0.1 245);
-  --border: oklch(0.29 0.01 250);
-  --input: oklch(0.33 0.012 250);
-  --ring: oklch(0.7 0.08 192);
+  --primary: #a3b4f6;
+  --primary-foreground: #10162b;
+  --secondary: #232a3a;
+  --secondary-foreground: #e1e5ee;
+  --muted: #1f2533;
+  --muted-foreground: #a0a8b9;
+  --accent: #242d4b;
+  --accent-foreground: #c8d2fa;
+  --destructive: #f0806a;
+  --destructive-foreground: #1d0c08;
+  --success: #73c99f;
+  --warning: #f2b844;
+  --marigold: #f2b844;
+  --info: #84b5ec;
+  --border: #2a3142;
+  --input: #363e52;
+  --ring: #a3b4f6;
 
-  --chart-1: #16a7a3;
-  --chart-2: #dd6d45;
-  --chart-3: oklch(0.8 0.12 75);
-  --chart-4: oklch(0.72 0.13 330);
-  --chart-5: oklch(0.74 0.1 150);
-  --chart-grid: oklch(0.27 0.01 250);
+  --chart-1: #a3b4f6;
+  --chart-2: #f0806a;
+  --chart-3: #f2b844;
+  --chart-4: #73c99f;
+  --chart-5: #c4a0e6;
+  --chart-grid: #262d3d;
 
-  --sidebar: oklch(0.18 0.008 250);
+  --sidebar: #141925;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Both families are by Ek Type (Mumbai) and have Devanagari companions for a Hindi version. */
+  --font-sans: "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Anek Latin Variable", "Mukta", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -101,6 +109,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-info: var(--info);
+  --color-marigold: var(--marigold);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -125,10 +134,21 @@
   html {
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
+    /* Mukta sets small for its size; a 17px base keeps text comfortable for older eyes. */
+    font-size: 106.25%;
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "cv11", "ss01";
+    line-height: 1.55;
+  }
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    font-stretch: 88%;
+    letter-spacing: -0.005em;
+    line-height: 1.15;
   }
   ::selection {
     background: color-mix(in oklch, var(--primary) 22%, transparent);
@@ -158,6 +178,13 @@
 
 @utility tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* Result values: the display face, tabular, so columns of numbers line up. */
+@utility figure {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-stretch: 92%;
 }
 
 @utility safe-bottom {

@@ -66,7 +66,7 @@ function SavedKey({ saved, onReplace }: { saved: AiSettingsView; onReplace: () =
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="bg-accent text-accent-foreground flex size-10 items-center justify-center rounded-xl">
+        <span className="bg-accent text-accent-foreground flex size-10 items-center justify-center rounded-md">
           <KeyRound className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
@@ -83,7 +83,7 @@ function SavedKey({ saved, onReplace }: { saved: AiSettingsView; onReplace: () =
           again to keep using the AI helper.
         </p>
       )}
-      <label className="flex items-start justify-between gap-4 rounded-xl border p-4">
+      <label className="flex items-start justify-between gap-4 rounded-md border p-4">
         <span className="text-sm">
           <span className="block font-medium">Let the AI read documents I upload</span>
           <span className="text-muted-foreground">

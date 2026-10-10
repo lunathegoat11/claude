@@ -54,17 +54,17 @@ export default async function LabsPage({
     <div>
       <PageHeader
         title="Lab results"
-        description="Every test result with the reference range printed on its own report. Compare values across dates."
+        description="Every test result you've saved, with the range printed on its own report."
         actions={
           <>
             <Button asChild variant="outline">
-              <Link href="/documents?upload=1">
-                <Upload /> Import report
+              <Link href="/labs/new">
+                <Plus /> Type in results
               </Link>
             </Button>
             <Button asChild>
-              <Link href="/labs/new">
-                <Plus /> Add results
+              <Link href="/documents?upload=1">
+                <Upload /> Add a report
               </Link>
             </Button>
           </>
@@ -78,7 +78,7 @@ export default async function LabsPage({
               <strong>
                 {pending.length} imported report{pending.length > 1 ? "s" : ""}
               </strong>{" "}
-              waiting for review. Values aren&apos;t saved until you confirm them.
+              from before results were saved automatically still need a look.
             </p>
             <Button asChild size="sm">
               <Link href={`/labs/import/${pending[0].id}`}>Review now</Link>
@@ -109,7 +109,7 @@ export default async function LabsPage({
         />
       ) : (
         <>
-          <nav className="bg-muted mb-6 inline-flex rounded-xl p-1" aria-label="Lab views">
+          <nav className="bg-muted mb-6 inline-flex rounded-md p-1" aria-label="Lab views">
             {[
               ["tests", "By test"],
               ["reports", "By report"],
@@ -140,7 +140,7 @@ export default async function LabsPage({
                     >
                       {CATEGORY_LABELS[cat]}
                     </h2>
-                    <ul className="bg-card divide-y overflow-hidden rounded-2xl border">
+                    <ul className="bg-card divide-y overflow-hidden rounded-[var(--radius)] border">
                       {grouped.get(cat)!.map((s) => {
                         const latest = toNum(s.latest.valueNumeric);
                         const prev =
@@ -156,7 +156,7 @@ export default async function LabsPage({
                               <div className="min-w-0">
                                 <div className="truncate font-medium">{s.testName}</div>
                                 <div className="text-muted-foreground text-xs">
-                                  {s.count} result{s.count === 1 ? "" : "s"} · latest{" "}
+                                  {s.count} result{s.count === 1 ? "" : "s"}, latest{" "}
                                   {formatDate(s.latest.observedAt, tz)}
                                 </div>
                               </div>
@@ -191,21 +191,21 @@ export default async function LabsPage({
             </div>
           ) : (
             <>
-              <ul className="bg-card divide-y overflow-hidden rounded-2xl border">
+              <ul className="bg-card divide-y overflow-hidden rounded-[var(--radius)] border">
                 {panels.items.map((p) => (
                   <li key={p.id}>
                     <Link
                       href={`/labs/reports/${p.id}`}
                       className="hover:bg-muted/60 flex items-center gap-4 px-4 py-4 sm:px-5"
                     >
-                      <span className="bg-accent text-accent-foreground flex size-10 shrink-0 items-center justify-center rounded-xl">
+                      <span className="bg-accent text-accent-foreground flex size-10 shrink-0 items-center justify-center rounded-md">
                         <FlaskConical className="size-5" />
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="line-clamp-2 leading-snug font-medium">{p.name}</div>
                         <div className="text-muted-foreground truncate text-sm">
                           {formatDate(p.collectedAt, tz)}
-                          {p.labName && ` · ${p.labName}`}
+                          {p.labName && `, ${p.labName}`}
                         </div>
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1">

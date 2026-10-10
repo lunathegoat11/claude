@@ -53,7 +53,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
         <ArrowLeft className="size-4" /> Lab results
       </Link>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">{history.testName}</h1>
+        <h1 className="text-2xl font-semibold">{history.testName}</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           {rows.length} result{rows.length === 1 ? "" : "s"} from{" "}
           {formatDate(rows[0].observedAt, tz)} to {formatDate(rows[rows.length - 1].observedAt, tz)}
@@ -97,7 +97,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                 points={numeric.map((r) => ({
                   at: r.observedAt.toISOString(),
                   value: toNum(r.valueNumeric)!,
-                  label: [r.labName, r.panel?.name].filter(Boolean).join(" · "),
+                  label: [r.labName, r.panel?.name].filter(Boolean).join(", "),
                   rangeText:
                     formatRange(toNum(r.refLow), toNum(r.refHigh), r.refText) || "not given",
                   notes: r.notes,
@@ -126,7 +126,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
       )}
 
       {history.description && (
-        <div className="bg-card mb-6 flex gap-3 rounded-2xl border p-4 text-sm">
+        <div className="bg-card mb-6 flex gap-3 rounded-[var(--radius)] border p-4 text-sm">
           <Info className="text-primary mt-0.5 size-4 shrink-0" />
           <p>
             <span className="font-medium">General information:</span> {history.description}{" "}
@@ -137,7 +137,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
         </div>
       )}
 
-      <div className="bg-card overflow-hidden rounded-2xl border">
+      <div className="bg-card overflow-hidden rounded-[var(--radius)] border">
         <table className="w-full text-sm">
           <caption className="sr-only">All {history.testName} results</caption>
           <thead className="bg-muted/50 text-muted-foreground border-b text-left text-xs">

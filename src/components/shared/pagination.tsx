@@ -22,7 +22,7 @@ export function Pagination({
       className="text-muted-foreground mt-6 flex items-center justify-between gap-3 text-sm"
     >
       <span className="tabular">
-        Page {page} of {pageCount} · {total} {label}
+        Page {page} of {pageCount}, {total} {label}
       </span>
       <div className="flex gap-2">
         {page > 1 ? (

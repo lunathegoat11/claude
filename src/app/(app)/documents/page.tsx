@@ -20,7 +20,7 @@ import { DOCUMENT_TYPES } from "@/lib/validation/health";
 import { formatDate, toDateInputValue } from "@/lib/format";
 import { formatBytes } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Documents" };
+export const metadata: Metadata = { title: "Reports & files" };
 
 type SP = { q?: string; type?: string; page?: string };
 
@@ -56,8 +56,8 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
   return (
     <div>
       <PageHeader
-        title="Documents"
-        description="Reports, prescriptions, discharge summaries and other files. Only you can open them."
+        title="Reports & files"
+        description="Lab reports, prescriptions, discharge summaries and other papers. Only you can open them."
         actions={upload}
       />
       <div className="mb-5">
@@ -98,7 +98,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
               <li key={d.id}>
                 <Link
                   href={`/documents/${d.id}`}
-                  className="group bg-card hover:border-primary/30 flex h-full flex-col overflow-hidden rounded-2xl border transition hover:shadow-sm"
+                  className="group bg-card hover:border-primary/30 flex h-full flex-col overflow-hidden rounded-[var(--radius)] border transition hover:shadow-sm"
                 >
                   <div className="bg-muted/60 relative flex h-32 items-center justify-center overflow-hidden border-b">
                     {isImage ? (
@@ -113,7 +113,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
                     ) : (
                       <div className="text-muted-foreground flex flex-col items-center gap-2">
                         <Icon className="size-8" strokeWidth={1.5} />
-                        <span className="text-[11px] font-medium tracking-wider uppercase">
+                        <span className="text-[11px] font-medium">
                           {d.mimeType === "application/pdf" ? "PDF" : d.mimeType.split("/")[1]}
                         </span>
                       </div>
@@ -128,7 +128,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
                     <div className="line-clamp-2 leading-snug font-medium">{d.name}</div>
                     <div className="text-muted-foreground mt-1 text-sm">
                       {DOCUMENT_TYPE_LABELS[d.type]}
-                      {d.providerName && ` · ${d.providerName}`}
+                      {d.providerName && `, ${d.providerName}`}
                     </div>
                     <div className="text-muted-foreground tabular mt-auto flex items-center justify-between pt-3 text-xs">
                       <span>

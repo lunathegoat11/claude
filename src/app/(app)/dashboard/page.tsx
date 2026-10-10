@@ -1,37 +1,19 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import {
-  Activity,
-  ArrowRight,
-  Bot,
-  CalendarClock,
-  FilePlus2,
-  FlaskConical,
-  Plus,
-  Sparkles,
-  Upload,
-} from "lucide-react";
+import { Bot, Plus, Upload } from "lucide-react";
 import { requireUser } from "@/server/auth/session";
 import { getDashboard } from "@/server/services/dashboard";
 import { listPendingImports } from "@/server/services/imports";
-import { MetricCard } from "@/components/dashboard/metric-card";
+import { getLabPanel, seriesKey } from "@/server/services/labs";
+import { MetricRow } from "@/components/dashboard/metric-card";
+import { ResultLedger } from "@/components/labs/result-ledger";
 import { TimelineList } from "@/components/timeline/timeline-list";
 import { EmptyState } from "@/components/shared/empty-state";
-import { DOCUMENT_ICONS, metricIcon } from "@/components/shared/icons";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { DOCUMENT_TYPE_LABELS } from "@/lib/catalog/labels";
-import { CONTEXT_LABELS } from "@/lib/catalog/metrics";
-import {
-  formatDate,
-  formatDateLong,
-  formatRelativeDate,
-  formatRelativeDateTime,
-} from "@/lib/format";
-import { presentMeasurement } from "@/lib/display";
+import { formatDate, formatDateLong } from "@/lib/format";
+import { toNum } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const metadata: Metadata = { title: "Home" };
 
 function greeting(tz: string) {
   const h = Number(
@@ -46,9 +28,9 @@ function SectionLink({ href, children }: { href: string; children: React.ReactNo
   return (
     <Link
       href={href}
-      className="text-primary -my-2 inline-flex min-h-10 items-center gap-1 py-2 text-[13px] font-medium hover:underline"
+      className="text-primary -my-2 inline-flex min-h-11 items-center py-2 text-[15px] font-medium underline-offset-2 hover:underline"
     >
-      {children} <ArrowRight className="size-3.5" />
+      {children}
     </Link>
   );
 }
@@ -68,79 +50,80 @@ export default async function DashboardPage({
   const firstName = user.name.split(" ")[0];
   const isEmpty = !data.cards.length && !data.timeline.length && !data.totals.documents;
 
+  const latest = data.recentPanels[0]
+    ? await getLabPanel(user.id, data.recentPanels[0].id).catch(() => null)
+    : null;
+  const latestRows = latest
+    ? [...latest.results]
+        // Results outside the printed range first, then the rest in report order.
+        .sort((a, b) => Number(isOut(b.flag)) - Number(isOut(a.flag)))
+        .slice(0, 6)
+    : [];
+  const readings = data.cards.filter((c) => c.kind === "measurement");
+  const labTrends = data.cards.filter((c) => c.kind === "lab");
+  const latestDoc = latest?.document && !latest.document.deletedAt ? latest.document : null;
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-10">
+      <header className="flex flex-col gap-5 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-muted-foreground text-sm">{formatDateLong(new Date(), tz)}</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-[28px]">
+          <h1 className="text-[2rem] font-semibold sm:text-[2.5rem]">
             {sp.welcome ? `Welcome, ${firstName}` : `${greeting(tz)}, ${firstName}`}
           </h1>
+          <p className="text-muted-foreground mt-1">{formatDateLong(new Date(), tz)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button asChild>
-            <Link href="/tracking?add=1">
-              <Plus /> Add reading
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/labs/new">
-              <FlaskConical /> Add lab result
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
+          <Button asChild size="lg">
             <Link href="/documents?upload=1">
-              <Upload /> Upload
+              <Upload /> Add a report
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link href="/tracking?add=1">
+              <Plus /> Add a reading
             </Link>
           </Button>
         </div>
-      </div>
+      </header>
 
       {user.isDemo && (
-        <div className="border-warning/50 bg-warning/6 flex items-start gap-3 rounded-2xl border border-dashed px-4 py-3 text-sm">
-          <Sparkles className="text-warning mt-0.5 size-4 shrink-0" />
-          <p>
-            You&apos;re viewing a <strong>demo account</strong> with a fictional patient, Ananya
-            Sharma. All data here is sample data and not real medical information.
-          </p>
-        </div>
+        <p className="border-marigold text-muted-foreground border-l-[3px] pl-3 text-[15px]">
+          This is the demo account. Ananya Sharma is a made-up patient and none of these results are
+          real.
+        </p>
       )}
 
       {pending.length > 0 && (
-        <Card className="border-primary/30 bg-accent/40">
-          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-            <div className="flex items-start gap-3">
-              <FlaskConical className="text-primary mt-0.5 size-5" />
-              <div>
-                <p className="font-medium">Lab values are waiting for your review</p>
-                <p className="text-muted-foreground text-sm">
-                  We found possible results in “{pending[0].document?.name}”. Nothing is saved until
-                  you confirm.
-                </p>
-              </div>
-            </div>
-            <Button asChild size="sm">
-              <Link href={`/labs/import/${pending[0].id}`}>Review values</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="bg-card flex flex-col gap-3 rounded-[var(--radius)] border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            <span className="font-medium">
+              Values from “{pending[0].document?.name}” need a look.
+            </span>{" "}
+            <span className="text-muted-foreground">
+              They were read before results were saved automatically.
+            </span>
+          </p>
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/labs/import/${pending[0].id}`}>Review them</Link>
+          </Button>
+        </div>
       )}
 
       {isEmpty ? (
         <EmptyState
-          icon={Activity}
-          title="Let's start your health record"
-          description="Add a blood pressure or sugar reading, enter a lab report, or upload a prescription. Your dashboard will fill in as you go."
+          icon={Upload}
+          title="Start with a lab report"
+          description="Upload a PDF or take a photo of a report. Kosha reads every test result and saves it with the report's date, so you can see how your numbers change."
           action={
             <>
               <Button asChild>
-                <Link href="/tracking?add=1">
-                  <Plus /> Add first reading
+                <Link href="/documents?upload=1">
+                  <Upload /> Add a report
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href="/documents?upload=1">
-                  <Upload /> Upload a document
+                <Link href="/tracking?add=1">
+                  <Plus /> Add a reading
                 </Link>
               </Button>
             </>
@@ -148,216 +131,151 @@ export default async function DashboardPage({
         />
       ) : (
         <>
-          <section aria-labelledby="overview">
-            <div className="mb-3 flex items-baseline justify-between">
-              <h2 id="overview" className="text-base font-semibold">
-                Overview
-              </h2>
-              <SectionLink href="/tracking">All measurements</SectionLink>
-            </div>
-            {data.cards.length ? (
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {data.cards.map((c) => (
-                  <MetricCard
-                    key={`${c.kind}-${c.key}`}
-                    card={c}
-                    prefs={user.prefs}
-                    timezone={tz}
-                  />
-                ))}
+          {latest && (
+            <section aria-labelledby="latest-report">
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+                <div>
+                  <p className="text-muted-foreground text-[15px]">Your latest report</p>
+                  <h2 id="latest-report" className="text-2xl font-semibold">
+                    {latest.name}
+                  </h2>
+                  <p className="text-muted-foreground text-[15px]">
+                    {formatDate(latest.collectedAt, tz)}
+                    {latest.labName && `, ${latest.labName}`}
+                    {latestDoc && (
+                      <>
+                        {". From "}
+                        <Link
+                          href={`/documents/${latestDoc.id}`}
+                          className="hover:text-foreground underline underline-offset-2"
+                        >
+                          {latestDoc.name}
+                        </Link>
+                      </>
+                    )}
+                  </p>
+                </div>
+                <SectionLink href={`/labs/reports/${latest.id}`}>
+                  {latest.results.length > latestRows.length
+                    ? `All ${latest.results.length} results`
+                    : "Open report"}
+                </SectionLink>
               </div>
-            ) : (
-              <EmptyState
-                compact
-                icon={Activity}
-                title="No measurements yet"
-                description="Readings you record will appear here with their trends."
-                action={
-                  <Button asChild size="sm">
-                    <Link href="/tracking?add=1">
-                      <Plus /> Add reading
-                    </Link>
-                  </Button>
-                }
-              />
-            )}
-          </section>
+              <div className="bg-card rounded-[var(--radius)] border">
+                <ResultLedger
+                  label={`Results from ${latest.name}`}
+                  results={latestRows.map((r) => ({
+                    id: r.id,
+                    testName: r.testName,
+                    href: `/labs/tests/${encodeURIComponent(seriesKey(r))}`,
+                    value: toNum(r.valueNumeric),
+                    valueText: r.valueText,
+                    unit: r.unit,
+                    refLow: toNum(r.refLow),
+                    refHigh: toNum(r.refHigh),
+                    refText: r.refText,
+                    flag: r.flag,
+                    notes: r.notes,
+                  }))}
+                />
+              </div>
+            </section>
+          )}
 
-          <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr] [&>*]:min-w-0">
-            <Card>
-              <CardHeader className="flex-row items-baseline justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <CalendarClock className="text-primary size-4" /> Recent health events
-                </CardTitle>
-                <SectionLink href="/timeline">Full timeline</SectionLink>
-              </CardHeader>
-              <CardContent>
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+            <div className="space-y-10">
+              <section aria-labelledby="readings">
+                <div className="mb-3 flex items-end justify-between">
+                  <h2 id="readings" className="text-xl font-semibold">
+                    Readings
+                  </h2>
+                  <SectionLink href="/tracking">All readings</SectionLink>
+                </div>
+                {readings.length ? (
+                  <ul className="bg-card divide-y rounded-[var(--radius)] border">
+                    {readings.map((c) => (
+                      <MetricRow key={c.key} card={c} prefs={user.prefs} timezone={tz} />
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground">
+                    No readings yet.{" "}
+                    <Link
+                      href="/tracking?add=1"
+                      className="text-primary font-medium underline-offset-2 hover:underline"
+                    >
+                      Add your blood pressure, sugar or weight
+                    </Link>
+                    .
+                  </p>
+                )}
+              </section>
+
+              {labTrends.length > 0 && (
+                <section aria-labelledby="lab-trends">
+                  <div className="mb-3 flex items-end justify-between">
+                    <h2 id="lab-trends" className="text-xl font-semibold">
+                      Tests over time
+                    </h2>
+                    <SectionLink href="/labs">All lab results</SectionLink>
+                  </div>
+                  <ul className="bg-card divide-y rounded-[var(--radius)] border">
+                    {labTrends.map((c) => (
+                      <MetricRow key={c.key} card={c} prefs={user.prefs} timezone={tz} />
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </div>
+
+            <div className="space-y-10">
+              <section aria-labelledby="recent">
+                <div className="mb-3 flex items-end justify-between">
+                  <h2 id="recent" className="text-xl font-semibold">
+                    Recently added
+                  </h2>
+                  <SectionLink href="/timeline">Timeline</SectionLink>
+                </div>
                 {data.timeline.length ? (
                   <TimelineList events={data.timeline} timezone={tz} compact />
                 ) : (
-                  <p className="text-muted-foreground py-6 text-center text-sm">
-                    Doctor visits, lab reports and documents will appear here.
+                  <p className="text-muted-foreground">
+                    Visits, reports and files you add will appear here in date order.
                   </p>
                 )}
-              </CardContent>
-            </Card>
+              </section>
 
-            <div className="space-y-6">
-              <Card>
-                <CardHeader className="flex-row items-baseline justify-between">
-                  <CardTitle>Recent lab reports</CardTitle>
-                  <SectionLink href="/labs">Lab results</SectionLink>
-                </CardHeader>
-                <CardContent className="space-y-1">
-                  {data.recentPanels.length ? (
-                    data.recentPanels.map((p) => (
-                      <Link
-                        key={p.id}
-                        href={`/labs/reports/${p.id}`}
-                        className="hover:bg-muted -mx-2 flex items-center justify-between gap-3 rounded-xl px-2 py-2.5"
-                      >
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-medium">{p.name}</div>
-                          <div className="text-muted-foreground truncate text-xs">
-                            {formatDate(p.collectedAt, tz)}
-                            {p.labName && ` · ${p.labName}`}
-                          </div>
-                        </div>
-                        {p.flagged > 0 ? (
-                          <Badge variant="warning">{p.flagged} outside range</Badge>
-                        ) : (
-                          <Badge variant="secondary">{p.total} results</Badge>
-                        )}
-                      </Link>
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground py-3 text-sm">No lab reports yet.</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex-row items-baseline justify-between">
-                  <CardTitle>Recent measurements</CardTitle>
-                  <SectionLink href="/tracking">Tracking</SectionLink>
-                </CardHeader>
-                <CardContent className="space-y-1">
-                  {data.recentMeasurements.length ? (
-                    data.recentMeasurements.map((m) => {
-                      const Icon = metricIcon(m.metric.key);
-                      const pres = presentMeasurement(
-                        { ...m.metric, unit: m.unit },
-                        m.value,
-                        m.value2,
-                        user.prefs,
-                      );
-                      return (
+              <section
+                aria-labelledby="ask"
+                className="border-primary/25 bg-accent/50 rounded-[var(--radius)] border p-5"
+              >
+                <h2 id="ask" className="text-lg font-semibold">
+                  Ask about your records
+                </h2>
+                <p className="text-muted-foreground mt-1 text-[15px]">
+                  For example, “How has my HbA1c changed?” Answers come only from what you&apos;ve
+                  saved, with links to the reports.
+                </p>
+                <Button asChild variant="outline" className="mt-4">
+                  <Link href="/assistant">
+                    <Bot /> Ask Kosha
+                  </Link>
+                </Button>
+                {data.recentConversations.length > 0 && (
+                  <ul className="mt-4 space-y-1 border-t pt-3">
+                    {data.recentConversations.slice(0, 3).map((c) => (
+                      <li key={c.id}>
                         <Link
-                          key={m.id}
-                          href={`/tracking/${m.metric.key}`}
-                          className="hover:bg-muted -mx-2 flex items-center gap-3 rounded-xl px-2 py-2"
+                          href={`/assistant/${c.id}`}
+                          className="hover:text-primary block truncate py-1 text-[15px]"
                         >
-                          <Icon className="text-muted-foreground size-4 shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm">
-                              {m.metric.name}
-                              {m.context && (
-                                <span className="text-muted-foreground">
-                                  {" "}
-                                  · {CONTEXT_LABELS[m.context] ?? m.context}
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-muted-foreground text-xs">
-                              {formatRelativeDateTime(m.measuredAt, new Date(), tz)}
-                            </div>
-                          </div>
-                          <div className="tabular text-sm font-semibold">
-                            {pres.text}{" "}
-                            <span className="text-muted-foreground font-normal">{pres.unit}</span>
-                          </div>
+                          {c.title}
                         </Link>
-                      );
-                    })
-                  ) : (
-                    <p className="text-muted-foreground py-3 text-sm">No readings yet.</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex-row items-baseline justify-between">
-                  <CardTitle>Recent uploads</CardTitle>
-                  <SectionLink href="/documents">Documents</SectionLink>
-                </CardHeader>
-                <CardContent className="space-y-1">
-                  {data.recentDocuments.length ? (
-                    data.recentDocuments.map((d) => {
-                      const Icon = DOCUMENT_ICONS[d.type];
-                      return (
-                        <Link
-                          key={d.id}
-                          href={`/documents/${d.id}`}
-                          className="hover:bg-muted -mx-2 flex items-center gap-3 rounded-xl px-2 py-2"
-                        >
-                          <span className="bg-muted flex size-8 items-center justify-center rounded-lg">
-                            <Icon className="text-muted-foreground size-4" />
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm font-medium">{d.name}</div>
-                            <div className="text-muted-foreground text-xs">
-                              {DOCUMENT_TYPE_LABELS[d.type]} ·{" "}
-                              {formatRelativeDate(d.createdAt, new Date(), tz)}
-                            </div>
-                          </div>
-                        </Link>
-                      );
-                    })
-                  ) : (
-                    <Link
-                      href="/documents?upload=1"
-                      className="text-primary flex items-center gap-2 py-2 text-sm"
-                    >
-                      <FilePlus2 className="size-4" /> Upload your first document
-                    </Link>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex-row items-baseline justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Bot className="text-primary size-4" /> Recent AI summaries
-                  </CardTitle>
-                  <SectionLink href="/assistant">Assistant</SectionLink>
-                </CardHeader>
-                <CardContent className="space-y-1">
-                  {data.recentConversations.length ? (
-                    data.recentConversations.map((c) => (
-                      <Link
-                        key={c.id}
-                        href={`/assistant/${c.id}`}
-                        className="hover:bg-muted -mx-2 block rounded-xl px-2 py-2"
-                      >
-                        <div className="truncate text-sm font-medium">{c.title}</div>
-                        <div className="text-muted-foreground line-clamp-1 text-xs">
-                          {c.messages[0]?.content
-                            .replace(/\[[A-Z]\d{1,3}\]/g, "")
-                            .replace(/[*>#]/g, "")
-                            .slice(0, 120) ?? "No answer yet"}
-                        </div>
-                      </Link>
-                    ))
-                  ) : (
-                    <Link
-                      href="/assistant"
-                      className="text-primary flex items-center gap-2 py-2 text-sm"
-                    >
-                      <Sparkles className="size-4" /> Ask about your records
-                    </Link>
-                  )}
-                </CardContent>
-              </Card>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             </div>
           </div>
         </>
@@ -365,3 +283,5 @@ export default async function DashboardPage({
     </div>
   );
 }
+
+const isOut = (flag: string) => flag === "HIGH" || flag === "LOW" || flag === "ABNORMAL";

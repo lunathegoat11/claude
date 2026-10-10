@@ -51,7 +51,9 @@ function Section({
         <Icon className="text-primary size-4" /> {title}{" "}
         <span className="text-muted-foreground font-normal">{count}</span>
       </h2>
-      <ul className="bg-card divide-y overflow-hidden rounded-2xl border">{children}</ul>
+      <ul className="bg-card divide-y overflow-hidden rounded-[var(--radius)] border">
+        {children}
+      </ul>
     </section>
   );
 }
@@ -168,7 +170,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                     <div className="font-medium">{r.displayName}</div>
                     <div className="text-muted-foreground text-xs">
                       {formatDate(r.observedAt, tz)}
-                      {r.labName && ` · ${r.labName}`}
+                      {r.labName && `, ${r.labName}`}
                     </div>
                   </div>
                   <div className="text-right text-sm">
@@ -207,7 +209,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                         {m.context && (
                           <span className="text-muted-foreground font-normal">
                             {" "}
-                            · {CONTEXT_LABELS[m.context] ?? m.context}
+                            , {CONTEXT_LABELS[m.context] ?? m.context}
                           </span>
                         )}
                       </div>
@@ -237,7 +239,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                   <div className="text-muted-foreground text-xs">
                     {r.typeLabel}
                     {(r.doctorName || r.facilityName) &&
-                      ` · ${[r.doctorName, r.facilityName].filter(Boolean).join(", ")}`}
+                      `, ${[r.doctorName, r.facilityName].filter(Boolean).join(", ")}`}
                   </div>
                 </Link>
               </li>
@@ -255,7 +257,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                   </div>
                   <div className="text-muted-foreground text-xs">
                     {DOCUMENT_TYPE_LABELS[d.type]}
-                    {d.providerName && ` · ${d.providerName}`}
+                    {d.providerName && `, ${d.providerName}`}
                   </div>
                   {d.snippet && (
                     <p className="text-muted-foreground mt-1 line-clamp-2 text-[13px]">
@@ -277,7 +279,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                     <div className="font-medium">{p.name}</div>
                     <div className="text-muted-foreground text-xs">
                       {PROVIDER_TYPE_LABELS[p.type]}
-                      {p.city && ` · ${p.city}`}
+                      {p.city && `, ${p.city}`}
                     </div>
                   </div>
                   <Badge variant="secondary">

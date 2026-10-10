@@ -1,13 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import "@fontsource/mukta/400.css";
+import "@fontsource/mukta/500.css";
+import "@fontsource/mukta/600.css";
+import "@fontsource/mukta/700.css";
+import "@fontsource-variable/anek-latin/wdth.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Kosha — your health records in one place", template: "%s · Kosha" },
+  title: { default: "Kosha — your health records in one place", template: "%s – Kosha" },
   description:
     "Securely organise your medical records, track health measurements, understand your lab results, and see your health history over time.",
   applicationName: "Kosha",
@@ -22,18 +25,14 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8f9fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#16181d" },
+    { media: "(prefers-color-scheme: light)", color: "#eff2ec" },
+    { media: "(prefers-color-scheme: dark)", color: "#11151f" },
   ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en-IN"
-      suppressHydrationWarning
-      className={`${GeistSans.variable} ${GeistMono.variable}`}
-    >
+    <html lang="en-IN" suppressHydrationWarning>
       <body className="min-h-dvh">
         <ThemeProvider>
           <TooltipProvider delayDuration={300}>
@@ -42,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               position="top-center"
               richColors
               closeButton
-              toastOptions={{ className: "!rounded-xl" }}
+              toastOptions={{ className: "!rounded-md" }}
             />
           </TooltipProvider>
         </ThemeProvider>

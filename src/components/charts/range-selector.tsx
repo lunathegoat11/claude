@@ -18,7 +18,7 @@ export function RangeSelector({
   makeHref: (range: string) => string;
 }) {
   return (
-    <nav aria-label="Time range" className="bg-muted inline-flex rounded-xl p-1">
+    <nav aria-label="Time range" className="bg-muted inline-flex rounded-md p-1">
       {RANGE_OPTIONS.map((o) => (
         <Link
           key={o.key}

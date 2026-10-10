@@ -71,7 +71,7 @@ export function RecordForm({
             <label
               key={t}
               className={cn(
-                "has-[:focus-visible]:ring-ring/30 flex cursor-pointer items-center justify-center rounded-xl border px-2 py-2.5 text-center text-[13px] font-medium transition has-[:focus-visible]:ring-3",
+                "has-[:focus-visible]:ring-ring/30 flex cursor-pointer items-center justify-center rounded-md border px-2 py-2.5 text-center text-[13px] font-medium transition has-[:focus-visible]:ring-3",
                 type === t ? "border-primary bg-accent text-accent-foreground" : "hover:bg-muted",
               )}
             >
@@ -115,7 +115,7 @@ export function RecordForm({
         </Field>
       </div>
 
-      <div className="rounded-2xl border">
+      <div className="rounded-[var(--radius)] border">
         <button
           type="button"
           onClick={() => setShowDetails((v) => !v)}

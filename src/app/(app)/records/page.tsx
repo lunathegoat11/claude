@@ -16,7 +16,7 @@ import { RECORD_TYPES } from "@/lib/validation/health";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Medical records" };
+export const metadata: Metadata = { title: "Visits & history" };
 
 type SP = { q?: string; type?: string; tag?: string; sort?: string; page?: string; view?: string };
 
@@ -48,8 +48,8 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
   return (
     <div>
       <PageHeader
-        title="Medical records"
-        description="Doctor visits, diagnoses, procedures, prescriptions, vaccinations and more — in one place."
+        title="Visits & history"
+        description="Doctor visits, diagnoses, procedures, prescriptions and vaccinations, by date."
         actions={
           <Button asChild>
             <Link href="/records/new">
@@ -99,7 +99,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
           />
         </FilterBar>
         <div
-          className="bg-muted inline-flex self-start rounded-xl p-1"
+          className="bg-muted inline-flex self-start rounded-md p-1"
           role="group"
           aria-label="View"
         >
@@ -155,7 +155,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
       ) : view === "timeline" ? (
         <RecordsTimeline items={items} tz={user.timezone} />
       ) : (
-        <ul className="bg-card divide-y overflow-hidden rounded-2xl border">
+        <ul className="bg-card divide-y overflow-hidden rounded-[var(--radius)] border">
           {items.map((r) => {
             const Icon = RECORD_ICONS[r.type];
             return (
@@ -164,7 +164,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
                   href={`/records/${r.id}`}
                   className="hover:bg-muted/60 flex items-start gap-4 px-4 py-4 transition-colors sm:px-5"
                 >
-                  <span className="bg-accent text-accent-foreground mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl">
+                  <span className="bg-accent text-accent-foreground mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-md">
                     <Icon className="size-5" />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -175,7 +175,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
                     <div className="text-muted-foreground mt-0.5 text-sm">
                       {RECORD_TYPE_LABELS[r.type]}
                       {(r.doctorName || r.facilityName) && (
-                        <> · {[r.doctorName, r.facilityName].filter(Boolean).join(", ")}</>
+                        <>, {[r.doctorName, r.facilityName].filter(Boolean).join(", ")}</>
                       )}
                     </div>
                     {r.tags.length > 0 && (
@@ -240,15 +240,15 @@ function RecordsTimeline({
                   </span>
                   <Link
                     href={`/records/${r.id}`}
-                    className="bg-card hover:border-primary/30 block rounded-2xl border p-4 transition hover:shadow-sm"
+                    className="bg-card hover:border-primary/30 block rounded-[var(--radius)] border p-4 transition hover:shadow-sm"
                   >
-                    <div className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                      {formatDate(r.date, tz)} · {RECORD_TYPE_LABELS[r.type]}
+                    <div className="text-muted-foreground text-xs font-medium">
+                      {formatDate(r.date, tz)}, {RECORD_TYPE_LABELS[r.type]}
                     </div>
                     <div className="mt-1 font-medium">{r.title}</div>
                     {(r.doctorName || r.facilityName) && (
                       <div className="text-muted-foreground mt-0.5 text-sm">
-                        {[r.doctorName, r.facilityName].filter(Boolean).join(" · ")}
+                        {[r.doctorName, r.facilityName].filter(Boolean).join(", ")}
                       </div>
                     )}
                     {r.notes && (

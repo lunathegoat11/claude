@@ -1,40 +1,41 @@
 import Link from "next/link";
-import { Lock, ShieldCheck, FileHeart } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_minmax(420px,520px)]">
-      <div className="bg-card relative hidden overflow-hidden border-r lg:flex lg:flex-col lg:justify-between lg:p-12">
+      <div className="bg-sidebar relative hidden border-r lg:flex lg:flex-col lg:justify-between lg:p-12">
         <Link href="/" aria-label="Kosha home">
           <Logo />
         </Link>
-        <div className="max-w-md space-y-8">
-          <h2 className="text-3xl leading-tight font-semibold tracking-tight text-balance">
-            All of your important health information, in one calm place.
+        <div className="max-w-md">
+          <h2 className="text-[2.5rem] leading-[1.05] font-semibold text-balance">
+            Your family&apos;s health file, kept in order.
           </h2>
-          <ul className="text-muted-foreground space-y-5 text-[15px]">
-            <li className="flex gap-3">
-              <FileHeart className="text-primary mt-0.5 size-5 shrink-0" /> Reports, prescriptions
-              and discharge summaries organised by date.
-            </li>
-            <li className="flex gap-3">
-              <ShieldCheck className="text-primary mt-0.5 size-5 shrink-0" /> Your records are
-              private to your account. Nothing is shared without you.
-            </li>
-            <li className="flex gap-3">
-              <Lock className="text-primary mt-0.5 size-5 shrink-0" /> Passwords are hashed with
-              Argon2id and sessions are server-verified.
-            </li>
-          </ul>
+          <dl className="mt-10 divide-y border-y text-[15px]">
+            <div className="py-3.5">
+              <dt className="font-semibold">Reports read for you</dt>
+              <dd className="text-muted-foreground">
+                Every result saved with the lab&apos;s name and the report&apos;s date.
+              </dd>
+            </div>
+            <div className="py-3.5">
+              <dt className="font-semibold">Private to your account</dt>
+              <dd className="text-muted-foreground">
+                Nothing is shared with hospitals, insurers or anyone else.
+              </dd>
+            </div>
+            <div className="py-3.5">
+              <dt className="font-semibold">Yours to take away</dt>
+              <dd className="text-muted-foreground">
+                Download everything, or delete your account, whenever you like.
+              </dd>
+            </div>
+          </dl>
         </div>
-        <p className="text-muted-foreground text-xs">
-          Kosha organises information and does not provide medical advice.
+        <p className="text-muted-foreground text-[13px]">
+          Kosha keeps records in order. It does not give medical advice.
         </p>
-        <div
-          aria-hidden
-          className="bg-primary/6 pointer-events-none absolute -top-24 -right-24 size-96 rounded-full blur-3xl"
-        />
       </div>
       <div className="flex flex-col px-5 py-8 sm:px-10">
         <Link href="/" className="mb-10 lg:hidden" aria-label="Kosha home">

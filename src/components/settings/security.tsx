@@ -100,7 +100,7 @@ export function DeleteAccountForm({ disabled }: { disabled?: boolean }) {
     >
       <form
         onSubmit={onSubmit}
-        className="border-destructive/30 bg-destructive/4 space-y-4 rounded-2xl border p-4"
+        className="border-destructive/30 bg-destructive/4 space-y-4 rounded-[var(--radius)] border p-4"
         noValidate
       >
         {state.error && !state.fieldErrors && <FormError message={state.error} />}

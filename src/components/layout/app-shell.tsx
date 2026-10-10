@@ -26,7 +26,7 @@ export function AppShell({
       </a>
       <Sidebar />
       <div className="lg:pl-64">
-        <header className="bg-background/85 sticky top-0 z-20 border-b backdrop-blur-lg">
+        <header className="bg-background sticky top-0 z-20 border-b">
           <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
             <Link href="/dashboard" className="lg:hidden" aria-label="Kosha dashboard">
               <LogoMark />

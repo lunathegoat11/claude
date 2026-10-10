@@ -160,7 +160,7 @@ export function UploadDialog({
   return (
     <>
       <Button onClick={() => setOpen(true)}>
-        <Upload /> Upload document
+        <Upload /> Add a report
       </Button>
       <Dialog
         open={open}
@@ -174,7 +174,7 @@ export function UploadDialog({
       >
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Upload a document</DialogTitle>
+            <DialogTitle>Add a report or file</DialogTitle>
             <DialogDescription>
               A PDF or a photo, up to {maxMb} MB. Test results on lab reports are read and saved for
               you, with the report&apos;s name and date.
@@ -185,7 +185,7 @@ export function UploadDialog({
             {quality && (
               <div
                 role="alert"
-                className="border-warning/40 bg-warning/10 space-y-3 rounded-xl border p-4 text-sm"
+                className="border-warning/40 bg-warning/10 space-y-3 rounded-md border p-4 text-sm"
               >
                 <p className="flex gap-2 font-medium">
                   <Camera className="text-warning mt-0.5 size-4 shrink-0" /> {quality}
@@ -213,11 +213,11 @@ export function UploadDialog({
                   pick(e.dataTransfer.files?.[0]);
                 }}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-4 py-10 text-center transition",
+                  "flex flex-col items-center justify-center gap-3 rounded-[var(--radius)] border-2 border-dashed px-4 py-10 text-center transition",
                   dragging ? "border-primary bg-accent" : "border-input",
                 )}
               >
-                <span className="bg-accent text-accent-foreground flex size-12 items-center justify-center rounded-2xl">
+                <span className="bg-accent text-accent-foreground flex size-12 items-center justify-center rounded-[var(--radius)]">
                   <FileUp className="size-6" />
                 </span>
                 <div className="text-sm">
@@ -237,7 +237,7 @@ export function UploadDialog({
                 />
               </div>
             ) : (
-              <div className="bg-muted/50 flex items-center gap-3 rounded-xl border px-3 py-2.5">
+              <div className="bg-muted/50 flex items-center gap-3 rounded-md border px-3 py-2.5">
                 <FileUp className="text-primary size-5" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{file.name}</div>

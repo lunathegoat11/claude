@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ArrowUp, Bot, Info, Loader2, ShieldAlert, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowUp, Bot, Info, Loader2, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { askAction } from "@/actions/assistant";
 import type { Citation } from "@/server/ai/types";
@@ -21,21 +21,18 @@ export interface ChatMessage {
 }
 
 const SUGGESTIONS = [
-  "What were my glucose readings over the last month?",
-  "Summarize my recent blood tests.",
   "What changed between my last two lab reports?",
   "Show me my HbA1c trend.",
-  "What documents mention my blood pressure?",
-  "Summarize my recent doctor visits.",
+  "What were my sugar readings over the last month?",
   "What questions could I ask my doctor at my next visit?",
   "What does TSH measure?",
 ];
 
 function providerLabel(p: string | null) {
-  if (p === "demo") return "Grounded summary · built directly from your records";
+  if (p === "demo") return "Summary built from your records";
   if (p === "safety") return "Safety notice";
-  if (p === "anthropic") return "AI-generated · Claude";
-  if (p === "openai") return "AI-generated";
+  if (p === "anthropic") return "Written by Claude from your records";
+  if (p === "openai") return "Written by ChatGPT from your records";
   return "AI-generated";
 }
 
@@ -148,35 +145,31 @@ export function Chat({
     <div className="flex min-h-[calc(100dvh-14rem)] flex-col lg:min-h-[calc(100dvh-12rem)]">
       <div className="flex-1 space-y-6 pb-6" aria-live="polite">
         {messages.length === 0 && (
-          <div className="mx-auto max-w-2xl py-6 text-center">
-            <span className="bg-accent text-accent-foreground mx-auto flex size-12 items-center justify-center rounded-2xl">
-              <Sparkles className="size-6" />
-            </span>
-            <h2 className="mt-4 text-xl font-semibold tracking-tight">
-              Ask about your health records
-            </h2>
-            <p className="text-muted-foreground mx-auto mt-2 max-w-md text-sm">
-              Answers are based only on what&apos;s in your records, with links to the source. The
-              assistant explains and organises — it does not diagnose or give medical advice.
+          <div className="max-w-2xl py-2">
+            <p className="text-muted-foreground">
+              Answers come only from what you&apos;ve saved, with links to the reports they came
+              from. Kosha explains and organises; it doesn&apos;t diagnose or give medical advice.
             </p>
-            <div className="mt-6 grid gap-2 text-left sm:grid-cols-2">
+            <h2 className="mt-6 text-lg font-semibold">Try asking</h2>
+            <ul className="mt-2 divide-y border-y">
               {SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => send(s)}
-                  className="bg-card hover:border-primary/40 hover:bg-accent/40 rounded-xl border px-3.5 py-3 text-sm transition"
-                >
-                  {s}
-                </button>
+                <li key={s}>
+                  <button
+                    type="button"
+                    onClick={() => send(s)}
+                    className="hover:text-primary w-full py-3 text-left text-[15px] transition-colors"
+                  >
+                    {s}
+                  </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
         {messages.map((m) =>
           m.role === "USER" ? (
             <div key={m.id} className="flex justify-end">
-              <div className="bg-primary text-primary-foreground max-w-[85%] rounded-2xl rounded-br-md px-4 py-2.5 text-[15px] whitespace-pre-wrap">
+              <div className="bg-primary text-primary-foreground max-w-[85%] rounded-[var(--radius)] rounded-br-md px-4 py-2.5 text-[15px] whitespace-pre-wrap">
                 {m.content}
               </div>
             </div>
@@ -184,7 +177,7 @@ export function Chat({
             <div key={m.id} className="flex gap-3" data-role="assistant">
               <span
                 className={cn(
-                  "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl",
+                  "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md",
                   m.safety?.emergency
                     ? "bg-destructive/10 text-destructive"
                     : "bg-accent text-accent-foreground",
@@ -198,11 +191,11 @@ export function Chat({
               </span>
               <div
                 className={cn(
-                  "bg-card min-w-0 flex-1 rounded-2xl rounded-tl-md border px-4 py-3",
+                  "bg-card min-w-0 flex-1 rounded-[var(--radius)] rounded-tl-md border px-4 py-3",
                   m.safety?.emergency && "border-destructive/40",
                 )}
               >
-                <div className="text-muted-foreground mb-2 text-[11px] font-medium tracking-wide uppercase">
+                <div className="text-muted-foreground mb-2 text-[11px] font-medium">
                   {providerLabel(m.provider)}
                 </div>
                 <MessageContent content={m.content} citations={m.citations} />
@@ -213,10 +206,10 @@ export function Chat({
         )}
         {pending && (
           <div className="flex gap-3">
-            <span className="bg-accent text-accent-foreground flex size-8 items-center justify-center rounded-xl">
+            <span className="bg-accent text-accent-foreground flex size-8 items-center justify-center rounded-md">
               <Bot className="size-4" />
             </span>
-            <div className="bg-card text-muted-foreground flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm">
+            <div className="bg-card text-muted-foreground flex items-center gap-2 rounded-[var(--radius)] border px-4 py-3 text-sm">
               <Loader2 className="size-4 animate-spin" /> Looking through your records…
             </div>
           </div>
@@ -229,7 +222,7 @@ export function Chat({
           e.preventDefault();
           send(input);
         }}
-        className="bg-card sticky bottom-20 rounded-2xl border p-2 shadow-lg shadow-black/[0.04] lg:bottom-4"
+        className="bg-card sticky bottom-20 rounded-[var(--radius)] border p-2 shadow-lg shadow-black/[0.04] lg:bottom-4"
       >
         <label htmlFor="ask" className="sr-only">
           Ask about your records
@@ -248,7 +241,7 @@ export function Chat({
             }}
             rows={1}
             maxLength={2000}
-            placeholder="Ask about your readings, lab results, documents or visits…"
+            placeholder="Ask about your records…"
             className="placeholder:text-muted-foreground max-h-40 min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 text-[15px] outline-none"
           />
           <Button type="submit" size="icon" disabled={pending || !input.trim()} aria-label="Send">

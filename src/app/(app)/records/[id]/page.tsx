@@ -42,19 +42,19 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
         href="/records"
         className="text-muted-foreground hover:text-foreground -my-2 mb-3 inline-flex min-h-11 items-center gap-1.5 py-2 text-sm"
       >
-        <ArrowLeft className="size-4" /> Records
+        <ArrowLeft className="size-4" /> Visits & history
       </Link>
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
-          <span className="bg-accent text-accent-foreground flex size-12 shrink-0 items-center justify-center rounded-2xl">
+          <span className="bg-accent text-accent-foreground flex size-12 shrink-0 items-center justify-center rounded-[var(--radius)]">
             <Icon className="size-6" />
           </span>
           <div>
             <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
               {RECORD_TYPE_LABELS[r.type]} {r.isDemo && <Badge variant="demo">Sample data</Badge>}
             </div>
-            <h1 className="mt-0.5 text-2xl font-semibold tracking-tight text-balance">{r.title}</h1>
+            <h1 className="mt-0.5 text-2xl font-semibold text-balance">{r.title}</h1>
           </div>
         </div>
         <div className="flex gap-2">
@@ -94,7 +94,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
             <Detail
               icon={Stethoscope}
               label="Doctor"
-              value={[r.doctorName, r.specialty].filter(Boolean).join(" · ")}
+              value={[r.doctorName, r.specialty].filter(Boolean).join(", ")}
             />
           )}
           {!r.doctorName && r.specialty && (
@@ -145,7 +145,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                   <li key={d.id}>
                     <Link
                       href={`/documents/${d.id}`}
-                      className="hover:bg-muted -mx-2 flex items-center gap-3 rounded-xl px-2 py-2.5"
+                      className="hover:bg-muted -mx-2 flex items-center gap-3 rounded-md px-2 py-2.5"
                     >
                       <span className="bg-muted flex size-9 items-center justify-center rounded-lg">
                         <DIcon className="text-muted-foreground size-4" />
@@ -153,7 +153,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">{d.name}</div>
                         <div className="text-muted-foreground text-xs">
-                          {DOCUMENT_TYPE_LABELS[d.type]} · {formatBytes(d.sizeBytes)}
+                          {DOCUMENT_TYPE_LABELS[d.type]}, {formatBytes(d.sizeBytes)}
                         </div>
                       </div>
                     </Link>
@@ -170,7 +170,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
         </CardContent>
       </Card>
       <p className="text-muted-foreground mt-6 text-xs">
-        Created {formatDateTime(r.createdAt, tz)} · Last updated {formatDateTime(r.updatedAt, tz)}
+        Created {formatDateTime(r.createdAt, tz)}, Last updated {formatDateTime(r.updatedAt, tz)}
       </p>
     </div>
   );

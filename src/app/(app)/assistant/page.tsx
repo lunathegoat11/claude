@@ -4,7 +4,7 @@ import { listConversations } from "@/server/services/assistant";
 import { AssistantLayout } from "@/components/assistant/assistant-layout";
 import { Chat } from "@/components/assistant/chat";
 
-export const metadata: Metadata = { title: "AI Health Assistant" };
+export const metadata: Metadata = { title: "Ask Kosha" };
 
 export default async function AssistantPage() {
   const user = await requireUser();

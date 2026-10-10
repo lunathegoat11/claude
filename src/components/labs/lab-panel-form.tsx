@@ -280,7 +280,7 @@ export function LabPanelForm({
               <li
                 key={r.key}
                 className={cn(
-                  "bg-card rounded-2xl border p-4 transition",
+                  "bg-card rounded-[var(--radius)] border p-4 transition",
                   !r.include && "opacity-55",
                   idx >= 0 &&
                     (resultErr(idx, "value") ||
@@ -498,7 +498,7 @@ export function LabPanelForm({
         />
       </Field>
 
-      <div className="bg-card/95 sticky bottom-20 z-10 flex items-center justify-between gap-2 rounded-2xl border p-2.5 shadow-lg backdrop-blur sm:p-3 lg:bottom-4">
+      <div className="bg-card/95 sticky bottom-20 z-10 flex items-center justify-between gap-2 rounded-[var(--radius)] border p-2.5 shadow-lg backdrop-blur sm:p-3 lg:bottom-4">
         <span className="text-muted-foreground hidden px-1 text-sm sm:inline">
           {included.length} result{included.length === 1 ? "" : "s"}{" "}
           {mode === "import" ? "selected" : ""}

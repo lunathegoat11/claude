@@ -16,7 +16,7 @@ export default function AppError({
   }, [error.digest]);
   return (
     <div className="flex min-h-[50dvh] flex-col items-center justify-center px-6 text-center">
-      <span className="bg-destructive/10 text-destructive flex size-12 items-center justify-center rounded-2xl">
+      <span className="bg-destructive/10 text-destructive flex size-12 items-center justify-center rounded-[var(--radius)]">
         <TriangleAlert className="size-6" />
       </span>
       <h1 className="mt-4 text-xl font-semibold">Something went wrong</h1>

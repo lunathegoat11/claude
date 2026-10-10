@@ -17,7 +17,7 @@ export function DocumentPreview({
   const src = `/api/documents/${id}/file`;
   if (!show) {
     return (
-      <div className="bg-muted/50 text-muted-foreground flex h-72 flex-col items-center justify-center gap-3 rounded-2xl border sm:h-96">
+      <div className="bg-muted/50 text-muted-foreground flex h-72 flex-col items-center justify-center gap-3 rounded-[var(--radius)] border sm:h-96">
         <FileText className="size-10" strokeWidth={1.4} />
         <Button variant="outline" onClick={() => setShow(true)}>
           <Eye /> Show preview
@@ -30,13 +30,13 @@ export function DocumentPreview({
       <iframe
         src={`${src}#view=FitH`}
         title={`Preview of ${name}`}
-        className="bg-muted h-[70vh] min-h-96 w-full rounded-2xl border"
+        className="bg-muted h-[70vh] min-h-96 w-full rounded-[var(--radius)] border"
       />
     );
   }
   if (mimeType === "image/heic") {
     return (
-      <p className="bg-muted/50 text-muted-foreground rounded-2xl border p-6 text-sm">
+      <p className="bg-muted/50 text-muted-foreground rounded-[var(--radius)] border p-6 text-sm">
         HEIC images can&apos;t be previewed in most browsers. Download the file to view it.
       </p>
     );
@@ -47,7 +47,7 @@ export function DocumentPreview({
     <img
       src={src}
       alt={`Preview of ${name}`}
-      className="bg-muted max-h-[75vh] w-full rounded-2xl border object-contain"
+      className="bg-muted max-h-[75vh] w-full rounded-[var(--radius)] border object-contain"
     />
   );
 }

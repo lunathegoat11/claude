@@ -50,9 +50,9 @@ function ChartTooltip({
   if (!active || !payload?.length) return null;
   const p = payload[0].payload as TrendPoint & { t: number };
   return (
-    <div className="bg-popover max-w-64 min-w-44 rounded-xl border px-3 py-2.5 text-sm shadow-lg">
+    <div className="bg-popover max-w-64 min-w-44 rounded-md border px-3 py-2.5 text-sm shadow-lg">
       <div className="text-muted-foreground text-xs">
-        {formatDate(p.at, timezone)} · {formatTime(p.at, timezone)}
+        {formatDate(p.at, timezone)}, {formatTime(p.at, timezone)}
       </div>
       {dual ? (
         <div className="mt-1 space-y-0.5">

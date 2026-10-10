@@ -15,7 +15,7 @@ export default async function ImportPage() {
         href="/tracking"
         className="text-muted-foreground hover:text-foreground -my-2 mb-3 inline-flex min-h-11 items-center gap-1.5 py-2 text-sm"
       >
-        <ArrowLeft className="size-4" /> Health tracking
+        <ArrowLeft className="size-4" /> Readings
       </Link>
       <PageHeader
         title="Import readings from CSV"

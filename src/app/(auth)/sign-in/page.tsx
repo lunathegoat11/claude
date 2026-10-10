@@ -17,13 +17,13 @@ export default async function SignInPage({
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+        <h1 className="text-2xl font-semibold">Welcome back</h1>
         <p className="text-muted-foreground text-[15px]">Sign in to see your health records.</p>
       </div>
       {reset && (
         <p
           role="status"
-          className="border-success/30 bg-success/8 rounded-xl border px-3.5 py-2.5 text-sm"
+          className="border-success/30 bg-success/8 rounded-md border px-3.5 py-2.5 text-sm"
         >
           Your password has been changed. Please sign in with your new password.
         </p>

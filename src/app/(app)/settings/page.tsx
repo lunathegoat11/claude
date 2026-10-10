@@ -28,7 +28,7 @@ import { formatDate, formatDateTime, toDateInputValue } from "@/lib/format";
 import { formatIndianPhone } from "@/lib/india";
 import { cn, toNum } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Profile & settings" };
+export const metadata: Metadata = { title: "Settings" };
 
 const TABS = [
   { key: "profile", label: "Profile" },
@@ -108,8 +108,8 @@ export default async function SettingsPage({
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader
-        title="Profile & settings"
-        description="Your details, health summary, preferences and privacy controls."
+        title="Settings"
+        description="Your details, health summary, AI helper and privacy."
       />
       <nav
         aria-label="Settings sections"
@@ -173,7 +173,7 @@ export default async function SettingsPage({
                   c.diagnosedOn && `since ${formatDate(c.diagnosedOn, "UTC")}`,
                 ]
                   .filter(Boolean)
-                  .join(" · ")}
+                  .join(", ")}
                 actions={
                   <>
                     <HealthItemDialog
@@ -217,7 +217,7 @@ export default async function SettingsPage({
                 }
                 subtitle={[m.dosage, m.frequency, m.prescribedBy && `by ${m.prescribedBy}`]
                   .filter(Boolean)
-                  .join(" · ")}
+                  .join(", ")}
                 actions={
                   <>
                     <HealthItemDialog
@@ -258,7 +258,7 @@ export default async function SettingsPage({
               <Row
                 key={a.id}
                 title={a.allergen}
-                subtitle={[a.reaction, SEVERITY_LABELS[a.severity]].filter(Boolean).join(" · ")}
+                subtitle={[a.reaction, SEVERITY_LABELS[a.severity]].filter(Boolean).join(", ")}
                 actions={
                   <>
                     <HealthItemDialog
@@ -412,7 +412,7 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
             <Link href="/terms" className="text-primary hover:underline">
               Terms of Use
             </Link>{" "}
-            · To withdraw consent, delete your account below.
+            , To withdraw consent, delete your account below.
           </p>
         </CardContent>
       </Card>

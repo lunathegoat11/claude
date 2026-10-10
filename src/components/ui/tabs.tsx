@@ -8,7 +8,7 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
   return (
     <TabsPrimitive.List
       className={cn(
-        "bg-muted text-muted-foreground inline-flex h-10 items-center gap-1 rounded-xl p-1",
+        "bg-muted text-muted-foreground inline-flex h-10 items-center gap-1 rounded-md p-1",
         className,
       )}
       {...props}
