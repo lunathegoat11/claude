@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FileUp, Loader2, Upload, X } from "lucide-react";
+import { Camera, FileUp, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -20,15 +20,23 @@ import { cn, formatBytes } from "@/lib/utils";
 
 const ACCEPT = "application/pdf,image/jpeg,image/png,image/webp,image/heic";
 
+/** A hint from the file name. "AUTO" lets the server decide from the document's contents. */
 function guessType(name: string): string {
   const n = name.toLowerCase();
-  if (/(cbc|lab|report|blood|lipid|thyroid|hba1c|sugar|test)/.test(n)) return "LAB_REPORT";
-  if (/(prescription|rx)/.test(n)) return "PRESCRIPTION";
+  if (/(prescription|\brx\b)/.test(n)) return "PRESCRIPTION";
   if (/discharge/.test(n)) return "DISCHARGE_SUMMARY";
-  if (/(x-?ray|mri|ct|scan|ultrasound|usg|echo|ecg)/.test(n)) return "IMAGING_REPORT";
+  if (/(x-?ray|mri|\bct\b|ultrasound|usg|echo|ecg)/.test(n)) return "IMAGING_REPORT";
   if (/(vaccin|immuni)/.test(n)) return "VACCINATION_RECORD";
   if (/(insurance|policy|claim)/.test(n)) return "INSURANCE";
-  return "OTHER";
+  return "AUTO";
+}
+
+function shortDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export function UploadDialog({
@@ -47,7 +55,8 @@ export function UploadDialog({
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
-  const [type, setType] = useState("OTHER");
+  const [type, setType] = useState("AUTO");
+  const [quality, setQuality] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +72,7 @@ export function UploadDialog({
     (f: File | undefined | null) => {
       if (!f) return;
       setError(null);
+      setQuality(null);
       if (f.size > maxMb * 1024 * 1024)
         return setError(`That file is ${formatBytes(f.size)}. The limit is ${maxMb} MB.`);
       if (f.type && !ACCEPT.split(",").includes(f.type))
@@ -81,39 +91,57 @@ export function UploadDialog({
     [maxMb],
   );
 
+  const formRef = useRef<HTMLFormElement>(null);
+
   function reset() {
     setFile(null);
     setName("");
-    setType("OTHER");
+    setType("AUTO");
     setError(null);
+    setQuality(null);
     setFieldErrors({});
   }
 
-  async function submit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!file) return setError("Choose a file to upload.");
+  function retakePhoto() {
+    reset();
+    // Open the picker straight away; on phones it offers the camera.
+    requestAnimationFrame(() => inputRef.current?.click());
+  }
+
+  async function send(allowPoorQuality: boolean) {
+    if (!file || !formRef.current) return setError("Choose a file to upload.");
     setBusy(true);
     setError(null);
+    setQuality(null);
     setFieldErrors({});
-    const fd = new FormData(e.currentTarget);
+    const fd = new FormData(formRef.current);
     fd.set("file", file);
+    if (allowPoorQuality) fd.set("allowPoorQuality", "1");
     try {
       const res = await fetch("/api/documents", { method: "POST", body: fd });
       const body = await res.json().catch(() => null);
       if (!res.ok) {
+        if (body?.error?.code === "IMAGE_QUALITY") return setQuality(body.error.message);
         setError(body?.error?.message ?? "Upload failed. Please try again.");
         setFieldErrors(body?.error?.fieldErrors ?? {});
         return;
       }
       setOpen(false);
       reset();
-      if (body.importJobId) {
+      if (body.panelId) {
+        const n = body.resultCount as number;
         toast.success(
-          `Uploaded. We found ${body.candidateCount} possible lab value${body.candidateCount === 1 ? "" : "s"} — please review them.`,
+          `Saved ${n} result${n === 1 ? "" : "s"} from ${body.reportName}` +
+            (body.dateFound ? `, ${shortDate(body.collectedAt)}` : ""),
+          body.dateFound
+            ? undefined
+            : {
+                description: "No date was printed on the report. You can set it on the next page.",
+              },
         );
-        router.push(`/labs/import/${body.importJobId}`);
+        router.push(`/labs/reports/${body.panelId}?new=1`);
       } else {
-        toast.success("Document uploaded");
+        toast.success("Document saved");
         router.push(`/documents/${body.id}`);
       }
       router.refresh();
@@ -122,6 +150,11 @@ export function UploadDialog({
     } finally {
       setBusy(false);
     }
+  }
+
+  function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    void send(false);
   }
 
   return (
@@ -143,12 +176,30 @@ export function UploadDialog({
           <DialogHeader>
             <DialogTitle>Upload a document</DialogTitle>
             <DialogDescription>
-              PDF or photo, up to {maxMb} MB. Lab reports are scanned for values that you can review
-              before saving.
+              A PDF or a photo, up to {maxMb} MB. Test results on lab reports are read and saved for
+              you, with the report&apos;s name and date.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={submit} className="space-y-4" noValidate>
+          <form ref={formRef} onSubmit={submit} className="space-y-4" noValidate>
             {error && <FormError message={error} />}
+            {quality && (
+              <div
+                role="alert"
+                className="border-warning/40 bg-warning/10 space-y-3 rounded-xl border p-4 text-sm"
+              >
+                <p className="flex gap-2 font-medium">
+                  <Camera className="text-warning mt-0.5 size-4 shrink-0" /> {quality}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" onClick={retakePhoto}>
+                    <Camera /> Take another photo
+                  </Button>
+                  <Button type="button" variant="ghost" onClick={() => void send(true)}>
+                    Save it anyway
+                  </Button>
+                </div>
+              </div>
+            )}
             {!file ? (
               <div
                 onDragOver={(e) => {
@@ -226,6 +277,7 @@ export function UploadDialog({
                     value={type}
                     onChange={(e) => setType(e.target.value)}
                   >
+                    <option value="AUTO">Work it out for me</option>
                     {DOCUMENT_TYPES.map((t) => (
                       <option key={t} value={t}>
                         {DOCUMENT_TYPE_LABELS[t]}
@@ -279,7 +331,8 @@ export function UploadDialog({
                 Cancel
               </Button>
               <Button type="submit" disabled={!file || busy}>
-                {busy && <Loader2 className="animate-spin" />} {busy ? "Uploading…" : "Upload"}
+                {busy && <Loader2 className="animate-spin" />}{" "}
+                {busy ? "Reading your document…" : "Upload"}
               </Button>
             </DialogFooter>
           </form>

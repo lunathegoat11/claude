@@ -8,7 +8,6 @@ describe("photo reading (on-server OCR)", () => {
     const res = await extractDocument(
       readFileSync("tests/fixtures/lab-report-photo.png"),
       "image/png",
-      true,
     );
     expect(res.status).toBe("COMPLETED");
     expect(res.extractor).toBe("ocr");
@@ -20,7 +19,7 @@ describe("photo reading (on-server OCR)", () => {
   }, 60_000);
 
   it("does not try to read HEIC photos it can't decode", async () => {
-    const res = await extractDocument(Buffer.from("not really heic"), "image/heic", true);
+    const res = await extractDocument(Buffer.from("not really heic"), "image/heic");
     expect(res.status).toBe("UNSUPPORTED");
   });
 

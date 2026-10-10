@@ -37,6 +37,9 @@ export type AuditAction =
   | "health_summary.update"
   | "ai.query"
   | "ai.conversation_delete"
+  | "ai.key_saved"
+  | "ai.key_removed"
+  | "ai.document_reading"
   | "data.export"
   | "account.delete";
 

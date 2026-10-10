@@ -9,7 +9,13 @@ import {
   updateDocument,
   uploadDocument,
 } from "@/server/services/documents";
-import { confirmImport, discardImport, getImportJob } from "@/server/services/imports";
+import { getLabPanel } from "@/server/services/labs";
+import { assessImage } from "@/server/extraction/image-quality";
+import { setAIProvider } from "@/server/ai";
+import type { AIProvider, ExtractedReport } from "@/server/ai/types";
+import { toDateInputValue } from "@/lib/format";
+import { readFileSync } from "node:fs";
+import sharp from "sharp";
 import { AppError } from "@/server/errors";
 import { toNum } from "@/lib/utils";
 import { labReportPdf, buildPdf } from "../prisma/fixtures/simple-pdf";
@@ -93,11 +99,11 @@ describe("file validation", () => {
   });
 });
 
-describe("upload → extraction → review → confirm", () => {
+describe("upload → results saved instantly", () => {
   let docId: string;
-  let jobId: string;
+  let panelId: string;
 
-  it("stores the file outside the database and proposes values without saving them", async () => {
+  it("stores the file outside the database and saves every value with its report and date", async () => {
     const res = await uploadDocument(
       alice.id,
       { buffer: report(), filename: "a1c.pdf", declaredMime: "application/pdf" },
@@ -106,71 +112,175 @@ describe("upload → extraction → review → confirm", () => {
     );
     docId = res.document.id;
     expect(res.extractionStatus).toBe("COMPLETED");
-    expect(res.candidateCount).toBe(3);
-    expect(res.importJobId).toBeTruthy();
-    jobId = res.importJobId!;
+    expect(res.resultCount).toBe(3);
+    expect(res.dateFound).toBe(true);
+    panelId = res.panelId!;
     expect(store.files.has(res.document.storageKey)).toBe(true);
     expect(res.document.storageKey).not.toContain("a1c");
     expect(res.document.sha256).toMatch(/^[a-f0-9]{64}$/);
-    // Nothing is written to lab results until the user confirms.
-    expect(await db.labResult.count({ where: { userId: alice.id } })).toBe(0);
-    const job = await getImportJob(alice.id, jobId);
-    expect(job.meta.collectedAt).toBe("2026-09-12");
-    const a1c = job.candidates.find((c) => c.biomarkerCode === "HBA1C")!;
-    expect(a1c).toMatchObject({
-      value: "5.7",
-      unit: "%",
-      refLow: 4,
-      refHigh: 5.6,
-      labFlag: "HIGH",
-    });
+
+    const panel = await getLabPanel(alice.id, panelId);
+    expect(panel.documentId).toBe(docId);
+    expect(panel.document?.name).toBe("Report");
+    expect(panel.source).toBe("PDF_IMPORT");
+    expect(panel.labName).toBe("Sample Diagnostics, Chennai");
+    expect(toDateInputValue(panel.collectedAt, TZ)).toBe("2026-09-12");
+    const a1c = panel.results.find((r) => r.biomarkerCode === "HBA1C")!;
+    expect(toNum(a1c.valueNumeric)).toBe(5.7);
+    expect(a1c).toMatchObject({ unit: "%", flag: "HIGH", source: "PDF_IMPORT" });
+    expect(toNum(a1c.refLow)).toBe(4);
+    expect(toNum(a1c.refHigh)).toBe(5.6);
+    expect(toDateInputValue(a1c.observedAt, TZ)).toBe("2026-09-12");
+    expect(panel.results.find((r) => r.biomarkerCode === "CREAT")).toBeTruthy();
   });
 
-  it("prevents other users from reviewing or confirming the import", async () => {
-    await code(getImportJob(bob.id, jobId), "NOT_FOUND");
-    await code(
-      confirmImport(
-        bob.id,
-        jobId,
-        { name: "x", collectedAt: "2026-09-12", results: [{ testName: "HbA1c", value: "9.9" }] },
-        TZ,
-      ),
-      "NOT_FOUND",
-    );
-    await code(discardImport(bob.id, jobId), "NOT_FOUND");
-  });
-
-  it("saves exactly the user-corrected values on confirmation", async () => {
-    const panel = await confirmImport(
+  it("works out the type, date and lab when the user leaves them blank", async () => {
+    const res = await uploadDocument(
       alice.id,
-      jobId,
-      {
-        name: "Diabetes panel",
-        collectedAt: "2026-09-12",
-        labName: "Sample Diagnostics, Chennai",
-        results: [{ testName: "HbA1c", value: "5.8", unit: "%", refLow: "4", refHigh: "5.6" }], // user corrected 5.7 → 5.8 and dropped two rows
-      },
+      { buffer: report(), filename: "IMG_2041.pdf", declaredMime: "application/pdf" },
+      { name: "Scan", type: "AUTO", tags: "" },
       TZ,
     );
-    const results = await db.labResult.findMany({ where: { panelId: panel.id } });
-    expect(results).toHaveLength(1);
-    expect(toNum(results[0].valueNumeric)).toBe(5.8);
-    expect(results[0].source).toBe("PDF_IMPORT");
-    expect(panel.documentId).toBe(docId);
-    await code(
-      confirmImport(
-        alice.id,
-        jobId,
-        { name: "again", collectedAt: "2026-09-12", results: [{ testName: "TSH", value: "1" }] },
-        TZ,
-      ),
-      "CONFLICT",
+    expect(res.document.type).toBe("LAB_REPORT");
+    expect(res.document.providerName).toBe("Sample Diagnostics, Chennai");
+    expect(toDateInputValue(res.document.documentDate, TZ)).toBe("2026-09-12");
+    expect(res.resultCount).toBe(3);
+    await deleteDocument(alice.id, res.document.id);
+  });
+
+  it("keeps the saved results private to their owner", async () => {
+    await code(getLabPanel(bob.id, panelId), "NOT_FOUND");
+    expect(await db.labResult.count({ where: { userId: bob.id } })).toBe(0);
+  });
+
+  it("does not save values from documents that aren't lab reports", async () => {
+    const res = await uploadDocument(
+      alice.id,
+      { buffer: report(), filename: "rx.pdf", declaredMime: "application/pdf" },
+      meta({ type: "PRESCRIPTION", name: "Rx" }),
+      TZ,
     );
+    expect(res.panelId).toBeNull();
+    await deleteDocument(alice.id, res.document.id);
   });
 
   it("makes extracted text searchable for the owner only", async () => {
     expect((await listDocuments(alice.id, { q: "creatinine" })).total).toBe(1);
     expect((await listDocuments(bob.id, { q: "creatinine" })).total).toBe(0);
+  });
+});
+
+describe("photo quality", () => {
+  const photo = () => readFileSync("tests/fixtures/lab-report-photo.png");
+
+  it("refuses a blurry photo, stores nothing, and explains what to do", async () => {
+    const blurry = await sharp(photo()).resize({ width: 2000 }).blur(6).jpeg().toBuffer();
+    const before = store.files.size;
+    await expect(
+      uploadDocument(
+        alice.id,
+        { buffer: blurry, filename: "blurry.jpg", declaredMime: "image/jpeg" },
+        meta({ name: "Blurry" }),
+        TZ,
+      ),
+    ).rejects.toSatisfy(
+      (e) => e instanceof AppError && e.code === "IMAGE_QUALITY" && /blurry/.test(e.message),
+    );
+    expect(store.files.size).toBe(before);
+    // The user can still choose to keep it.
+    const kept = await uploadDocument(
+      alice.id,
+      { buffer: blurry, filename: "blurry.jpg", declaredMime: "image/jpeg" },
+      meta({ name: "Blurry" }),
+      TZ,
+      { allowPoorQuality: true },
+    );
+    expect(store.files.has(kept.document.storageKey)).toBe(true);
+    await deleteDocument(alice.id, kept.document.id);
+  }, 120_000);
+
+  it("rates a sharp photo as readable", async () => {
+    const sharpPhoto = await sharp(photo()).resize({ width: 2000 }).png().toBuffer();
+    expect((await assessImage(sharpPhoto)).problem).toBeNull();
+  });
+});
+
+describe("reading reports with the user's AI", () => {
+  const extracted: ExtractedReport = {
+    readable: true,
+    problem: null,
+    reportName: "Thyroid Profile",
+    labName: "Metro Labs, Pune",
+    collectedAt: "2026-07-03",
+    results: [
+      { testName: "TSH", value: "3.1", unit: "uIU/mL", refText: "0.4 - 4.5", flag: null },
+      { testName: "Anti-TPO antibodies", value: "12", unit: "IU/mL", refText: "< 34", flag: null },
+      { testName: "Free T4", value: "1.9", unit: "ng/dL", refText: "0.8 - 1.8", flag: "HIGH" },
+    ],
+    transcript: "Metro Labs, Pune\nTSH 3.1 uIU/mL 0.4 - 4.5",
+  };
+  const fake = (r: ExtractedReport): AIProvider => ({
+    name: "fake",
+    model: "fake-1",
+    supportsVision: true,
+    generate: async () => "",
+    extractReport: async () => r,
+  });
+  afterAll(() => setAIProvider(undefined));
+
+  it("saves every test the AI read, including ones not in the built-in list", async () => {
+    setAIProvider(fake(extracted));
+    const res = await uploadDocument(
+      alice.id,
+      {
+        buffer: readFileSync("tests/fixtures/lab-report-photo.png"),
+        filename: "thyroid.png",
+        declaredMime: "image/png",
+      },
+      { name: "Thyroid", type: "AUTO", tags: "" },
+      TZ,
+    );
+    const panel = await getLabPanel(alice.id, res.panelId!);
+    expect(panel.name).toBe("Thyroid Profile");
+    expect(panel.labName).toBe("Metro Labs, Pune");
+    expect(panel.source).toBe("IMAGE_IMPORT");
+    expect(toDateInputValue(panel.collectedAt, TZ)).toBe("2026-07-03");
+    expect(panel.results.map((r) => r.testName)).toEqual(["TSH", "Anti-TPO antibodies", "Free T4"]);
+    expect(panel.results[0].biomarkerCode).toBe("TSH");
+    expect(panel.results[2].flag).toBe("HIGH");
+    expect(panel.results[1].flag).toBe("NORMAL"); // 12 is under the printed "< 34"
+    await deleteDocument(alice.id, res.document.id);
+  });
+
+  it("asks for a new photo when the AI can't read it", async () => {
+    setAIProvider(fake({ ...extracted, readable: false, problem: "BLURRY", results: [] }));
+    await code(
+      uploadDocument(
+        alice.id,
+        {
+          buffer: readFileSync("tests/fixtures/lab-report-photo.png"),
+          filename: "x.png",
+          declaredMime: "image/png",
+        },
+        meta(),
+        TZ,
+      ),
+      "IMAGE_QUALITY",
+    );
+  });
+
+  it("ignores impossible dates from the AI", async () => {
+    setAIProvider(fake({ ...extracted, collectedAt: "2099-01-01" }));
+    const res = await uploadDocument(
+      alice.id,
+      { buffer: report(), filename: "r.pdf", declaredMime: "application/pdf" },
+      meta({ name: "Future" }),
+      TZ,
+    );
+    expect(res.dateFound).toBe(false);
+    const panel = await getLabPanel(alice.id, res.panelId!);
+    expect(panel.notes).toMatch(/No date was found/);
+    await deleteDocument(alice.id, res.document.id);
   });
 });
 
@@ -187,7 +297,7 @@ describe("document access control", () => {
       TZ,
     );
     const id = res.document.id;
-    expect(res.importJobId).toBeNull(); // only lab reports are parsed for values
+    expect(res.panelId).toBeNull(); // only lab reports are parsed for values
     await code(openDocumentFile(bob.id, id), "NOT_FOUND");
     await code(getDocument(bob.id, id), "NOT_FOUND");
     await code(updateDocument(bob.id, id, meta({ name: "stolen" }), TZ), "NOT_FOUND");

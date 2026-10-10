@@ -1,5 +1,5 @@
 import "server-only";
-import type { AIProvider, GenerateInput } from "../types";
+import type { AIProvider, GenerateInput, KeyCheck } from "../types";
 import { VISION_TRANSCRIBE_PROMPT } from "../prompts";
 import { AppError } from "@/server/errors";
 
@@ -59,5 +59,18 @@ export class OpenAICompatibleProvider implements AIProvider {
         ],
       },
     ]);
+  }
+
+  async verifyKey(): Promise<KeyCheck> {
+    try {
+      const res = await fetch(`${this.baseUrl.replace(/\/$/, "")}/models`, {
+        headers: { authorization: `Bearer ${this.apiKey}` },
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (res.status === 401 || res.status === 403) return "invalid";
+      return res.ok ? "ok" : "unreachable";
+    } catch {
+      return "unreachable";
+    }
   }
 }

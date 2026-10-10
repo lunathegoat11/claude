@@ -165,4 +165,35 @@ export interface AIProvider {
   generate(input: GenerateInput): Promise<string>;
   /** Transcribe the text of a lab report image (no interpretation). */
   transcribeImage?(image: Buffer, mimeType: string): Promise<string>;
+  /** Read every test result from a report (PDF, photo or extracted text). */
+  extractReport?(input: ReportInput): Promise<ExtractedReport>;
+  /** Check that the API key works, without spending tokens. */
+  verifyKey?(): Promise<KeyCheck>;
 }
+
+/** What a document reader returns: every test printed on the report, exactly as printed. */
+export interface ExtractedReport {
+  /** False when the page can't be read reliably (blurry, cut off, too dark, not a report). */
+  readable: boolean;
+  problem: "BLURRY" | "NOT_A_REPORT" | null;
+  reportName: string | null;
+  labName: string | null;
+  /** YYYY-MM-DD: sample collection date, else the report date. */
+  collectedAt: string | null;
+  results: {
+    testName: string;
+    value: string;
+    unit: string | null;
+    refText: string | null;
+    flag: "LOW" | "HIGH" | "NORMAL" | null;
+  }[];
+  /** Plain-text transcription (used for search). */
+  transcript: string | null;
+}
+
+export type ReportInput =
+  | { kind: "pdf"; data: Buffer }
+  | { kind: "image"; data: Buffer; mimeType: string }
+  | { kind: "text"; text: string };
+
+export type KeyCheck = "ok" | "invalid" | "unreachable";

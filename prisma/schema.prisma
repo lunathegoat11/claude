@@ -35,6 +35,8 @@ model User {
   termsAcceptedAt     DateTime?
   healthDataConsentAt DateTime?
   consentVersion      String?
+  /// When the user confirmed they are 18 or older (DPDP Act 2023: under 18 is a child).
+  ageConfirmedAt      DateTime?
 
   profile         Profile?
   accounts        Account[]
@@ -54,6 +56,7 @@ model User {
   auditLogs       AuditLog[]
   importJobs      ImportJob[]
   authTokens      AuthToken[]
+  aiCredential    AiCredential?
 }
 
 /// External identity providers (OAuth / OIDC). Present so Google, Apple or
@@ -103,6 +106,23 @@ model AuthToken {
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, type])
+}
+
+/// A user's own AI provider API key. Encrypted with AES-256-GCM (key derived from
+/// APP_SECRET, bound to the user id) and never sent back to the browser.
+model AiCredential {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @unique @db.Uuid
+  /// "anthropic" or "openai"
+  provider      String
+  encryptedKey  String
+  /// Last four characters, shown so the user can recognise which key is saved.
+  keyHint       String
+  /// Whether uploaded documents may be sent to the provider to be read.
+  readDocuments Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum Sex {

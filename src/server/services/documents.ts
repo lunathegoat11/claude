@@ -7,8 +7,16 @@ import { AppError, notFound } from "@/server/errors";
 import { logger } from "@/server/logger";
 import { ALLOWED_MIME, newStorageKey, sniffMime, storage } from "@/server/storage";
 import { extractDocument } from "@/server/extraction/pipeline";
-import { parseZonedInput } from "@/lib/format";
-import { documentMetaSchema } from "@/lib/validation/health";
+import { parseZonedInput, toDateInputValue } from "@/lib/format";
+import {
+  documentMetaSchema,
+  labPanelSchema,
+  labResultInputSchema,
+  type LabResultInput,
+} from "@/lib/validation/health";
+import type { ParsedReport } from "@/server/extraction/lab-parser";
+import { aiForUser } from "./ai-settings";
+import { writePanel } from "./labs";
 import { ensureProvider } from "./providers";
 import { removeTimelineEvent, syncDocumentEvent } from "./timeline";
 
@@ -20,13 +28,47 @@ export interface UploadInput {
 
 const ownedActive = (userId: string) => ({ userId, deletedAt: null });
 
+export interface UploadOptions {
+  /** Save a photo even though it looks too blurry/dark to read. */
+  allowPoorQuality?: boolean;
+  /** Seed data only: store the document without saving the values read from it. */
+  saveResults?: boolean;
+}
+
+/** Turn what was read from a report into lab results that pass the same validation as manual entry. */
+function resultsFrom(report: ParsedReport) {
+  const out: LabResultInput[] = [];
+  for (const c of report.candidates) {
+    const checks = [...(c.warnings ?? [])];
+    if (c.confidence < 0.5) checks.push("Read with low confidence — check it against the report.");
+    const parsed = labResultInputSchema.safeParse({
+      testName: c.testName,
+      biomarkerCode: c.biomarkerCode ?? undefined,
+      value: c.value,
+      unit: c.unit ?? undefined,
+      refText: c.refText ?? undefined,
+      refLow: c.refLow ?? undefined,
+      refHigh: c.refHigh ?? undefined,
+      labFlag: c.labFlag ?? undefined,
+      notes: checks.length ? checks.join(" ") : undefined,
+    });
+    if (parsed.success) out.push(parsed.data);
+  }
+  return out.slice(0, 100);
+}
+
 export async function uploadDocument(
   userId: string,
   file: UploadInput,
   rawMeta: unknown,
   tz: string,
+  opts: UploadOptions = {},
 ) {
-  const meta = documentMetaSchema.parse(rawMeta);
+  // "AUTO" lets Kosha decide: it becomes a lab report if test results are found.
+  const metaIn = { ...(rawMeta as Record<string, unknown>) };
+  const autoType = !metaIn.type || metaIn.type === "AUTO";
+  if (autoType) metaIn.type = "OTHER";
+  const meta = documentMetaSchema.parse(metaIn);
   const maxBytes = env().MAX_UPLOAD_MB * 1024 * 1024;
   if (file.buffer.length === 0) throw new AppError("VALIDATION", "The file is empty.");
   if (file.buffer.length > maxBytes)
@@ -45,31 +87,42 @@ export async function uploadDocument(
     });
     if (!rec) throw notFound("Medical record");
   }
-  const documentDate = meta.documentDate ? parseZonedInput(meta.documentDate, tz) : null;
+  let documentDate = meta.documentDate ? parseZonedInput(meta.documentDate, tz) : null;
+
+  // Read the document first, so a photo that can't be read is refused before anything is stored.
+  const readLabs = autoType || meta.type === "LAB_REPORT";
+  const extraction = await extractDocument(file.buffer, sniffed, {
+    ai: await aiForUser(userId),
+    allowPoorQuality: opts.allowPoorQuality,
+  });
+  if (extraction.quality) throw new AppError("IMAGE_QUALITY", extraction.quality.message);
+
+  const report = readLabs ? extraction.report : null;
+  const results = report && opts.saveResults !== false ? resultsFrom(report) : [];
+  const type = autoType ? (results.length ? "LAB_REPORT" : "OTHER") : meta.type;
+  const reportDate = report?.collectedAt ?? null;
+  if (!documentDate && reportDate) documentDate = parseZonedInput(reportDate, tz);
+  const providerName = meta.providerName ?? report?.labName ?? null;
 
   const key = newStorageKey(userId, ALLOWED_MIME[sniffed].ext);
   await storage().put(key, file.buffer, sniffed);
-
-  // Extract text (and candidate lab values for lab reports) before saving metadata.
-  const isLab = meta.type === "LAB_REPORT";
-  const extraction = await extractDocument(file.buffer, sniffed, isLab);
 
   try {
     return await db.$transaction(async (tx) => {
       const providerId = await ensureProvider(
         tx,
         userId,
-        meta.providerName,
-        isLab ? "LABORATORY" : "OTHER",
+        providerName ?? undefined,
+        type === "LAB_REPORT" ? "LABORATORY" : "OTHER",
       );
       const doc = await tx.medicalDocument.create({
         data: {
           userId,
           name: meta.name,
-          type: meta.type,
+          type,
           documentDate,
           providerId,
-          providerName: meta.providerName ?? null,
+          providerName,
           recordId: meta.recordId ?? null,
           storageKey: key,
           originalFilename: file.filename.slice(0, 200),
@@ -83,28 +136,39 @@ export async function uploadDocument(
         },
       });
       await syncDocumentEvent(tx, doc);
-      let importJobId: string | null = null;
-      if (isLab && extraction.report && extraction.report.candidates.length) {
-        const job = await tx.importJob.create({
-          data: {
-            userId,
-            documentId: doc.id,
-            kind: "LAB_REPORT",
-            extractor: extraction.extractor,
-            candidates: extraction.report.candidates as unknown as Prisma.InputJsonValue,
-            meta: {
-              collectedAt: extraction.report.collectedAt,
-              labName: extraction.report.labName ?? meta.providerName ?? null,
-            },
-          },
+
+      // Save the results right away, linked to this document and dated from the report.
+      let panel: { id: string; name: string; collectedAt: Date } | null = null;
+      if (results.length) {
+        const collectedAt = documentDate ?? new Date();
+        const panelInput = labPanelSchema.parse({
+          name: report!.reportName,
+          collectedAt: toDateInputValue(collectedAt, tz),
+          labName: providerName ?? undefined,
+          documentId: doc.id,
+          notes: reportDate
+            ? undefined
+            : documentDate
+              ? "Date taken from the document details you entered."
+              : "No date was found on the report, so the upload date was used. Edit this report to set the right date.",
+          results,
         });
-        importJobId = job.id;
+        panel = await writePanel(
+          tx,
+          userId,
+          panelInput,
+          collectedAt,
+          sniffed === "application/pdf" ? "PDF_IMPORT" : "IMAGE_IMPORT",
+        );
       }
       return {
         document: doc,
-        importJobId,
+        panelId: panel?.id ?? null,
+        reportName: panel?.name ?? null,
+        collectedAt: panel?.collectedAt ?? null,
+        dateFound: Boolean(reportDate),
+        resultCount: results.length,
         extractionStatus: extraction.status,
-        candidateCount: extraction.report?.candidates.length ?? 0,
       };
     });
   } catch (err) {

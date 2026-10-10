@@ -142,7 +142,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
           <caption className="sr-only">All {history.testName} results</caption>
           <thead className="bg-muted/50 text-muted-foreground border-b text-left text-xs">
             <tr>
-              <th className="px-4 py-3 font-medium sm:px-5">Date</th>
+              <th className="px-4 py-3 font-medium sm:px-5">Date and report</th>
               <th className="px-3 py-3 text-right font-medium">Result</th>
               <th className="hidden px-3 py-3 font-medium sm:table-cell">Range on report</th>
               <th className="hidden px-3 py-3 font-medium md:table-cell">Lab</th>
@@ -167,6 +167,13 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                     </Link>
                   ) : (
                     formatDate(r.observedAt, tz)
+                  )}
+                  {r.panel && (
+                    <div className="text-muted-foreground mt-0.5 text-xs">
+                      {r.panel.document && !r.panel.document.deletedAt
+                        ? `From ${r.panel.document.name}`
+                        : r.panel.name}
+                    </div>
                   )}
                 </td>
                 <td className="px-3 py-3 text-right">

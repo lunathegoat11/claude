@@ -38,7 +38,7 @@ export function normaliseResult(r: LabPanelInput["results"][number]) {
   };
 }
 
-async function writePanel(
+export async function writePanel(
   tx: Tx,
   userId: string,
   input: LabPanelInput,
@@ -263,7 +263,15 @@ export async function getTestHistory(userId: string, key: string) {
     where,
     orderBy: { observedAt: "asc" },
     take: 500,
-    include: { panel: { select: { id: true, name: true } } },
+    include: {
+      panel: {
+        select: {
+          id: true,
+          name: true,
+          document: { select: { id: true, name: true, deletedAt: true } },
+        },
+      },
+    },
   });
   if (!results.length) throw notFound("Lab test");
   const def = key.startsWith("name:") ? undefined : getBiomarker(key);

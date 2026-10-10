@@ -44,6 +44,7 @@ export const LIMITS = {
   signUp: { limit: 5, windowMs: 60 * 60_000 },
   passwordReset: { limit: 5, windowMs: 60 * 60_000 },
   ai: { limit: 30, windowMs: 60 * 60_000 },
+  aiKey: { limit: 10, windowMs: 60 * 60_000 },
   upload: { limit: 60, windowMs: 60 * 60_000 },
   api: { limit: 300, windowMs: 60_000 },
   export: { limit: 5, windowMs: 60 * 60_000 },

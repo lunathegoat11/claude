@@ -5,7 +5,7 @@ const order: Record<Level, number> = { debug: 10, info: 20, warn: 30, error: 40 
 
 /** Keys that may contain health data or secrets. Values are never logged. */
 const REDACT =
-  /(password|token|secret|cookie|authorization|notes|content|value|text|name|email|phone|dob|dateOfBirth|question|answer)/i;
+  /(password|token|secret|apikey|api_key|encryptedkey|cookie|authorization|notes|content|value|text|name|email|phone|dob|dateOfBirth|question|answer)/i;
 
 function redact(meta: unknown, depth = 0): unknown {
   if (meta == null || depth > 3) return meta;

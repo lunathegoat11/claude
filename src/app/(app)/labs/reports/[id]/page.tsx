@@ -16,13 +16,23 @@ import { toNum } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Lab report" };
 
-export default async function LabReportPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function LabReportPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ new?: string }>;
+}) {
   const user = await requireUser();
   const { id } = await params;
+  const justSaved = (await searchParams).new === "1";
   const panel = await or404(id, (i) => getLabPanel(user.id, i));
   const prev = await getPreviousResults(user.id, panel);
   const tz = user.timezone;
   const flagged = panel.results.filter((r) => ["HIGH", "LOW", "ABNORMAL"].includes(r.flag)).length;
+  const imported = panel.source === "PDF_IMPORT" || panel.source === "IMAGE_IMPORT";
+  const toCheck = imported ? panel.results.filter((r) => r.notes).length : 0;
+  const sourceDoc = panel.document && !panel.document.deletedAt ? panel.document : null;
 
   return (
     <div>
@@ -70,6 +80,33 @@ export default async function LabReportPage({ params }: { params: Promise<{ id: 
           />
         </div>
       </div>
+
+      {imported && (justSaved || toCheck > 0) && (
+        <div
+          role="status"
+          className="bg-accent/60 text-accent-foreground mb-5 rounded-xl border px-4 py-3 text-sm"
+        >
+          <p className="font-medium">
+            {justSaved ? `Saved ${panel.results.length} results` : "Read automatically"}
+            {sourceDoc ? (
+              <>
+                {" "}
+                from{" "}
+                <Link href={`/documents/${sourceDoc.id}`} className="underline underline-offset-2">
+                  {sourceDoc.name}
+                </Link>
+              </>
+            ) : null}
+            , dated {formatDate(panel.collectedAt, tz)}.
+          </p>
+          <p className="mt-1 opacity-80">
+            {toCheck
+              ? `${toCheck} value${toCheck === 1 ? " is" : "s are"} marked to check against the original. `
+              : ""}
+            If anything looks different from the report, tap Edit to correct it.
+          </p>
+        </div>
+      )}
 
       <div className="bg-card overflow-hidden rounded-2xl border">
         <table className="w-full text-sm">

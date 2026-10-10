@@ -51,6 +51,7 @@ export async function signInAction(_: ActionState, fd: FormData): Promise<Action
       await audit(null, "auth.sign_in_failed", undefined, meta);
       throw new AppError("UNAUTHENTICATED", "That email and password combination didn't work.");
     }
+    await db.user.update({ where: { id: user.id }, data: { ageConfirmedAt: new Date() } });
     const { token, expiresAt } = await createSession(user.id, meta.userAgent);
     await setSessionCookie(token, expiresAt);
     await audit(user.id, "auth.sign_in", undefined, meta);
@@ -85,10 +86,14 @@ export async function signUpAction(_: ActionState, fd: FormData): Promise<Action
   return result;
 }
 
-export async function demoSignInAction(): Promise<ActionState> {
+export async function demoSignInAction(confirmedAge: boolean): Promise<ActionState> {
   const result = await runAction("demoSignIn", async () => {
     if (!env().DEMO_LOGIN_ENABLED)
       throw new AppError("FORBIDDEN", "The demo account is not available.");
+    if (confirmedAge !== true)
+      throw new AppError("VALIDATION", "Kosha is only for people aged 18 or older", {
+        ageConfirmed: ["Kosha is only for people aged 18 or older"],
+      });
     const meta = await requestMeta();
     await rateLimit("signIn", `ip:${meta.ip}`);
     const user = await db.user.findFirst({ where: { isDemo: true }, select: { id: true } });

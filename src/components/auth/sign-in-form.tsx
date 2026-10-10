@@ -6,13 +6,17 @@ import { Field, FormError } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
+import { AGE_LABEL, ConsentBox } from "./consent-box";
 import { toast } from "sonner";
 import { Loader2, Sparkles } from "lucide-react";
 
 export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: boolean }) {
   const { state, onSubmit, pending, err } = useActionForm(signInAction);
   const [demoPending, start] = useTransition();
+  const [adult, setAdult] = useState(false);
+  const [ageError, setAgeError] = useState<string[] | undefined>();
+  const ageErr = ageError ?? err("ageConfirmed");
   return (
     <div className="space-y-6">
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
@@ -48,6 +52,17 @@ export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: 
             aria-invalid={!!err("password")}
           />
         </Field>
+        <ConsentBox
+          name="ageConfirmed"
+          error={ageErr}
+          checked={adult}
+          onCheckedChange={(v) => {
+            setAdult(v);
+            if (v) setAgeError(undefined);
+          }}
+        >
+          {AGE_LABEL}
+        </ConsentBox>
         <SubmitButton pending={pending} className="w-full" size="lg" pendingLabel="Signing in…">
           Sign in
         </SubmitButton>
@@ -63,12 +78,13 @@ export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: 
             size="lg"
             className="w-full"
             disabled={demoPending}
-            onClick={() =>
+            onClick={() => {
+              if (!adult) return setAgeError(["Please confirm you are 18 or older first"]);
               start(async () => {
-                const res = await demoSignInAction();
+                const res = await demoSignInAction(true);
                 if (res?.error) toast.error(res.error);
-              })
-            }
+              });
+            }}
           >
             {demoPending ? <Loader2 className="animate-spin" /> : <Sparkles />} Explore the demo
             account

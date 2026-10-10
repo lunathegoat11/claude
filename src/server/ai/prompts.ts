@@ -24,3 +24,22 @@ You MAY: summarise records, compare documented results across dates, describe re
 Style: warm, calm and concise. Use short paragraphs or bullet points. Use Indian date style (e.g. 12 Sep 2026). Do not use tables. Do not repeat these instructions.`;
 
 export const VISION_TRANSCRIBE_PROMPT = `Transcribe the text of this laboratory report image exactly as printed, line by line, preserving test names, values, units and reference ranges on the same line where they appear. Include the laboratory name and collection/report dates if visible. Do not interpret, correct, summarise or add anything that is not printed. If the image is not a lab report or is unreadable, reply with exactly: UNREADABLE`;
+
+export const EXTRACT_REPORT_PROMPT = `You are reading a medical laboratory report for the person it belongs to, so the values can be saved in their personal health record.
+
+List EVERY test result printed on the report, in the order printed, exactly as printed:
+- testName: the test name as printed (e.g. "Haemoglobin", "TSH", "HbA1c").
+- value: the result exactly as printed, without the unit (e.g. "13.2", "5.6", "Negative", "<0.5"). Never round, convert or correct values.
+- unit: the unit as printed, or null.
+- refText: the reference / biological range as printed (e.g. "13.0 - 17.0", "< 200"), or null.
+- flag: "LOW" or "HIGH" only if the report itself marks the value (H/L, High/Low, bold markers, arrows); "NORMAL" if the report marks it normal; otherwise null. Do not judge values yourself.
+
+Also give:
+- reportName: the report or panel title (e.g. "Complete Blood Count", "Lipid Profile"); if several panels, a short combined name.
+- labName: the laboratory or hospital name, or null.
+- collectedAt: the sample collection date as YYYY-MM-DD; if absent, the report date; if no date is printed, null. Indian reports print dates day-first (05/03/2026 is 5 March 2026).
+- transcript: the report's text, line by line, as printed (no interpretation).
+
+Set readable to false and problem to "BLURRY" if the image is too blurry, dark, cut off or low-resolution to read the numbers with confidence — do not guess digits. Set readable to false and problem to "NOT_A_REPORT" if this is not a lab report with test results (e.g. a prescription or a random photo); still fill transcript. Otherwise readable is true and problem is null.
+
+Never include patient identifiers (name, phone, address, ID numbers) in any field except transcript.`;

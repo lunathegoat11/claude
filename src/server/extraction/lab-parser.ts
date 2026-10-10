@@ -1,4 +1,10 @@
-import { BIOMARKERS, type BiomarkerDef } from "@/lib/catalog/biomarkers";
+import {
+  BIOMARKERS,
+  CATEGORY_LABELS,
+  matchBiomarker,
+  type BiomarkerCategory,
+  type BiomarkerDef,
+} from "@/lib/catalog/biomarkers";
 import { parseReferenceRange } from "@/lib/lab-range";
 
 /**
@@ -27,6 +33,8 @@ export interface ParsedReport {
   candidates: LabCandidate[];
   collectedAt: string | null; // YYYY-MM-DD
   labName: string | null;
+  /** A short title for the report, e.g. "Complete blood count". */
+  reportName: string;
 }
 
 const UNIT_PATTERN =
@@ -171,83 +179,197 @@ export function candidateWarnings(
   return w.length ? { warnings: w } : {};
 }
 
+/** Words that start lines which carry numbers but are not test results. */
+const NOT_A_TEST =
+  /^(patient|name|age|sex|gender|date|time|page|ref(erred)?\.?\s*by|ref\.?\s*no|reg|sample|id\b|no\.?\b|mobile|phone|tel|pin|address|dr\.?\b|doctor|consultant|collected|received|reported|printed|barcode|uhid|lab\s*no|bill|amount|rs\.?\b|signature|method|specimen|interval|report|visit|ward|bed|ip\s*no|op\s*no|test\s*name|investigation|parameter|result|unit|biological|reference)/i;
+
+/** Remove list markers like "1.", "2)", "*", "•" at the start of a line. */
+function stripMarker(line: string) {
+  return line.replace(/^\s*(?:\d{1,2}[.)]\s+|[*•·]\s*|[-–]\s+)/, "");
+}
+
+const RANGE_RE =
+  /((?:<|>|<=|>=|≤|≥|up\s*to|upto)\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?)/i;
+
+interface RowParts {
+  value: string;
+  labFlag: "LOW" | "HIGH" | null;
+  unit: string | null;
+  refText: string | null;
+}
+
+/** Parse what follows a test name: value, optional H/L flag, unit and reference range. */
+function parseRow(rest: string, unitRe: RegExp): RowParts | null {
+  rest = rest.replace(/^\s*(\([^)]*\)|\[[^\]]*\])\s*/, "").replace(/^[\s:.-]+/, "");
+  const valueMatch = /^(\d+(?:[.,]\d+)?)/.exec(rest);
+  if (!valueMatch) return null;
+  const value = valueMatch[1].replace(",", ".");
+  rest = rest.slice(valueMatch[0].length).trim();
+
+  let labFlag: "LOW" | "HIGH" | null = null;
+  const flagMatch = /^(H|L|High|Low|\*)\b\s*/i.exec(rest);
+  if (flagMatch) {
+    const f = flagMatch[1].toLowerCase();
+    labFlag = f.startsWith("h") ? "HIGH" : f.startsWith("l") ? "LOW" : null;
+    rest = rest.slice(flagMatch[0].length);
+  }
+
+  let unit: string | null = null;
+  const u = unitRe.exec(rest);
+  if (u) {
+    unit = normaliseUnit(u[1]);
+    rest = rest.slice(u[0].length).trim();
+  }
+
+  const refMatch = RANGE_RE.exec(rest);
+  const refText = refMatch ? refMatch[1].replace(/\s+/g, " ").trim() : null;
+  if (!unit) {
+    // Some reports print the unit after the range.
+    const tail = rest.slice(refMatch ? (refMatch.index ?? 0) + refMatch[0].length : 0).trim();
+    const u2 = unitRe.exec(tail);
+    if (u2) unit = normaliseUnit(u2[1]);
+  }
+  return { value, labFlag, unit, refText };
+}
+
+/** Title for a report from the kinds of tests found on it. */
+export function reportNameFor(candidates: { biomarkerCode: string | null }[]): string {
+  const counts = new Map<BiomarkerCategory, number>();
+  for (const c of candidates) {
+    const def = c.biomarkerCode ? BIOMARKERS.find((b) => b.code === c.biomarkerCode) : undefined;
+    if (def && def.category !== "OTHER")
+      counts.set(def.category, (counts.get(def.category) ?? 0) + 1);
+  }
+  const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => CATEGORY_LABELS[c]);
+  if (!top.length) return "Lab report";
+  if (top.length === 1) return top[0];
+  if (top.length === 2) return `${top[0]} & ${top[1].toLowerCase()}`;
+  return "Lab report";
+}
+
 export function parseLabText(text: string, opts: { source?: "text" | "ocr" } = {}): ParsedReport {
   const candidates: LabCandidate[] = [];
   const seen = new Set<string>();
   const unitRe = new RegExp(`^${UNIT_PATTERN}(?![a-z])`, "i");
+  const fromPhoto = opts.source === "ocr";
+  const lines = text.split(/\r?\n/).map((l) => stripMarker(l.replace(/\s+/g, " ").trim()));
 
-  for (const rawLine of text.split(/\r?\n/)) {
-    const line = rawLine.replace(/\s+/g, " ").trim();
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     if (line.length < 3 || line.length > 200) continue;
     const hit = ALIASES.find((a) => a.re.test(line));
-    if (!hit) continue;
 
-    // Remove the matched name and any trailing method/specimen in brackets.
-    let rest = line
-      .replace(hit.re, "")
-      .replace(/^\s*(\([^)]*\)|\[[^\]]*\])\s*/, "")
-      .replace(/^[\s:.-]+/, "");
-    const valueMatch = /^(\d+(?:[.,]\d+)?)/.exec(rest);
-    if (!valueMatch) continue;
-    const value = valueMatch[1].replace(",", ".");
-    rest = rest.slice(valueMatch[0].length).trim();
-
-    let labFlag: "LOW" | "HIGH" | null = null;
-    const flagMatch = /^(H|L|High|Low|\*)\b\s*/i.exec(rest);
-    if (flagMatch) {
-      const f = flagMatch[1].toLowerCase();
-      labFlag = f.startsWith("h") ? "HIGH" : f.startsWith("l") ? "LOW" : null;
-      rest = rest.slice(flagMatch[0].length);
+    if (hit) {
+      const afterName = line.replace(hit.re, "");
+      // Tables sometimes put the value on the next line.
+      let row = parseRow(afterName, unitRe);
+      let sourceLine = line;
+      if (!row && i + 1 < lines.length && /^\d/.test(lines[i + 1])) {
+        row = parseRow(lines[i + 1], unitRe);
+        sourceLine = `${line} ${lines[i + 1]}`;
+      }
+      if (!row) continue;
+      const key = hit.def.code;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const { low, high } = parseReferenceRange(row.refText);
+      let confidence = 0.5;
+      if (row.unit) confidence += 0.25;
+      if (row.refText) confidence += 0.2;
+      if (row.unit && !hit.def.units.some((x) => x.toLowerCase() === row.unit!.toLowerCase()))
+        confidence -= 0.2;
+      candidates.push({
+        testName: hit.def.name,
+        biomarkerCode: hit.def.code,
+        value: row.value,
+        unit: row.unit ?? hit.def.units[0] ?? null,
+        refText: row.refText,
+        refLow: low,
+        refHigh: high,
+        labFlag: row.labFlag,
+        confidence: Math.max(0.1, Math.min(fromPhoto ? 0.6 : 0.95, Number(confidence.toFixed(2)))),
+        sourceLine: sourceLine.slice(0, 160),
+        ...candidateWarnings(row.value, low, high, row.refText, hit.def.decimals, fromPhoto),
+      });
+      continue;
     }
 
-    let unit: string | null = null;
-    const u = unitRe.exec(rest);
-    if (u) {
-      unit = normaliseUnit(u[1]);
-      rest = rest.slice(u[0].length).trim();
-    }
-
-    const refMatch =
-      /((?:<|>|<=|>=|≤|≥|up\s*to|upto)\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?)/i.exec(
-        rest,
-      );
-    const refText = refMatch ? refMatch[1].replace(/\s+/g, " ").trim() : null;
-    const { low, high } = parseReferenceRange(refText);
-
-    if (!unit) {
-      // Some reports print the unit after the range.
-      const tail = rest.slice(refMatch ? (refMatch.index ?? 0) + refMatch[0].length : 0).trim();
-      const u2 = unitRe.exec(tail);
-      if (u2) unit = normaliseUnit(u2[1]);
-    }
-
-    const key = hit.def.code;
+    // Tests that aren't in the built-in catalogue: "<name> <value> <unit and/or range>".
+    const generic = /^([A-Za-z][A-Za-z0-9 ()/%,.'+-]{1,58}?)\s*[:-]?\s+(?=[<>]?\d)(.*)$/.exec(line);
+    if (!generic) continue;
+    const name = generic[1].replace(/[\s:.-]+$/, "").trim();
+    if (name.replace(/[^A-Za-z]/g, "").length < 2 || NOT_A_TEST.test(name)) continue;
+    const row = parseRow(generic[2], unitRe);
+    // Without a unit or a range, a number next to a word is too often not a result.
+    if (!row || (!row.unit && !row.refText)) continue;
+    const key = name.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-
-    let confidence = 0.5;
-    if (unit) confidence += 0.25;
-    if (refText) confidence += 0.2;
-    if (unit && !hit.def.units.some((x) => x.toLowerCase() === unit!.toLowerCase()))
-      confidence -= 0.2;
-
+    const { low, high } = parseReferenceRange(row.refText);
     candidates.push({
-      testName: hit.def.name,
-      biomarkerCode: hit.def.code,
-      value,
-      unit: unit ?? hit.def.units[0] ?? null,
-      refText,
+      testName: name.slice(0, 120),
+      biomarkerCode: null,
+      value: row.value,
+      unit: row.unit,
+      refText: row.refText,
       refLow: low,
       refHigh: high,
-      labFlag,
-      confidence: Math.max(
-        0.1,
-        Math.min(opts.source === "ocr" ? 0.6 : 0.95, Number(confidence.toFixed(2))),
-      ),
+      labFlag: row.labFlag,
+      confidence: row.unit && row.refText ? 0.6 : 0.45,
       sourceLine: line.slice(0, 160),
-      ...candidateWarnings(value, low, high, refText, hit.def.decimals, opts.source === "ocr"),
+      ...candidateWarnings(row.value, low, high, row.refText, 0, false),
     });
   }
 
-  return { candidates, collectedAt: findReportDate(text), labName: findLabName(text) };
+  return {
+    candidates,
+    collectedAt: findReportDate(text),
+    labName: findLabName(text),
+    reportName: reportNameFor(candidates),
+  };
+}
+
+/**
+ * Turn results read by an AI model into candidates, linking them to the catalogue and
+ * re-checking ranges and decimal points locally (never trusting the model's numbers blindly).
+ */
+export function candidatesFromResults(
+  results: {
+    testName: string;
+    value: string;
+    unit: string | null;
+    refText: string | null;
+    flag: "LOW" | "HIGH" | "NORMAL" | null;
+  }[],
+): LabCandidate[] {
+  const out: LabCandidate[] = [];
+  const seen = new Set<string>();
+  for (const r of results.slice(0, 100)) {
+    const testName = r.testName.replace(/\s+/g, " ").trim().slice(0, 120);
+    const value = r.value.replace(/\s+/g, " ").trim().slice(0, 40);
+    if (!testName || !value) continue;
+    const def = matchBiomarker(testName) ?? ALIASES.find((a) => a.re.test(testName))?.def;
+    const key = def?.code ?? testName.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const refText = r.refText?.replace(/\s+/g, " ").trim().slice(0, 120) || null;
+    const { low, high } = parseReferenceRange(refText);
+    const numeric = /^[<>]?\s*\d+(?:[.,]\d+)?$/.test(value) ? value.replace(",", ".") : null;
+    out.push({
+      testName: def?.name ?? testName,
+      biomarkerCode: def?.code ?? null,
+      value,
+      unit: normaliseUnit(r.unit?.trim().slice(0, 30) || null) ?? def?.units[0] ?? null,
+      refText,
+      refLow: low,
+      refHigh: high,
+      labFlag: r.flag === "LOW" || r.flag === "HIGH" ? r.flag : null,
+      confidence: 0.9,
+      sourceLine: `${testName} ${value} ${r.unit ?? ""} ${refText ?? ""}`.trim().slice(0, 160),
+      ...(numeric
+        ? candidateWarnings(numeric.replace(/^[<>]\s*/, ""), low, high, refText, 0, false)
+        : {}),
+    });
+  }
+  return out;
 }

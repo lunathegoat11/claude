@@ -55,6 +55,7 @@ export const POST = withApi(
       { buffer, filename: file.name, declaredMime: file.type },
       meta,
       user.timezone,
+      { allowPoorQuality: form.get("allowPoorQuality") === "1" },
     );
     await audit(
       user.id,
@@ -66,9 +67,12 @@ export const POST = withApi(
     return json(
       {
         id: result.document.id,
-        importJobId: result.importJobId,
+        panelId: result.panelId,
+        reportName: result.reportName,
+        collectedAt: result.collectedAt,
+        dateFound: result.dateFound,
+        resultCount: result.resultCount,
         extractionStatus: result.extractionStatus,
-        candidateCount: result.candidateCount,
       },
       { status: 201 },
     );

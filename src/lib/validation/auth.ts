@@ -18,6 +18,11 @@ export const passwordSchema = z
     "Include letters and at least one number or symbol",
   );
 
+/** DPDP Act 2023: under 18 is a child, whose data needs verifiable parental consent. */
+export const ageConfirmed = z.literal("on", {
+  errorMap: () => ({ message: "Kosha is only for people aged 18 or older" }),
+});
+
 export const signUpSchema = z.object({
   name: z.preprocess(
     (v) => (typeof v === "string" ? v.trim() : v),
@@ -25,6 +30,7 @@ export const signUpSchema = z.object({
   ),
   email: emailSchema,
   password: passwordSchema,
+  ageConfirmed,
   acceptTerms: z.literal("on", {
     errorMap: () => ({ message: "Please accept the Terms of Use and Privacy Policy" }),
   }),
@@ -36,6 +42,7 @@ export const signUpSchema = z.object({
 export const signInSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, "Password is required").max(128),
+  ageConfirmed,
 });
 
 export const changePasswordSchema = z

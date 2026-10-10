@@ -25,6 +25,7 @@ export async function registerUser(input: { name: string; email: string; passwor
       email: input.email,
       passwordHash,
       termsAcceptedAt: now,
+      ageConfirmedAt: now,
       healthDataConsentAt: now,
       consentVersion: CONSENT_VERSION,
       profile: { create: { fullName: input.name } },

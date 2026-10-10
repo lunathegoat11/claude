@@ -5,35 +5,7 @@ import { useActionForm } from "@/components/forms/use-action-form";
 import { Field, FormError } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Input } from "@/components/ui/input";
-
-function ConsentBox({
-  name,
-  error,
-  children,
-}: {
-  name: string;
-  error?: string[];
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="text-muted-foreground flex items-start gap-3 text-sm leading-relaxed">
-        <input
-          type="checkbox"
-          name={name}
-          aria-invalid={!!error}
-          className="mt-1 size-5 shrink-0 rounded accent-[var(--primary)]"
-        />
-        <span>{children}</span>
-      </label>
-      {error && (
-        <p role="alert" className="text-destructive mt-1 pl-8 text-[13px]">
-          {error[0]}
-        </p>
-      )}
-    </div>
-  );
-}
+import { AGE_LABEL, ConsentBox } from "./consent-box";
 
 export function SignUpForm() {
   const { state, onSubmit, pending, err } = useActionForm(signUpAction);
@@ -71,6 +43,9 @@ export function SignUpForm() {
       </Field>
       <fieldset className="bg-card space-y-3 rounded-2xl border p-4">
         <legend className="sr-only">Consent</legend>
+        <ConsentBox name="ageConfirmed" error={err("ageConfirmed")}>
+          {AGE_LABEL}
+        </ConsentBox>
         <ConsentBox name="acceptTerms" error={err("acceptTerms")}>
           I agree to the{" "}
           <Link

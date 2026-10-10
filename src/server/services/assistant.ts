@@ -3,7 +3,8 @@ import type { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { notFound } from "@/server/errors";
 import { logger } from "@/server/logger";
-import { aiProvider, demoProvider } from "@/server/ai";
+import { demoProvider } from "@/server/ai";
+import { aiForUser } from "./ai-settings";
 import { analyseQuestion } from "@/server/ai/analyse";
 import { buildContext, renderContext } from "@/server/ai/retrieval";
 import {
@@ -89,7 +90,7 @@ export async function ask(userId: string, raw: unknown, timezone: string): Promi
     if (flags.dosing) analysis.intents = ["HEALTH_SUMMARY"];
     const bundle = await buildContext(userId, analysis, timezone);
     const context = renderContext(bundle);
-    const provider = aiProvider();
+    const { provider } = await aiForUser(userId);
     let answer: string;
     try {
       answer = await provider.generate({

@@ -35,6 +35,7 @@ describe("registration and sign-in", () => {
       name: "Priya Test",
       email: `  ${email.toUpperCase()} `,
       password: "valid-pass-123",
+      ageConfirmed: "on",
       acceptTerms: "on",
       healthDataConsent: "on",
     });

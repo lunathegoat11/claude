@@ -10,7 +10,7 @@ import {
   verifyEmailWithToken,
 } from "@/server/auth/email-tokens";
 import { hashToken } from "@/server/auth/tokens";
-import { signUpSchema } from "@/lib/validation/auth";
+import { signInSchema, signUpSchema } from "@/lib/validation/auth";
 import * as email from "@/server/email";
 import { vi } from "vitest";
 import { cleanup } from "./helpers/factory";
@@ -29,12 +29,35 @@ beforeAll(async () => {
     name: "R",
     email: addr,
     password: "first-pass-123",
+    ageConfirmed: "on",
     acceptTerms: "on",
     healthDataConsent: "on",
   });
   userId = (await registerUser(input)).id;
 });
 afterAll(() => cleanup(userId));
+
+describe("age", () => {
+  it("requires people to confirm they are 18 or older to sign up and sign in", async () => {
+    const base = {
+      name: "R",
+      email: "x@test.example",
+      password: "first-pass-123",
+      acceptTerms: "on",
+      healthDataConsent: "on",
+    };
+    const res = signUpSchema.safeParse(base);
+    expect(res.success).toBe(false);
+    expect(res.error?.flatten().fieldErrors.ageConfirmed?.[0]).toMatch(/18 or older/);
+    expect(signInSchema.safeParse({ email: "x@test.example", password: "p" }).success).toBe(false);
+    expect(
+      signInSchema.safeParse({ email: "x@test.example", password: "p", ageConfirmed: "on" })
+        .success,
+    ).toBe(true);
+    const u = await db.user.findUniqueOrThrow({ where: { id: userId } });
+    expect(u.ageConfirmedAt).not.toBeNull();
+  });
+});
 
 describe("consent", () => {
   it("requires both consents to sign up and records them", async () => {

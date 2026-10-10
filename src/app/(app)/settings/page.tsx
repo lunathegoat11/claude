@@ -10,6 +10,9 @@ import { deleteHealthItemAction } from "@/actions/settings";
 import { PageHeader } from "@/components/shared/page-header";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { PreferencesForm } from "@/components/settings/preferences-form";
+import { AiHelperSettings } from "@/components/settings/ai-helper";
+import { AI_PROVIDER_LABELS, getAiSettings } from "@/server/services/ai-settings";
+import { aiProvider } from "@/server/ai";
 import { HealthItemDialog } from "@/components/settings/health-item-dialog";
 import {
   ChangePasswordForm,
@@ -31,6 +34,7 @@ const TABS = [
   { key: "profile", label: "Profile" },
   { key: "health", label: "Health summary" },
   { key: "preferences", label: "Preferences" },
+  { key: "ai", label: "AI helper" },
   { key: "privacy", label: "Privacy & security" },
 ] as const;
 
@@ -84,6 +88,10 @@ const ACTION_LABELS: Record<string, string> = {
   "measurement.import": "Imported readings",
   "profile.update": "Updated profile",
   "health_summary.update": "Updated health summary",
+  "ai.key_saved": "Added an AI key",
+  "ai.key_removed": "Removed the AI key",
+  "ai.document_reading": "Changed AI document reading",
+  "consent.given": "Gave consent",
 };
 
 export default async function SettingsPage({
@@ -294,8 +302,37 @@ export default async function SettingsPage({
         </Card>
       )}
 
+      {tab === "ai" && <AiTab userId={user.id} isDemo={user.isDemo} tz={tz} />}
+
       {tab === "privacy" && <PrivacyTab userId={user.id} isDemo={user.isDemo} tz={tz} />}
     </div>
+  );
+}
+
+async function AiTab({ userId, isDemo, tz }: { userId: string; isDemo: boolean; tz: string }) {
+  const saved = await getAiSettings(userId);
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>AI helper</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <AiHelperSettings
+          isDemo={isDemo}
+          serverAi={aiProvider().name !== "demo"}
+          saved={
+            saved && {
+              provider: saved.provider,
+              providerLabel: AI_PROVIDER_LABELS[saved.provider],
+              keyHint: saved.keyHint,
+              readDocuments: saved.readDocuments,
+              savedOn: formatDate(saved.updatedAt, tz),
+              usable: saved.usable,
+            }
+          }
+        />
+      </CardContent>
+    </Card>
   );
 }
 

@@ -342,13 +342,9 @@ async function seedDemo() {
           recordId: opts.pdf.recordId,
         },
         TZ,
+        { saveResults: false },
       );
       documentId = up.document.id;
-      if (up.importJobId)
-        await db.importJob.update({
-          where: { id: up.importJobId },
-          data: { status: "CONFIRMED", confirmedAt: new Date() },
-        });
     }
     return createLabPanel(
       uid,
