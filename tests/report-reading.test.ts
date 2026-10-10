@@ -50,6 +50,16 @@ describe("reading real-world report layouts", () => {
   });
 });
 
+describe("photo misreads", () => {
+  it("spots a range that lost its decimal points", () => {
+    const c = parseLabText("Hemoglobin 12.8 g/dL 120 - 155", { source: "ocr" }).candidates[0];
+    expect(c.warnings?.join(" ")).toMatch(/range may be missing a decimal point/);
+    // A genuinely low value against a sensible range is not second-guessed.
+    const ok = parseLabText("Hemoglobin 9.8 g/dL 12.0 - 15.5").candidates[0];
+    expect(ok.warnings).toBeUndefined();
+  });
+});
+
 describe("results read by an AI model", () => {
   it("links known tests to the catalogue and re-checks ranges locally", () => {
     const c = candidatesFromResults([

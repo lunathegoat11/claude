@@ -41,15 +41,19 @@ function resultsFrom(report: ParsedReport) {
   for (const c of report.candidates) {
     const checks = [...(c.warnings ?? [])];
     if (c.confidence < 0.5) checks.push("Read with low confidence — check it against the report.");
+    // If a decimal point may have been lost, don't judge high/low from the misread numbers:
+    // keep the range as printed in the note instead of a possibly false alarm.
+    const doubtful = (c.warnings ?? []).length > 0;
+    if (doubtful && c.refText) checks.push(`Range as read: ${c.refText}.`);
     const parsed = labResultInputSchema.safeParse({
       testName: c.testName,
       biomarkerCode: c.biomarkerCode ?? undefined,
       value: c.value,
       unit: c.unit ?? undefined,
-      refText: c.refText ?? undefined,
-      refLow: c.refLow ?? undefined,
-      refHigh: c.refHigh ?? undefined,
-      labFlag: c.labFlag ?? undefined,
+      refText: doubtful ? undefined : (c.refText ?? undefined),
+      refLow: doubtful ? undefined : (c.refLow ?? undefined),
+      refHigh: doubtful ? undefined : (c.refHigh ?? undefined),
+      labFlag: doubtful ? undefined : (c.labFlag ?? undefined),
       notes: checks.length ? checks.join(" ") : undefined,
     });
     if (parsed.success) out.push(parsed.data);

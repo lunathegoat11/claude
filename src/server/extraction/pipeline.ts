@@ -23,6 +23,20 @@ export interface ExtractionResult {
 
 const READABLE_IMAGES = ["image/jpeg", "image/png", "image/webp"];
 
+/**
+ * Photos sent to an AI service are straightened, scaled to at most 2400px and re-encoded
+ * as JPEG: this keeps them under the service's size limit and strips hidden metadata
+ * such as the GPS location phones embed in photos.
+ */
+async function prepareForAI(buf: Buffer): Promise<Buffer> {
+  const sharp = (await import("sharp")).default;
+  return sharp(buf, { failOn: "none" })
+    .rotate()
+    .resize({ width: 2400, height: 2400, fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 88 })
+    .toBuffer();
+}
+
 /** Accept only a real, past, plausible YYYY-MM-DD date. */
 export function plausibleDate(d: string | null | undefined): string | null {
   if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return null;
@@ -75,7 +89,9 @@ export async function extractDocument(
     if ((isPdf || isImage) && ai?.readDocuments && ai.provider.extractReport) {
       try {
         const r = await ai.provider.extractReport(
-          isPdf ? { kind: "pdf", data: buf } : { kind: "image", data: buf, mimeType },
+          isPdf
+            ? { kind: "pdf", data: buf }
+            : { kind: "image", data: await prepareForAI(buf), mimeType: "image/jpeg" },
         );
         if (!r.readable && r.problem === "BLURRY" && isImage && !opts.allowPoorQuality) {
           return {
@@ -108,7 +124,9 @@ export async function extractDocument(
     if (isImage) {
       if (ai?.readDocuments && ai.provider.transcribeImage) {
         try {
-          const text = (await ai.provider.transcribeImage(buf, mimeType)).trim();
+          const text = (
+            await ai.provider.transcribeImage(await prepareForAI(buf), "image/jpeg")
+          ).trim();
           if (text && text !== "UNREADABLE")
             return result("COMPLETED", `vision:${ai.provider.name}`, text, parseLabText(text));
         } catch (err) {

@@ -19,9 +19,12 @@ describe("same-origin check for uploads", () => {
         }),
       ),
     ).not.toThrow();
-    expect(() =>
-      assertSameOrigin(req({ origin: "http://192.168.1.23:3000", host: "192.168.1.23:3000" })),
-    ).not.toThrow();
+  });
+  it("trusts the raw Host header only in development", () => {
+    const phone = req({ origin: "http://192.168.1.23:3000", host: "192.168.1.23:3000" });
+    expect(() => assertSameOrigin(phone)).toThrow(/origin/); // tests run as NODE_ENV=test
+    const forged = req({ origin: "https://evil.example", host: "evil.example" });
+    expect(() => assertSameOrigin(forged)).toThrow(/origin/);
   });
   it("rejects requests sent from other websites", () => {
     expect(() =>

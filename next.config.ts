@@ -20,7 +20,7 @@ const securityHeaders = [
       "font-src 'self' data:",
       "connect-src 'self'",
       "frame-src 'self' blob:",
-      "object-src 'self' blob:",
+      "object-src 'none'",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",

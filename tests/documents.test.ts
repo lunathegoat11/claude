@@ -12,7 +12,7 @@ import {
 import { getLabPanel } from "@/server/services/labs";
 import { assessImage } from "@/server/extraction/image-quality";
 import { setAIProvider } from "@/server/ai";
-import type { AIProvider, ExtractedReport } from "@/server/ai/types";
+import type { AIProvider, ExtractedReport, ReportInput } from "@/server/ai/types";
 import { toDateInputValue } from "@/lib/format";
 import { readFileSync } from "node:fs";
 import sharp from "sharp";
@@ -199,6 +199,23 @@ describe("photo quality", () => {
     await deleteDocument(alice.id, kept.document.id);
   }, 120_000);
 
+  it("doesn't call a value high or low when a decimal point may have been lost", async () => {
+    const photo2 = await sharp(photo()).resize({ width: 2000 }).png().toBuffer();
+    const res = await uploadDocument(
+      alice.id,
+      { buffer: photo2, filename: "p.png", declaredMime: "image/png" },
+      meta({ name: "Photo" }),
+      TZ,
+    );
+    const panel = await getLabPanel(alice.id, res.panelId!);
+    for (const r of panel.results.filter((x) => x.notes?.includes("decimal"))) {
+      expect(r.flag).toBe("UNKNOWN");
+      expect(r.notes).toMatch(/Range as read/);
+    }
+    expect(panel.results.some((x) => x.notes?.includes("decimal"))).toBe(true);
+    await deleteDocument(alice.id, res.document.id);
+  }, 60_000);
+
   it("rates a sharp photo as readable", async () => {
     const sharpPhoto = await sharp(photo()).resize({ width: 2000 }).png().toBuffer();
     expect((await assessImage(sharpPhoto)).problem).toBeNull();
@@ -249,6 +266,34 @@ describe("reading reports with the user's AI", () => {
     expect(panel.results[0].biomarkerCode).toBe("TSH");
     expect(panel.results[2].flag).toBe("HIGH");
     expect(panel.results[1].flag).toBe("NORMAL"); // 12 is under the printed "< 34"
+    await deleteDocument(alice.id, res.document.id);
+  });
+
+  it("sends the AI a resized copy of a photo without its hidden location data", async () => {
+    let sent: ReportInput | null = null;
+    setAIProvider({
+      ...fake(extracted),
+      extractReport: async (input) => {
+        sent = input;
+        return extracted;
+      },
+    });
+    const big = await sharp(readFileSync("tests/fixtures/lab-report-photo.png"))
+      .resize({ width: 3600 })
+      .withExif({ IFD0: { Make: "Phone", Artist: "Someone" } })
+      .jpeg()
+      .toBuffer();
+    expect((await sharp(big).metadata()).exif).toBeTruthy();
+    const res = await uploadDocument(
+      alice.id,
+      { buffer: big, filename: "big.jpg", declaredMime: "image/jpeg" },
+      meta({ name: "Big photo" }),
+      TZ,
+    );
+    expect(sent).toMatchObject({ kind: "image", mimeType: "image/jpeg" });
+    const m = await sharp((sent as unknown as { data: Buffer }).data).metadata();
+    expect(m.width).toBeLessThanOrEqual(2400);
+    expect(m.exif).toBeUndefined();
     await deleteDocument(alice.id, res.document.id);
   });
 

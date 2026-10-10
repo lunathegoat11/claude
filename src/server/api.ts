@@ -41,11 +41,16 @@ export function assertSameOrigin(req: NextRequest) {
   } catch {
     throw new AppError("FORBIDDEN", "Request origin not allowed.");
   }
-  // Same check Next.js applies to Server Actions: the browser's Origin must match the
-  // host the request was addressed to (as seen through the hosting proxy) or APP_URL.
+  // The browser's Origin must be this site: APP_URL, or the public host the hosting proxy
+  // forwarded. The raw Host header is only trusted in development (e.g. opening the dev
+  // server from a phone on the same Wi-Fi), since outside a browser anyone can set it.
   const forwarded = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
   const allowed = new Set(
-    [new URL(env().APP_URL).host, forwarded, req.headers.get("host")].filter(Boolean),
+    [
+      new URL(env().APP_URL).host,
+      forwarded,
+      env().NODE_ENV === "development" ? req.headers.get("host") : null,
+    ].filter(Boolean),
   );
   if (!allowed.has(originHost)) throw new AppError("FORBIDDEN", "Request origin not allowed.");
 }

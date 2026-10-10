@@ -171,9 +171,18 @@ export function candidateWarnings(
   ) {
     w.push("This value may be missing a decimal point — check the report.");
   }
+  const v = Number(value);
   if (low !== null && high !== null && low > high) {
     w.push("The reference range looks wrong (the low number is higher than the high number).");
-  } else if (refText && /(^|[^\d.])0\d/.test(refText)) {
+  } else if (
+    (refText && /(^|[^\d.])0\d/.test(refText)) ||
+    // e.g. 12.8 against "120 – 155": the range lost its decimal points, not the value.
+    (low !== null &&
+      value.includes(".") &&
+      v > 0 &&
+      v < low / 4 &&
+      [10, 100].some((d) => low / d <= v * 1.5 && (high ?? low) / d >= v * 0.5))
+  ) {
     w.push("The reference range may be missing a decimal point.");
   }
   return w.length ? { warnings: w } : {};

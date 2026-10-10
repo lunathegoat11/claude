@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { DocumentType } from "@prisma/client";
-import { FileText } from "lucide-react";
+import { FileText, Upload } from "lucide-react";
 import { requireUser } from "@/server/auth/session";
 import { listDocuments } from "@/server/services/documents";
 import { listRecordOptions } from "@/server/services/records";
@@ -15,6 +15,7 @@ import { Pagination } from "@/components/shared/pagination";
 import { DOCUMENT_ICONS } from "@/components/shared/icons";
 import { UploadDialog } from "@/components/documents/upload-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DOCUMENT_TYPE_LABELS } from "@/lib/catalog/labels";
 import { DOCUMENT_TYPES } from "@/lib/validation/health";
 import { formatDate, toDateInputValue } from "@/lib/format";
@@ -81,13 +82,22 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
       {items.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title={filtered ? "No matching documents" : "No documents yet"}
+          title={filtered ? "Nothing matches that search" : "No reports or files yet"}
           description={
             filtered
               ? "Try a different search or clear the filters."
-              : "Upload a lab report, prescription or discharge summary. PDFs and photos both work."
+              : "Add a lab report, prescription or discharge summary. A PDF or a phone photo both work."
           }
-          action={filtered ? undefined : upload}
+          action={
+            filtered ? undefined : (
+              // Opens the one upload dialog in the page header (it listens for ?upload=1).
+              <Button asChild>
+                <Link href="/documents?upload=1" scroll={false}>
+                  <Upload /> Add a report
+                </Link>
+              </Button>
+            )
+          }
         />
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

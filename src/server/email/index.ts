@@ -68,10 +68,10 @@ function layout(
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px"><tr><td align="center">
 <table width="100%" style="max-width:480px;background:#fff;border:1px solid #e6e8ec;border-radius:16px;padding:32px">
 <tr><td>
-<div style="font-weight:600;font-size:18px;color:#1d6f78;margin-bottom:24px">Kosha</div>
+<div style="font-weight:600;font-size:18px;color:#2a3f9d;margin-bottom:24px">Kosha</div>
 <h1 style="font-size:20px;margin:0 0 12px">${esc(title)}</h1>
 <p style="font-size:15px;line-height:1.6;color:#4a5160;margin:0 0 24px">${esc(body)}</p>
-<a href="${esc(button.url)}" style="display:inline-block;background:#1d6f78;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-size:15px;font-weight:600">${esc(button.label)}</a>
+<a href="${esc(button.url)}" style="display:inline-block;background:#2a3f9d;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-size:15px;font-weight:600">${esc(button.label)}</a>
 <p style="font-size:13px;line-height:1.6;color:#6b7280;margin:24px 0 0">${esc(footer)}</p>
 <p style="font-size:12px;color:#9aa0aa;margin:16px 0 0;word-break:break-all">If the button doesn't work, copy this link into your browser:<br>${esc(button.url)}</p>
 </td></tr></table></td></tr></table></body></html>`;
