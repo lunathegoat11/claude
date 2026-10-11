@@ -31,18 +31,18 @@ const range = (low: number | null, high: number | null, label = "Typical range")
 
 const FASTING: GuideBand[] = [
   { label: "Normal", low: null, high: 99, tone: "normal" },
-  { label: "Prediabetes", low: 100, high: 125, tone: "borderline" },
-  { label: "Diabetes", low: 126, high: null, tone: "high" },
+  { label: "Prediabetes range", low: 100, high: 125, tone: "borderline" },
+  { label: "Diabetes range", low: 126, high: null, tone: "high" },
 ];
 const OGTT: GuideBand[] = [
   { label: "Normal", low: null, high: 139, tone: "normal" },
-  { label: "Prediabetes", low: 140, high: 199, tone: "borderline" },
-  { label: "Diabetes", low: 200, high: null, tone: "high" },
+  { label: "Prediabetes range", low: 140, high: 199, tone: "borderline" },
+  { label: "Diabetes range", low: 200, high: null, tone: "high" },
 ];
 const A1C: GuideBand[] = [
   { label: "Normal", low: null, high: 5.6, tone: "normal" },
-  { label: "Prediabetes", low: 5.7, high: 6.4, tone: "borderline" },
-  { label: "Diabetes", low: 6.5, high: null, tone: "high" },
+  { label: "Prediabetes range", low: 5.7, high: 6.4, tone: "borderline" },
+  { label: "Diabetes range", low: 6.5, high: null, tone: "high" },
 ];
 const GLUCOSE_MMOL = [{ unit: "mmol/L", factor: 0.0555 }];
 const CHOL_MMOL = [{ unit: "mmol/L", factor: 0.02586 }];
@@ -61,8 +61,8 @@ export const GUIDE_DATA: Record<string, GuideEntry> = {
       source: "Anemia Mukt Bharat (Ministry of Health), using WHO cut-offs",
       url: "https://en.vikaspedia.in/health/health-campaigns/anemia-mukt-bharat",
       unit: "g/dL",
-      male: [{ label: "Anaemia", low: null, high: 13, tone: "low" }],
-      female: [{ label: "Anaemia", low: null, high: 12, tone: "low" }],
+      male: [{ label: "Anaemia range", low: null, high: 13, tone: "low" }],
+      female: [{ label: "Anaemia range", low: null, high: 12, tone: "low" }],
       note: "An anaemia cut-off, not a full range (for pregnancy it is 11)",
     },
     convert: [{ unit: "g/L", factor: 10 }],
@@ -129,13 +129,13 @@ export const GUIDE_DATA: Record<string, GuideEntry> = {
       source: "American Diabetes Association Standards of Care 2025",
       url: "https://diabetesjournals.org/care/article/48/Supplement_1/S27/157566/2-Diagnosis-and-Classification-of-Diabetes",
       unit: "mg/dL",
-      bands: [{ label: "Diabetes, with symptoms", low: 200, high: null, tone: "high" }],
+      bands: [{ label: "Diabetes range (with symptoms)", low: 200, high: null, tone: "high" }],
     },
     india: {
       source: "ICMR Standard Treatment Workflows: Endocrinology",
       url: "https://www.icmr.gov.in/icmrobject/uploads/STWs/1726567249_endocrinology_all.pdf",
       unit: "mg/dL",
-      bands: [{ label: "Diabetes, with symptoms", low: 200, high: null, tone: "high" }],
+      bands: [{ label: "Diabetes range (with symptoms)", low: 200, high: null, tone: "high" }],
     },
     convert: GLUCOSE_MMOL,
   },
@@ -424,13 +424,13 @@ export const GUIDE_DATA: Record<string, GuideEntry> = {
       source: "American Diabetes Association Standards of Care 2025",
       url: "https://diabetesjournals.org/care/article/48/Supplement_1/S27/157566/2-Diagnosis-and-Classification-of-Diabetes",
       unit: "mg/dL",
-      bands: [{ label: "Diabetes, with symptoms", low: 200, high: null, tone: "high" }],
+      bands: [{ label: "Diabetes range (with symptoms)", low: 200, high: null, tone: "high" }],
     },
     india: {
       source: "ICMR Standard Treatment Workflows: Endocrinology",
       url: "https://www.icmr.gov.in/icmrobject/uploads/STWs/1726567249_endocrinology_all.pdf",
       unit: "mg/dL",
-      bands: [{ label: "Diabetes, with symptoms", low: 200, high: null, tone: "high" }],
+      bands: [{ label: "Diabetes range (with symptoms)", low: 200, high: null, tone: "high" }],
     },
     convert: GLUCOSE_MMOL,
   },
@@ -491,7 +491,7 @@ export const GUIDE_DATA: Record<string, GuideEntry> = {
       source: "Integrated Disease Surveillance Programme (Ministry of Health)",
       url: "https://idsp.mohfw.gov.in/WriteReadData/OldSite/Case_Def_P_Form.pdf",
       unit: "°F",
-      bands: [{ label: "Fever", low: 100.4, high: null, tone: "high" }],
+      bands: [{ label: "Fever range", low: 100.4, high: null, tone: "high" }],
       note: "A fever threshold (38 °C); no Indian normal range is published",
     },
     convert: [{ unit: "°C", factor: 5 / 9, offset: -32 * (5 / 9) }],

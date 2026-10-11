@@ -48,6 +48,18 @@ const schema = z.object({
   CONTACT_EMAIL: z.string().optional(),
   GRIEVANCE_OFFICER_NAME: z.string().optional(),
   GRIEVANCE_OFFICER_EMAIL: z.string().optional(),
+  GRIEVANCE_OFFICER_ADDRESS: z.string().optional(),
+  /** Where the database and files are kept, e.g. "Mumbai, India (Amazon Web Services)". */
+  DATA_LOCATION: z.string().optional(),
+  /** Companies that host or store data for this server, e.g. "Railway (hosting), AWS (files)". */
+  HOSTING_PROVIDERS: z.string().optional(),
+  /** City whose courts hear disputes under the Terms. */
+  JURISDICTION_CITY: z.string().optional(),
+  /** How long database backups are kept, in days. */
+  BACKUP_RETENTION_DAYS: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.coerce.number().int().min(0).max(365).optional(),
+  ),
   LEGAL_REVIEWED: bool,
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });

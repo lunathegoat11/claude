@@ -1,3 +1,4 @@
+import { env } from "@/server/env";
 import type { NextRequest } from "next/server";
 import { withApi, json } from "@/server/api";
 import { AppError } from "@/server/errors";
@@ -24,9 +25,12 @@ export const GET = withApi(async (req, { user }) => {
 /** POST /api/documents — multipart upload: file + metadata fields. */
 export const POST = withApi(
   async (req: NextRequest, { user }) => {
-    const contentLength = Number(req.headers.get("content-length") ?? 0);
-    if (contentLength > 110 * 1024 * 1024)
-      throw new AppError("PAYLOAD_TOO_LARGE", "File is too large.");
+    // Check the size before reading the body, so an oversized upload is never held in memory.
+    const contentLength = Number(req.headers.get("content-length"));
+    if (!Number.isFinite(contentLength) || contentLength <= 0)
+      throw new AppError("VALIDATION", "The upload could not be read. Please try again.");
+    if (contentLength > env().MAX_UPLOAD_MB * 1024 * 1024 + 64 * 1024)
+      throw new AppError("PAYLOAD_TOO_LARGE", `Files can be up to ${env().MAX_UPLOAD_MB} MB.`);
     let form: FormData;
     try {
       form = await req.formData();

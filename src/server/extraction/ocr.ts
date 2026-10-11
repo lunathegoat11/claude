@@ -1,4 +1,5 @@
 import "server-only";
+import { SHARP_INPUT } from "@/server/extraction/sharp-options";
 import path from "node:path";
 import { existsSync } from "node:fs";
 import { logger } from "@/server/logger";
@@ -29,7 +30,7 @@ export function ocrAvailable() {
  */
 async function variants(buf: Buffer): Promise<{ img: Buffer; psm: "4" | "3" }[]> {
   const sharp = (await import("sharp")).default;
-  const base = () => sharp(buf, { failOn: "none" }).rotate().grayscale(); // honour EXIF orientation
+  const base = () => sharp(buf, SHARP_INPUT).rotate().grayscale(); // honour EXIF orientation
   const [a, b] = await Promise.all([
     base().resize({ width: 2600, kernel: "lanczos3" }).normalize().sharpen().png().toBuffer(),
     base()
@@ -53,7 +54,7 @@ async function variants(buf: Buffer): Promise<{ img: Buffer; psm: "4" | "3" }[]>
  */
 async function headerStrip(buf: Buffer): Promise<Buffer | null> {
   const sharp = (await import("sharp")).default;
-  const img = sharp(buf, { failOn: "none" }).rotate();
+  const img = sharp(buf, SHARP_INPUT).rotate();
   const m = await img.metadata();
   const width = m.autoOrient?.width ?? m.width;
   const height = m.autoOrient?.height ?? m.height;

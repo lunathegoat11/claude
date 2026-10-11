@@ -13,7 +13,7 @@ export default function TermsPage() {
         <p>
           These terms are an agreement between you and {p.org} for using Kosha. Please read them,
           together with our{" "}
-          <Link href="/privacy" className="text-primary hover:underline">
+          <Link href="/privacy" className="text-primary underline underline-offset-2">
             Privacy Policy
           </Link>
           .
@@ -38,6 +38,11 @@ export default function TermsPage() {
             Kosha is not connected to any government system (including ABDM) or hospital, unless we
             say otherwise in the app.
           </li>
+          <li>
+            The general ranges shown on charts (from Indian and US health agencies) are for
+            information only. They are not a diagnosis, and your doctor may use different targets
+            for you.
+          </li>
         </ul>
       </section>
       <section>
@@ -59,9 +64,17 @@ export default function TermsPage() {
       <section>
         <h2>4. The AI assistant and automatic reading</h2>
         <p>
-          The assistant and the automatic reading of reports can make mistakes. Answers are based
-          only on your records and are labelled as AI-generated. Do not make medical decisions based
-          on them without consulting a doctor.
+          The assistant and the automatic reading of reports can make mistakes, including reading a
+          number wrongly. Always check values against the original report. Answers are based only on
+          your records, and each one is labelled with what wrote it (an AI service or Kosha&apos;s
+          automatic summary). Do not make medical decisions based on them without consulting a
+          doctor.
+        </p>
+        <p>
+          AI is optional and off unless you switch it on. If you use your own AI key, your use of
+          that AI service is also governed by your agreement with its provider, and you must follow
+          its usage policies. Kosha is not affiliated with, or endorsed by, Anthropic, OpenAI or any
+          health agency whose guidance it cites.
         </p>
       </section>
       <section>
@@ -78,7 +91,15 @@ export default function TermsPage() {
         </ul>
       </section>
       <section>
-        <h2>6. Availability</h2>
+        <h2>6. Price</h2>
+        <p>
+          Kosha is free to use. It has no paid plans, subscriptions or in-app purchases, and never
+          asks for payment details. If you add your own AI key, the AI company may charge you
+          directly for what you use, under your agreement with them.
+        </p>
+      </section>
+      <section>
+        <h2>7. Availability</h2>
         <p>
           We work to keep Kosha available and your data safe, but the service is provided &quot;as
           is&quot;. Keep your original medical documents — Kosha is not a substitute for official
@@ -86,26 +107,41 @@ export default function TermsPage() {
         </p>
       </section>
       <section>
-        <h2>7. Liability</h2>
+        <h2>8. Liability</h2>
         <p>
           To the extent permitted by law, {p.org} is not liable for decisions made based on
-          information in Kosha, or for indirect losses. [Liability terms to be completed by legal
-          counsel.]
+          information in Kosha, for errors in values read automatically or answers written by AI, or
+          for indirect losses. Nothing in these terms limits liability that cannot be limited under
+          Indian law, including your rights as a consumer.
         </p>
       </section>
       <section>
-        <h2>8. Ending your use</h2>
+        <h2>9. Open-source software</h2>
+        <p>
+          Kosha is built with open-source software, used under its licences. See the{" "}
+          <a
+            href="/licenses/THIRD_PARTY_NOTICES.txt"
+            className="text-primary underline underline-offset-2"
+          >
+            open-source notices
+          </a>
+          .
+        </p>
+      </section>
+      <section>
+        <h2>10. Ending your use</h2>
         <p>
           You can delete your account at any time. We may suspend accounts that break these terms,
           and will tell you why where we can.
         </p>
       </section>
       <section>
-        <h2>9. Changes and law</h2>
+        <h2>11. Changes and law</h2>
         <p>
-          We will tell you about important changes to these terms. These terms are governed by the
-          laws of India, and the courts of [city] have jurisdiction. Questions: {p.contact}.
-          Grievances: {p.officer} ({p.officerEmail}).
+          We will show you important changes to these terms in the app and ask you to accept them
+          before you continue. These terms are governed by the laws of India, and the courts of{" "}
+          {p.city} have jurisdiction. Questions: {p.contact}. Grievances: {p.officer} (
+          {p.officerEmail}).
         </p>
       </section>
     </LegalDoc>

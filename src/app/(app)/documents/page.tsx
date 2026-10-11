@@ -7,6 +7,7 @@ import { requireUser } from "@/server/auth/session";
 import { listDocuments } from "@/server/services/documents";
 import { listRecordOptions } from "@/server/services/records";
 import { listProviderNames } from "@/server/services/providers";
+import { documentReaderLabel } from "@/server/services/ai-settings";
 import { env } from "@/server/env";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -36,6 +37,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
     listRecordOptions(user.id),
     listProviderNames(user.id),
   ]);
+  const readBy = await documentReaderLabel(user.id);
   const filtered = !!(sp.q || type);
   const tz = user.timezone;
   const qs = (over: Partial<SP>) =>
@@ -50,6 +52,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
         maxMb={env().MAX_UPLOAD_MB}
         today={toDateInputValue(new Date(), tz)}
         providers={providers.map((p) => p.name)}
+        readBy={readBy}
       />
     </Suspense>
   );
@@ -58,7 +61,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
     <div>
       <PageHeader
         title="Reports & files"
-        description="Lab reports, prescriptions, discharge summaries and other papers. Only you can open them."
+        description="Lab reports, prescriptions, discharge summaries and other papers. They're private to your account."
         actions={upload}
       />
       <div className="mb-5">

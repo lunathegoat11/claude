@@ -26,8 +26,8 @@ export function AppShell({
         Skip to content
       </a>
       <div>
-        {/* Translucent bar, as on apple.com. The blur is limited to this one small sticky element. */}
-        <header className="bg-background/80 supports-[backdrop-filter]:bg-background/70 sticky top-0 z-20 border-b border-black/5 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10">
+        {/* A glass bar: the page scrolls softly beneath it. */}
+        <header className="glass-bar sticky top-0 z-20">
           <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6 lg:gap-5 lg:px-8">
             <Link
               href="/dashboard"
@@ -61,6 +61,33 @@ export function AppShell({
           className="enter mx-auto max-w-6xl px-4 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-10 lg:px-8 lg:pb-20"
         >
           {children}
+          <footer className="text-muted-foreground mt-16 border-t pt-5 text-[12px] leading-relaxed">
+            <p>
+              Kosha organises your health information. It doesn&apos;t give medical advice,
+              diagnosis or treatment, and values read automatically or written by AI can be wrong.
+              In an emergency, call 112.
+            </p>
+            <nav aria-label="Legal" className="mt-1 flex flex-wrap gap-x-4">
+              <Link
+                href="/privacy"
+                className="hover:text-foreground py-2 underline-offset-2 hover:underline"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                href="/terms"
+                className="hover:text-foreground py-2 underline-offset-2 hover:underline"
+              >
+                Terms of Use
+              </Link>
+              <a
+                href="/licenses/THIRD_PARTY_NOTICES.txt"
+                className="hover:text-foreground py-2 underline-offset-2 hover:underline"
+              >
+                Open-source notices
+              </a>
+            </nav>
+          </footer>
         </main>
       </div>
       <MobileNav />

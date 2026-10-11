@@ -21,7 +21,7 @@ export default function AppError({
       </span>
       <h1 className="mt-4 text-xl font-semibold">Something went wrong</h1>
       <p className="text-muted-foreground mt-2 max-w-sm text-sm">
-        We couldn&apos;t load this page. Your data is safe. Please try again
+        We couldn&apos;t load this page. Nothing you saved was lost. Please try again
         {error.digest ? ` (reference ${error.digest})` : ""}.
       </p>
       <Button onClick={reset} className="mt-6">

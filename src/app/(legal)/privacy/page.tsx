@@ -1,198 +1,303 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalDoc, legalParties } from "@/components/legal/legal-doc";
+import { env } from "@/server/env";
+import { serverAiLabel } from "@/server/services/ai-settings";
+import { DELETED_KEEP_DAYS } from "@/server/services/retention";
 
 export const metadata: Metadata = { title: "Privacy Policy" };
 
 export default function PrivacyPage() {
   const p = legalParties();
+  const e = env();
+  const serverAi = serverAiLabel();
+  const email = e.EMAIL_PROVIDER === "resend" ? "Resend (email delivery)" : null;
+  const link = "text-primary underline underline-offset-2";
   return (
     <LegalDoc
       title="Privacy Policy"
       intro={
         <p>
           Kosha is operated by {p.org} (&quot;we&quot;). Your health information is personal and
-          sensitive. This policy explains, in plain language, what we collect, why, and the choices
-          you have. It is written with India&apos;s Digital Personal Data Protection Act, 2023 in
-          mind.
+          sensitive. This policy explains, in plain language, what we collect, why, who else handles
+          it and the choices you have. It is written for India&apos;s Digital Personal Data
+          Protection Act, 2023 (DPDP Act) and its Rules.
         </p>
       }
     >
       <section>
         <h2>1. The short version</h2>
         <ul>
+          <li>You decide what health information to add. We use it only to run Kosha for you.</li>
+          <li>We do not sell your data, and we don&apos;t use it for advertising or profiling.</li>
           <li>
-            You decide what health information to add. We use it only to provide Kosha to you.
+            Your records are private to your account. We don&apos;t share them with doctors,
+            hospitals, insurers or employers. The companies that run Kosha for us (listed in section
+            5) handle them only on our instructions.
           </li>
-          <li>We do not sell your data and do not use it for advertising.</li>
           <li>
-            Only you can see your records. We don&apos;t share them with doctors, hospitals,
-            insurers or employers.
+            AI is optional. Nothing is sent to an AI company unless you switch it on, and you can
+            switch it off again at any time.
           </li>
-          <li>You can download everything or delete your account at any time.</li>
+          <li>
+            You can download your data or delete your account, and everything in it, at any time.
+          </li>
+          <li>There are no ads, analytics or tracking tools in Kosha.</li>
         </ul>
       </section>
+
       <section>
         <h2>2. What we collect</h2>
         <ul>
           <li>
-            <strong>Account details:</strong> your name, email address and password (stored only as
-            a secure, one-way hash).
+            <strong>Account details:</strong> your name, email address and password. The password is
+            stored only as a one-way hash, so nobody can read it.
           </li>
           <li>
-            <strong>Health information you add:</strong> medical records, uploaded documents, lab
-            results, health readings, medications, allergies, conditions, and questions you ask the
-            assistant.
+            <strong>Health information you add:</strong> medical records, uploaded reports and
+            photos, the text read from them, lab results, health readings, medicines, allergies,
+            conditions, and questions you ask the assistant with its answers.
           </li>
           <li>
             <strong>Optional profile details:</strong> date of birth, sex, blood group, height,
-            phone number, city/state and an emergency contact — only if you choose to add them.
+            phone number, city/state and an emergency contact, only if you choose to add them.
           </li>
           <li>
-            <strong>Security information:</strong> your signed-in sessions with a short device label
-            (for example &ldquo;Chrome on Android&rdquo;), and a log of account activity (for
-            example &ldquo;signed in&rdquo; or &ldquo;uploaded a document&rdquo;) with dates. We
-            don&apos;t store your IP address or your browser&apos;s full details, and the log never
+            <strong>Consent records:</strong> when you accepted these terms, gave consent to process
+            health data, confirmed you are 18 or older, and switched AI on or off, with the version
+            of the terms you saw.
+          </li>
+          <li>
+            <strong>Security information:</strong> your signed-in devices with a short label (for
+            example &ldquo;Chrome on Android&rdquo;), and a log of account activity (for example
+            &ldquo;signed in&rdquo; or &ldquo;uploaded a document&rdquo;) with dates. The log never
             contains your health information.
+          </li>
+          <li>
+            <strong>Your IP address</strong> is used for a short time, in memory only, to stop
+            people guessing passwords or flooding the service. It is not saved.
           </li>
           <li>
             <strong>Photos you upload</strong> are stored without their hidden details, such as the
             GPS location and phone model that cameras add.
           </li>
         </ul>
-        <p>We do not ask for Aadhaar, ABHA or other government ID numbers.</p>
+        <p>We do not ask for Aadhaar, ABHA or any other government ID number.</p>
       </section>
+
       <section>
         <h2>3. Why we use it</h2>
         <ul>
           <li>
-            To store, organise and display your health information to you (dashboards, charts,
+            To store, organise and show your health information to you (dashboards, charts,
             timeline, search).
           </li>
           <li>
-            To read values from reports you upload, which you then review before anything is saved.
+            To read test results from reports you upload. The values are saved automatically and
+            marked for checking; please compare them with the original report, and correct them if
+            anything was misread.
           </li>
           <li>To answer your questions in the assistant, using only your own records.</li>
           <li>
-            To keep your account secure, prevent abuse and send account emails (like password
-            resets).
+            To keep your account secure, prevent abuse, and send account emails (verification and
+            password resets). Emails never contain health information.
           </li>
         </ul>
         <p>
-          We process your health information on the basis of the consent you give when you create
-          your account. You can withdraw consent at any time by deleting your account (Profile &amp;
-          Settings → Privacy &amp; security).
+          We process your health information because you consent to it when you create your account.
+          Using AI is a separate, optional consent. You can withdraw either at any time (see section
+          9).
         </p>
       </section>
+
       <section>
-        <h2>4. The AI assistant</h2>
+        <h2>4. AI and automatic reading</h2>
         <p>
-          The assistant only looks at the records relevant to each question. Depending on how this
-          service is configured, answers are created either on our own servers or by an AI provider
-          we contract with ([name of AI provider, if any]). When an external provider is used, only
-          the relevant parts of your records are sent to it, for the purpose of answering your
-          question, under an agreement that restricts their use of your data. The assistant cannot
-          change your records and does not give medical advice.
+          Kosha reads uploaded reports on its own server, using text recognition software that runs
+          here. Nothing is sent elsewhere to do this.
+        </p>
+        <p>AI is used only if you choose it, in one of two ways:</p>
+        <ul>
+          {serverAi ? (
+            <li>
+              <strong>The AI service set up for this server ({serverAi}).</strong> Off unless you
+              switch on &ldquo;Use AI for answers&rdquo; in Settings → AI helper. When on, your
+              question, your recent messages in that conversation and the records related to it are
+              sent to {serverAi} to write the answer. Uploaded reports may also be sent to it to be
+              read. {serverAi} is located outside India and acts on our instructions.
+            </li>
+          ) : (
+            <li>
+              <strong>This server has no AI service of its own.</strong> Without your own key, the
+              assistant answers with simple summaries built from your records on this server, and
+              nothing is sent to an AI company.
+            </li>
+          )}
+          <li>
+            <strong>Your own AI key.</strong> If you add your own Claude (Anthropic) or OpenAI key,
+            your questions and related records are sent to your account with that company, and your
+            uploaded reports are sent too only if you tick that option. That company handles them
+            under its own terms with you. Your key is encrypted before it is stored and is never
+            shown again.
+          </li>
+        </ul>
+        <p>
+          Every answer is labelled with what wrote it: an AI service, or Kosha&apos;s automatic
+          summary. The assistant cannot change your records, does not give medical advice, and can
+          be wrong. Kosha is not affiliated with Anthropic or OpenAI.
         </p>
       </section>
+
       <section>
-        <h2>5. Who we share it with</h2>
-        <p>We do not sell or rent your information. We share it only with:</p>
+        <h2>5. Who handles your data</h2>
+        <p>We do not sell or rent your information. Besides us, it is handled only by:</p>
         <ul>
           <li>
-            <strong>Service providers</strong> who help us run Kosha — hosting, file storage, email
-            delivery and (if enabled) the AI provider — under contracts requiring them to protect
-            it: [list providers].
+            <strong>Companies that run Kosha for us:</strong> {p.hosts}
+            {email ? `, and ${email}` : ""}. They process data only to provide their service to us.
           </li>
+          {serverAi && (
+            <li>
+              <strong>{serverAi}</strong>, only if you switch AI on (section 4).
+            </li>
+          )}
           <li>
             <strong>Authorities</strong>, only where Indian law requires it.
           </li>
         </ul>
+        <p>
+          People who maintain this service can technically access the database to keep it running.
+          They may only do so when needed for that, and access is limited.
+        </p>
       </section>
+
       <section>
         <h2>6. Where and how it is stored</h2>
         <p>
-          Your information is stored in [location of servers, e.g. Mumbai, India]. Documents are
-          stored privately and are only shown to you after checking your sign-in. Connections are
-          encrypted, passwords are hashed, and access is logged.
-        </p>
-      </section>
-      <section>
-        <h2>7. How long we keep it</h2>
-        <p>
-          We keep your information while your account is active. When you delete a document, the
-          file is removed immediately. When you delete your account, all your records and files are
-          deleted; copies in backups are removed within [30] days.
+          Your information is stored in {p.location}. If you switch on an AI service, the
+          information sent to it may be processed in other countries, such as the United States.
         </p>
         <p>
-          Some things are removed automatically even while your account is active: expired sign-ins
-          as soon as they expire, email links a day after they are used or expire, values read from
-          a document that you didn&apos;t keep after 30 days, and the account activity log after one
-          year.
+          Connections to Kosha are encrypted (HTTPS). Passwords are hashed, AI keys are encrypted,
+          documents are only shown after checking your sign-in, and account activity is logged.
+          Records and files are protected by the security of the servers they are stored on; Kosha
+          does not add its own extra layer of encryption to them. No system is perfectly secure, and
+          we don&apos;t claim certification under HIPAA, ISO 27001 or any similar scheme.
         </p>
       </section>
+
       <section>
-        <h2>8. Your rights</h2>
+        <h2>7. Cookies and storage on your device</h2>
+        <p>
+          Kosha uses one essential cookie to keep you signed in. It lasts up to 30 days while you
+          use Kosha, and never more than 90 days in total. Your device also remembers a few display
+          choices (theme, transparency, which chart ranges you show). There are no advertising or
+          tracking cookies, so no cookie banner is needed.
+        </p>
+      </section>
+
+      <section>
+        <h2>8. How long we keep it</h2>
+        <ul>
+          <li>Your information is kept while your account is open.</li>
+          <li>
+            When you delete something (a record, report, result, reading or document), uploaded
+            files are removed at once. The rest is kept for {DELETED_KEEP_DAYS} days so a mistake
+            can be put right, then removed for good.
+          </li>
+          <li>
+            When you delete your account, everything is removed at once, including files and the
+            activity log. Copies in backups are removed within {p.backupDays} days.
+          </li>
+          <li>
+            Removed automatically while your account is open: expired sign-ins when they expire,
+            email links a day after they are used or expire, and the activity log after one year.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>9. Your rights</h2>
         <ul>
           <li>
-            <strong>Access:</strong> see your information in the app, or download it all (Settings →
-            Privacy &amp; security → Download my data).
+            <strong>Access and portability:</strong> see your information in the app, or download it
+            in one file (Settings → Privacy &amp; security → Download my data). Uploaded files are
+            downloaded one by one from Reports &amp; files.
           </li>
           <li>
             <strong>Correction:</strong> edit or delete any record yourself.
           </li>
           <li>
-            <strong>Erasure:</strong> delete your account and everything in it.
+            <strong>Erasure:</strong> delete your account and everything in it (Settings → Privacy
+            &amp; security).
           </li>
           <li>
-            <strong>Withdraw consent:</strong> at any time, by deleting your account.
+            <strong>Withdraw consent:</strong> switch AI off at any time in Settings → AI helper. To
+            withdraw consent to all processing, delete your account. Withdrawing doesn&apos;t affect
+            what was done before.
           </li>
           <li>
-            <strong>Nominate</strong> someone to exercise these rights on your behalf in case of
-            death or incapacity, by writing to us.
+            <strong>Nominate</strong> someone to act for you if you die or can&apos;t act yourself,
+            by writing to the Grievance Officer.
           </li>
           <li>
-            <strong>Complain:</strong> to our Grievance Officer (below), and if you&apos;re not
-            satisfied, to the Data Protection Board of India.
+            <strong>Complain:</strong> to our Grievance Officer (section 12). If you&apos;re not
+            satisfied, you can complain to the Data Protection Board of India.
           </li>
         </ul>
-      </section>
-      <section>
-        <h2>9. Children</h2>
         <p>
-          Kosha is for adults (18+). A child&apos;s records should be managed by a parent or legal
-          guardian through their own account.
+          If you live outside India, you have at least these same rights. We do not
+          &ldquo;sell&rdquo; or &ldquo;share&rdquo; personal information as California law defines
+          those words.
         </p>
       </section>
+
       <section>
-        <h2>10. Data breaches</h2>
+        <h2>10. Children</h2>
         <p>
-          If a security incident affects your information, we will inform you and the authorities as
-          required by law.
+          Kosha is only for adults (18+), and asks you to confirm this. A child&apos;s records
+          should be kept by a parent or legal guardian in the guardian&apos;s own account. If we
+          learn that an account belongs to someone under 18, we will close it.
         </p>
       </section>
+
       <section>
-        <h2>11. Grievance Officer and contact</h2>
+        <h2>11. Data breaches</h2>
         <p>
-          {p.officer}, Grievance Officer —{" "}
-          <a className="text-primary hover:underline" href={`mailto:${p.officerEmail}`}>
+          If a security incident affects your personal data, we will tell you without delay, in
+          plain language, what happened, what it may mean for you and what we are doing about it. We
+          will also report it to the Data Protection Board of India as the DPDP Act and Rules
+          require.
+        </p>
+      </section>
+
+      <section>
+        <h2>12. Grievance Officer and contact</h2>
+        <p>
+          {p.officer}, Grievance Officer,{" "}
+          <a className={link} href={`mailto:${p.officerEmail}`}>
             {p.officerEmail}
           </a>
-          . We will acknowledge your complaint and respond within the time required by law. General
-          questions: {p.contact}.
+          , {p.officerAddress}. We will acknowledge your complaint promptly and resolve it within
+          the time the law requires. General questions: {p.contact}.
         </p>
       </section>
+
       <section>
-        <h2>12. Changes to this policy</h2>
+        <h2>13. Changes to this policy</h2>
         <p>
-          If we make important changes, we will tell you in the app and ask for your consent again
-          where required.
+          If we make important changes, we will show you the new version in the app and ask you to
+          accept it before you continue.
         </p>
         <p>
           See also our{" "}
-          <Link href="/terms" className="text-primary hover:underline">
+          <Link href="/terms" className={link}>
             Terms of Use
-          </Link>
+          </Link>{" "}
+          and the{" "}
+          <a href="/licenses/THIRD_PARTY_NOTICES.txt" className={link}>
+            open-source notices
+          </a>
           .
         </p>
       </section>

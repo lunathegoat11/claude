@@ -45,11 +45,14 @@ export function UploadDialog({
   maxMb,
   today,
   providers,
+  readBy,
 }: {
   records: { id: string; title: string }[];
   maxMb: number;
   today: string;
   providers: string[];
+  /** Who reads the report, e.g. "on this server (no AI)". */
+  readBy: string;
 }) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -177,8 +180,9 @@ export function UploadDialog({
           <DialogHeader>
             <DialogTitle>Add a report or file</DialogTitle>
             <DialogDescription>
-              A PDF or a photo, up to {maxMb} MB. Test results on lab reports are read and saved for
-              you, with the report&apos;s name and date.
+              A PDF or a photo, up to {maxMb} MB. Test results are read {readBy} and saved with the
+              report&apos;s name and date. Reading can make mistakes, so check the values against
+              the report.
             </DialogDescription>
           </DialogHeader>
           <form ref={formRef} onSubmit={submit} className="space-y-4" noValidate>

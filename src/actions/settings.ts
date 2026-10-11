@@ -14,6 +14,7 @@ import {
   upsertMedication,
 } from "@/server/services/profile";
 import { audit } from "@/server/audit";
+import { rateLimit } from "@/server/rate-limit";
 import { db } from "@/server/db";
 import { AppError } from "@/server/errors";
 import { uuid } from "@/lib/validation/common";
@@ -82,6 +83,7 @@ export async function deleteAccountAction(_: ActionState, fd: FormData): Promise
       throw new AppError("VALIDATION", "Type DELETE to confirm.", {
         confirm: ["Type DELETE to confirm"],
       });
+    await rateLimit("signIn", `user:${user.id}`);
     const row = await db.user.findUnique({
       where: { id: user.id },
       select: { passwordHash: true },

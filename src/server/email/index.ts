@@ -41,6 +41,14 @@ export async function sendEmail(msg: EmailMessage): Promise<void> {
   }
   if (e.EMAIL_PROVIDER === "resend") logger.warn("email.resend_key_missing");
   if (process.env.NODE_ENV === "test") return;
+  if (process.env.NODE_ENV === "production") {
+    // On a real server, printing emails would put working sign-in links into the logs.
+    logger.error("email.not_configured");
+    throw new AppError(
+      "INTERNAL",
+      "Email isn't set up on this server yet, so we couldn't send the message.",
+    );
+  }
   // Development / self-hosted without an email service: show the email in the terminal.
   console.warn(
     [

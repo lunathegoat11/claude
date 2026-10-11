@@ -139,21 +139,39 @@ export async function listSessions(userId: string) {
   });
 }
 
-/** Permanently delete the account, all data and all stored files. */
+/**
+ * Permanently delete the account, all data, all stored files and the account's activity
+ * log. Files go first (each tried up to three times), so a database failure can never
+ * leave files behind that no account points to any more.
+ */
 export async function deleteAccount(userId: string) {
   const docs = await db.medicalDocument.findMany({
     where: { userId },
     select: { storageKey: true },
   });
-  await db.user.delete({ where: { id: userId } });
   for (const d of docs) {
-    await storage()
-      .delete(d.storageKey)
-      .catch((err) => logger.error("storage.delete_failed", { err }));
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const ok = await storage()
+        .delete(d.storageKey)
+        .then(() => true)
+        .catch((err) => {
+          if (attempt === 3) logger.error("storage.delete_failed", { err });
+          return false;
+        });
+      if (ok) break;
+    }
   }
+  await db.$transaction([
+    db.auditLog.deleteMany({ where: { userId } }),
+    db.user.delete({ where: { id: userId } }),
+  ]);
 }
 
-/** Machine-readable export of everything the user has stored (no binaries). */
+/**
+ * Machine-readable export of everything Kosha holds about the user. Uploaded files
+ * themselves are downloaded one by one from Reports & files; their details and the text
+ * read from them are included here.
+ */
 export async function exportUserData(userId: string) {
   const [
     user,
@@ -167,8 +185,26 @@ export async function exportUserData(userId: string) {
     allergies,
     conditions,
     conversations,
+    providers,
+    sessions,
+    activity,
+    aiSettings,
   ] = await Promise.all([
-    db.user.findUnique({ where: { id: userId }, select: { email: true, createdAt: true } }),
+    db.user.findUnique({
+      where: { id: userId },
+      select: {
+        email: true,
+        emailVerified: true,
+        createdAt: true,
+        lastLoginAt: true,
+        termsAcceptedAt: true,
+        healthDataConsentAt: true,
+        consentVersion: true,
+        ageConfirmedAt: true,
+        lastAgeConfirmedAt: true,
+        aiConsentAt: true,
+      },
+    }),
     db.profile.findUnique({ where: { userId } }),
     db.medicalRecord.findMany({ where: { userId, deletedAt: null }, orderBy: { date: "asc" } }),
     db.medicalDocument.findMany({
@@ -185,6 +221,7 @@ export async function exportUserData(userId: string) {
         sha256: true,
         tags: true,
         notes: true,
+        extractedText: true,
         createdAt: true,
       },
     }),
@@ -193,10 +230,7 @@ export async function exportUserData(userId: string) {
       include: { results: { where: { deletedAt: null } } },
       orderBy: { collectedAt: "asc" },
     }),
-    db.healthMetric.findMany({
-      where: { OR: [{ userId: null }, { userId }] },
-      select: { id: true, key: true, name: true, unit: true },
-    }),
+    db.healthMetric.findMany({ where: { OR: [{ userId: null }, { userId }] } }),
     db.healthMeasurement.findMany({
       where: { userId, deletedAt: null },
       orderBy: { measuredAt: "asc" },
@@ -206,16 +240,32 @@ export async function exportUserData(userId: string) {
     db.condition.findMany({ where: { userId } }),
     db.aIConversation.findMany({
       where: { userId },
-      include: { messages: { select: { role: true, content: true, createdAt: true } } },
+      include: { messages: { orderBy: { createdAt: "asc" } } },
+    }),
+    db.provider.findMany({ where: { userId } }),
+    db.session.findMany({
+      where: { userId },
+      select: { device: true, createdAt: true, lastUsedAt: true, expiresAt: true },
+    }),
+    db.auditLog.findMany({
+      where: { userId },
+      orderBy: { createdAt: "asc" },
+      select: { action: true, entityType: true, entityId: true, createdAt: true },
+    }),
+    // Never the key itself: only which service, its last four characters and the choices.
+    db.aiCredential.findUnique({
+      where: { userId },
+      select: { provider: true, keyHint: true, readDocuments: true, createdAt: true },
     }),
   ]);
   const metricKey = new Map(metrics.map((m) => [m.id, m]));
   return {
     exportedAt: new Date().toISOString(),
     format: "kosha-health-export/v1",
-    note: "Document files are not included in this export; download them individually from the Documents page.",
+    note: "Uploaded files are not inside this file; download each one from Reports & files. Their details and the text read from them are included below.",
     account: user,
     profile,
+    providers,
     records,
     documents,
     labReports: labPanels,
@@ -227,6 +277,10 @@ export async function exportUserData(userId: string) {
     medications,
     allergies,
     conditions,
+    customMeasurements: metrics.filter((m) => m.userId === userId),
     assistantConversations: conversations,
+    aiSettings,
+    signedInDevices: sessions,
+    accountActivity: activity,
   };
 }

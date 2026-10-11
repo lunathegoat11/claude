@@ -11,8 +11,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { PreferencesForm } from "@/components/settings/preferences-form";
 import { AiHelperSettings } from "@/components/settings/ai-helper";
-import { AI_PROVIDER_LABELS, getAiSettings } from "@/server/services/ai-settings";
-import { aiProvider } from "@/server/ai";
+import { AI_PROVIDER_LABELS, getAiSettings, serverAiLabel } from "@/server/services/ai-settings";
 import { HealthItemDialog } from "@/components/settings/health-item-dialog";
 import {
   ChangePasswordForm,
@@ -285,7 +284,10 @@ export default async function SettingsPage({
 }
 
 async function AiTab({ userId, isDemo, tz }: { userId: string; isDemo: boolean; tz: string }) {
-  const saved = await getAiSettings(userId);
+  const [saved, consent] = await Promise.all([
+    getAiSettings(userId),
+    db.user.findUnique({ where: { id: userId }, select: { aiConsentAt: true } }),
+  ]);
   return (
     <Card>
       <CardHeader>
@@ -294,7 +296,8 @@ async function AiTab({ userId, isDemo, tz }: { userId: string; isDemo: boolean; 
       <CardContent>
         <AiHelperSettings
           isDemo={isDemo}
-          serverAi={aiProvider().name !== "demo"}
+          serverAi={serverAiLabel()}
+          serverConsent={!!consent?.aiConsentAt}
           saved={
             saved && {
               provider: saved.provider,
@@ -355,8 +358,10 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
             <li>Security events are logged without the contents of your records.</li>
           </ul>
           <p className="text-muted-foreground text-xs">
-            Kosha is not a government or ABDM-integrated service and does not share your records
-            with any hospital, insurer or third party.
+            Kosha is not a government or ABDM-integrated service. It doesn&apos;t share your records
+            with hospitals, insurers or employers, and never sells them. The companies that host
+            Kosha, and an AI service only if you switch AI on, handle them for us; the Privacy
+            Policy lists them.
           </p>
           <dl className="grid gap-2 border-t pt-3 sm:grid-cols-2">
             <div>
@@ -380,14 +385,15 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
             </div>
           </dl>
           <p className="text-xs">
-            <Link href="/privacy" className="text-primary hover:underline">
+            <Link href="/privacy" className="text-primary underline underline-offset-2">
               Privacy Policy
             </Link>{" "}
             ·{" "}
-            <Link href="/terms" className="text-primary hover:underline">
+            <Link href="/terms" className="text-primary underline underline-offset-2">
               Terms of Use
-            </Link>{" "}
-            , To withdraw consent, delete your account below.
+            </Link>
+            . To stop using AI, switch it off under AI helper. To withdraw all consent, delete your
+            account below.
           </p>
         </CardContent>
       </Card>
@@ -432,9 +438,9 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-muted-foreground text-sm">
-            Download a copy of everything you&apos;ve stored: records, lab results, readings, health
-            summary and assistant conversations. Files can be downloaded individually from
-            Documents.
+            Download your data in one file: records, lab results, readings, health summary,
+            assistant conversations, consent records, signed-in devices and account activity.
+            Uploaded files themselves are downloaded one by one from Reports &amp; files.
           </p>
           <ExportButton />
         </CardContent>

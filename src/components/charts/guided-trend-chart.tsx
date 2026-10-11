@@ -74,7 +74,9 @@ export function GuidedTrendChart({
           role="group"
           aria-label="General ranges"
         >
-          <span className="text-muted-foreground text-[13px]">General ranges:</span>
+          <span className="text-muted-foreground text-[13px]">
+            General ranges, not a diagnosis:
+          </span>
           {available.map((s) => (
             <button
               key={s}
@@ -104,40 +106,42 @@ export function GuidedTrendChart({
       )}
       <LazyTrendChart {...chart} unit={unit} decimals={decimals} guides={chartGuides} />
       {available.some((s) => on[s]) && (
-        <dl className="mt-3 space-y-2 text-[13px]">
-          {available
-            .filter((s) => on[s])
-            .map((s) => {
-              const g = guides[s]!;
-              return (
-                <div key={s}>
-                  <dt className="font-medium">
-                    {s === "india" ? "India" : "USA"}:{" "}
-                    <a
-                      href={g.url}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="text-primary font-normal underline underline-offset-2"
-                    >
-                      {g.source}
-                    </a>
-                  </dt>
-                  <dd className="text-muted-foreground">
-                    {g.unavailable
-                      ? `${g.unavailable}.`
-                      : `${
-                          g.summary ??
-                          g.bands.map((b) => `${b.label}: ${bandText(b, g.unit)}`).join("; ")
-                        }.${g.note ? ` ${g.note}.` : ""}`}
-                  </dd>
-                </div>
-              );
-            })}
+        <div className="mt-3 space-y-2 text-[13px]">
+          <dl className="space-y-2">
+            {available
+              .filter((s) => on[s])
+              .map((s) => {
+                const g = guides[s]!;
+                return (
+                  <div key={s}>
+                    <dt className="font-medium">
+                      {s === "india" ? "India" : "USA"}:{" "}
+                      <a
+                        href={g.url}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="text-primary font-normal underline underline-offset-2"
+                      >
+                        {g.source}
+                      </a>
+                    </dt>
+                    <dd className="text-muted-foreground">
+                      {g.unavailable
+                        ? `${g.unavailable}.`
+                        : `${
+                            g.summary ??
+                            g.bands.map((b) => `${b.label}: ${bandText(b, g.unit)}`).join("; ")
+                          }.${g.note ? ` ${g.note}.` : ""}`}
+                    </dd>
+                  </div>
+                );
+              })}
+          </dl>
           <p className="text-muted-foreground">
             General ranges are for orientation only. Your report&apos;s own range, and your doctor,
             decide what a result means for you.
           </p>
-        </dl>
+        </div>
       )}
     </div>
   );

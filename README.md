@@ -96,7 +96,7 @@ All variables are documented in [`.env.example`](.env.example) and validated at 
 | Variable                                                                                                   | Required        | Default                 | Purpose                                                                                |
 | ---------------------------------------------------------------------------------------------------------- | --------------- | ----------------------- | -------------------------------------------------------------------------------------- |
 | `DATABASE_URL`                                                                                             | yes             | —                       | PostgreSQL connection string                                                           |
-| `APP_SECRET`                                                                                               | yes             | —                       | ≥ 32 chars. Keyed hash for pseudonymising IPs in the audit log                         |
+| `APP_SECRET`                                                                                               | yes             | —                       | ≥ 32 chars. Encrypts saved AI keys and signs tokens                         |
 | `APP_URL`                                                                                                  | no              | `http://localhost:3000` | Public origin, used for same-origin checks                                             |
 | `ALLOW_SIGNUP`                                                                                             | no              | `true`                  | Set `false` to close registration                                                      |
 | `DEMO_LOGIN_ENABLED`                                                                                       | no              | `false`                 | Shows the "Explore the demo account" button. **Keep off in production**                |
@@ -315,7 +315,7 @@ The assistant cannot modify records — it has no write path.
 - **Input validation:** Zod on every action and route; plausibility checks for readings; lab values validated; CSV preview before import.
 - **Headers:** CSP, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-Content-Type-Options`, HSTS (prod).
 - **Rate limiting:** sign-in (per IP and per email), sign-up, AI, uploads, export, API; pluggable store.
-- **Audit log:** sign-in/out, failures, record/lab/document/measurement changes, document views/downloads, exports, AI queries (metadata only), account deletion; IPs stored as keyed hashes.
+- **Audit log:** sign-in/out, failures, record/lab/document/measurement changes, document views/downloads, exports, AI queries (metadata only), account deletion; no IP addresses or browser details are stored.
 - **Logging & errors:** JSON logger redacts sensitive keys; users only ever see safe messages; client error boundary reports only an opaque digest; ESLint forbids `console.log` in app code.
 - **Account recovery:** reset and verification links are random, stored only as hashes, single-use, short-lived (1 h / 24 h), rate-limited, and never reveal whether an email is registered; a reset signs out every device.
 - **Consent:** Terms and health-data consent are required at sign-up and stored with a version and timestamp; withdrawing consent = deleting the account.

@@ -1,3 +1,5 @@
+import { ALLOWED_MIME } from "@/server/storage";
+import { SHARP_INPUT } from "@/server/extraction/sharp-options";
 import { Readable } from "node:stream";
 import { withApi } from "@/server/api";
 import { openDocumentFile } from "@/server/services/documents";
@@ -24,7 +26,7 @@ export const GET = withApi<{ id: string }>(async (req, { user, params }) => {
     const chunks: Buffer[] = [];
     for await (const c of body as Readable) chunks.push(Buffer.from(c));
     const sharp = (await import("sharp")).default;
-    const thumb = await sharp(Buffer.concat(chunks), { failOn: "none" })
+    const thumb = await sharp(Buffer.concat(chunks), SHARP_INPUT)
       .rotate()
       .resize({ width: 480, height: 320, fit: "cover", position: "top" })
       .webp({ quality: 70 })
@@ -46,9 +48,8 @@ export const GET = withApi<{ id: string }>(async (req, { user, params }) => {
     { type: "MedicalDocument", id: doc.id },
     { ip: req.headers.get("x-forwarded-for"), userAgent: req.headers.get("user-agent") },
   );
-  const ext = doc.originalFilename.includes(".")
-    ? doc.originalFilename.split(".").pop()
-    : doc.mimeType.split("/")[1];
+  // The extension comes from the checked file type, never from the name the user uploaded.
+  const ext = ALLOWED_MIME[doc.mimeType]?.ext ?? "bin";
   const filename = `${
     doc.name
       .replace(/[^\w\s.-]/g, "")

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { Laptop, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,5 +64,34 @@ export function ThemeSegmented() {
         </button>
       ))}
     </div>
+  );
+}
+
+/** Kosha's own "Reduce transparency" switch, saved on this device only. */
+export function TransparencySwitch() {
+  const [reduced, setReduced] = useState<boolean | null>(null);
+  useEffect(() => setReduced(document.documentElement.dataset.glass === "off"), []);
+  return (
+    <label className="flex items-start justify-between gap-4">
+      <span className="text-sm">
+        <span className="block font-medium">Reduce transparency</span>
+        <span className="text-muted-foreground">
+          Makes the glass bars and sheets solid. Easier to read, and smoother on older phones.
+        </span>
+      </span>
+      <Switch
+        checked={!!reduced}
+        disabled={reduced === null}
+        aria-label="Reduce transparency"
+        onCheckedChange={(on) => {
+          setReduced(on);
+          try {
+            localStorage.setItem("kosha-glass", on ? "off" : "on");
+          } catch {}
+          if (on) document.documentElement.dataset.glass = "off";
+          else delete document.documentElement.dataset.glass;
+        }}
+      />
+    </label>
   );
 }

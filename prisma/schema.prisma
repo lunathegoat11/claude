@@ -35,8 +35,14 @@ model User {
   termsAcceptedAt     DateTime?
   healthDataConsentAt DateTime?
   consentVersion      String?
-  /// When the user confirmed they are 18 or older (DPDP Act 2023: under 18 is a child).
+  /// When the user first confirmed they are 18 or older (DPDP Act 2023: under 18 is a
+  /// child). Kept as the original record; later sign-ins only update lastAgeConfirmedAt.
   ageConfirmedAt      DateTime?
+  lastAgeConfirmedAt  DateTime?
+  /// Separate, optional consent to send records to the AI service run by this server.
+  /// Null means no consent: answers then come from the built-in summary, and reports are
+  /// read on this server only. A user's own AI key is a separate choice (AiCredential).
+  aiConsentAt         DateTime?
 
   profile         Profile?
   accounts        Account[]
@@ -120,7 +126,7 @@ model AiCredential {
   /// Last four characters, shown so the user can recognise which key is saved.
   keyHint       String
   /// Whether uploaded documents may be sent to the provider to be read.
-  readDocuments Boolean  @default(true)
+  readDocuments Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)

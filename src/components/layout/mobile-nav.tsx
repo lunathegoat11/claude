@@ -16,11 +16,12 @@ export function MobileNav() {
 
   return (
     <>
+      {/* A floating glass capsule, like the tab bar in iOS 26. Taps around it reach the page. */}
       <nav
         aria-label="Main"
-        className="bg-card/85 supports-[backdrop-filter]:bg-card/70 safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-black/5 backdrop-blur-xl backdrop-saturate-150 lg:hidden dark:border-white/10"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] lg:hidden"
       >
-        <ul className="mx-auto grid h-[3.25rem] max-w-lg grid-cols-5">
+        <ul className="glass pointer-events-auto mx-auto grid h-[3.875rem] max-w-md grid-cols-5 gap-0.5 rounded-full p-1">
           {primary.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -29,13 +30,13 @@ export function MobileNav() {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex h-full flex-col items-center justify-center gap-0.5 border-t-[3px] text-[12px] font-medium",
+                    "flex h-full flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium transition-colors duration-200",
                     active
-                      ? "border-primary text-primary"
-                      : "text-muted-foreground border-transparent",
+                      ? "text-primary bg-[color-mix(in_oklab,var(--primary)_12%,transparent)]"
+                      : "text-foreground/70",
                   )}
                 >
-                  <item.icon className="size-6" strokeWidth={active ? 2 : 1.6} />
+                  <item.icon className="size-[1.375rem]" strokeWidth={active ? 2 : 1.6} />
                   {item.short ?? item.label}
                 </Link>
               </li>
@@ -47,13 +48,13 @@ export function MobileNav() {
               onClick={() => setOpen(true)}
               aria-haspopup="dialog"
               className={cn(
-                "flex h-full w-full flex-col items-center justify-center gap-0.5 border-t-[3px] text-[12px] font-medium",
+                "flex h-full w-full flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium transition-colors duration-200",
                 moreActive
-                  ? "border-primary text-primary"
-                  : "text-muted-foreground border-transparent",
+                  ? "text-primary bg-[color-mix(in_oklab,var(--primary)_12%,transparent)]"
+                  : "text-foreground/70",
               )}
             >
-              <MoreHorizontal className="size-6" strokeWidth={1.6} />
+              <MoreHorizontal className="size-[1.375rem]" strokeWidth={1.6} />
               More
             </button>
           </li>

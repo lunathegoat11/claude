@@ -39,6 +39,15 @@ export const signUpSchema = z.object({
   }),
 });
 
+export const renewConsentSchema = z.object({
+  acceptTerms: z.literal("on", {
+    errorMap: () => ({ message: "Please accept the Terms of Use and Privacy Policy" }),
+  }),
+  healthDataConsent: z.literal("on", {
+    errorMap: () => ({ message: "Kosha needs your consent to store your health information" }),
+  }),
+});
+
 export const signInSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, "Password is required").max(128),

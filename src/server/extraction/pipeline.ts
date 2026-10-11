@@ -1,4 +1,5 @@
 import "server-only";
+import { SHARP_INPUT } from "@/server/extraction/sharp-options";
 import { logger } from "@/server/logger";
 import type { ResolvedAI } from "@/server/services/ai-settings";
 import { extractPdfText } from "./pdf";
@@ -32,7 +33,7 @@ const READABLE_IMAGES = ["image/jpeg", "image/png", "image/webp"];
  */
 async function prepareForAI(buf: Buffer): Promise<Buffer> {
   const sharp = (await import("sharp")).default;
-  return sharp(buf, { failOn: "none" })
+  return sharp(buf, SHARP_INPUT)
     .rotate()
     .resize({ width: 2400, height: 2400, fit: "inside", withoutEnlargement: true })
     .jpeg({ quality: 88 })

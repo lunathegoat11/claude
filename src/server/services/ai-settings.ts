@@ -15,8 +15,25 @@ import type { AIProvider } from "@/server/ai/types";
 
 export const AI_PROVIDER_LABELS: Record<AiProviderId, string> = {
   anthropic: "Claude (Anthropic)",
-  openai: "ChatGPT (OpenAI)",
+  openai: "OpenAI",
 };
+
+/**
+ * Who receives data when the AI service set up for this server is used, in words a
+ * person can check, or null when no such service is set up.
+ */
+export function serverAiLabel(): string | null {
+  const e = env();
+  if (aiProvider().name === demoProvider.name) return null;
+  if (e.AI_PROVIDER === "anthropic") return AI_PROVIDER_LABELS.anthropic;
+  const host = new URL(e.OPENAI_BASE_URL).host;
+  return host === "api.openai.com" ? AI_PROVIDER_LABELS.openai : `the AI service at ${host}`;
+}
+
+/** Turn the user's consent to use the server's AI service on or off. */
+export async function setAiConsent(userId: string, on: boolean) {
+  await db.user.update({ where: { id: userId }, data: { aiConsentAt: on ? new Date() : null } });
+}
 
 const saveSchema = z.object({
   provider: z.enum(["anthropic", "openai"], {
@@ -95,7 +112,11 @@ export interface ResolvedAI {
   source: "user" | "server" | "demo";
 }
 
-/** The AI a user's requests should use: their own key first, then the server's, then the offline helper. */
+/**
+ * The AI a user's requests should use: their own key first; then the server's AI service,
+ * but only if they have agreed to it; otherwise the built-in helper, which sends nothing
+ * anywhere.
+ */
 export async function aiForUser(userId: string): Promise<ResolvedAI> {
   const forced = providerOverride();
   if (forced) return { provider: forced, readDocuments: forced.supportsVision, source: "server" };
@@ -112,5 +133,16 @@ export async function aiForUser(userId: string): Promise<ResolvedAI> {
   const server = aiProvider();
   if (server.name === demoProvider.name)
     return { provider: server, readDocuments: false, source: "demo" };
+  const user = await db.user.findUnique({ where: { id: userId }, select: { aiConsentAt: true } });
+  if (!user?.aiConsentAt) return { provider: demoProvider, readDocuments: false, source: "demo" };
   return { provider: server, readDocuments: env().AI_VISION_EXTRACTION, source: "server" };
+}
+
+/** Who will read a report this user uploads, in plain words, for the upload screen. */
+export async function documentReaderLabel(userId: string): Promise<string> {
+  const ai = await aiForUser(userId);
+  if (!ai.readDocuments || ai.source === "demo") return "on this server (no AI)";
+  if (ai.source === "server") return `by ${serverAiLabel() ?? "an AI service"} (AI)`;
+  const name = ai.provider.name as AiProviderId;
+  return `by ${AI_PROVIDER_LABELS[name] ?? "your AI service"} (AI), using your key`;
 }

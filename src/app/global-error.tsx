@@ -22,7 +22,7 @@ export default function GlobalError({
         <div style={{ textAlign: "center", padding: 24 }}>
           <h1 style={{ fontSize: 20, fontWeight: 600 }}>Something went wrong</h1>
           <p style={{ color: "#667085", fontSize: 14 }}>
-            Please reload the page. Your data is safe.
+            Please reload the page. Nothing you saved was lost.
           </p>
           <button
             onClick={reset}

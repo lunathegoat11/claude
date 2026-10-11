@@ -2,14 +2,38 @@ import { AlertTriangle } from "lucide-react";
 import { env } from "@/server/env";
 import { LEGAL_LAST_UPDATED } from "@/lib/legal";
 
+/**
+ * The operator's details used in the Privacy Policy and Terms. Each comes from the
+ * server's settings (.env); anything missing is shown in [square brackets], and the
+ * documents keep their "draft" warning until every item is filled in AND a lawyer has
+ * reviewed them (LEGAL_REVIEWED=true).
+ */
 export function legalParties() {
   const e = env();
+  const fields = {
+    org: e.ORGANIZATION_NAME,
+    contact: e.CONTACT_EMAIL,
+    officer: e.GRIEVANCE_OFFICER_NAME,
+    officerEmail: e.GRIEVANCE_OFFICER_EMAIL || e.CONTACT_EMAIL,
+    officerAddress: e.GRIEVANCE_OFFICER_ADDRESS,
+    location: e.DATA_LOCATION,
+    hosts: e.HOSTING_PROVIDERS,
+    city: e.JURISDICTION_CITY,
+    backupDays: e.BACKUP_RETENTION_DAYS?.toString(),
+  };
+  const complete = Object.values(fields).every(Boolean);
   return {
-    org: e.ORGANIZATION_NAME || "[Your organisation's legal name]",
-    contact: e.CONTACT_EMAIL || "[contact email]",
-    officer: e.GRIEVANCE_OFFICER_NAME || "[Grievance Officer's name]",
-    officerEmail: e.GRIEVANCE_OFFICER_EMAIL || e.CONTACT_EMAIL || "[grievance email]",
-    reviewed: e.LEGAL_REVIEWED,
+    org: fields.org || "[Your organisation's legal name]",
+    contact: fields.contact || "[contact email]",
+    officer: fields.officer || "[Grievance Officer's name]",
+    officerEmail: fields.officerEmail || "[grievance email]",
+    officerAddress: fields.officerAddress || "[Grievance Officer's postal address]",
+    location: fields.location || "[city and country where data is stored, and the hosting company]",
+    hosts: fields.hosts || "[hosting and storage companies]",
+    city: fields.city || "[city]",
+    backupDays: fields.backupDays || "[number of]",
+    reviewed: e.LEGAL_REVIEWED && complete,
+    complete,
   };
 }
 

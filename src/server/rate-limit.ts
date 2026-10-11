@@ -42,6 +42,8 @@ export function setRateLimitStore(s: RateLimitStore) {
 export const LIMITS = {
   signIn: { limit: 10, windowMs: 15 * 60_000 },
   signUp: { limit: 5, windowMs: 60 * 60_000 },
+  /** All new accounts across the whole server, so a flood of sign-ups can't run up AI costs. */
+  signUpGlobal: { limit: 100, windowMs: 60 * 60_000 },
   passwordReset: { limit: 5, windowMs: 60 * 60_000 },
   ai: { limit: 30, windowMs: 60 * 60_000 },
   aiKey: { limit: 10, windowMs: 60 * 60_000 },

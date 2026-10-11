@@ -142,9 +142,19 @@ const phone = (label: string) =>
       .optional(),
   );
 
+/** True if someone born on this date (YYYY-MM-DD) has had their 18th birthday. */
+export function isAtLeast18(dob: string, today = new Date()) {
+  const [y, m, d] = dob.slice(0, 10).split("-").map(Number);
+  const eighteenth = new Date(Date.UTC(y + 18, m - 1, d));
+  return eighteenth.getTime() <= today.getTime();
+}
+
 export const profileSchema = z.object({
   fullName: requiredString("Name", 120),
-  dateOfBirth: optionalDateInput("Date of birth"),
+  // Kosha is for adults only (DPDP Act 2023 treats anyone under 18 as a child).
+  dateOfBirth: optionalDateInput("Date of birth").refine((v) => !v || isAtLeast18(v), {
+    message: "Kosha is only for people aged 18 or older",
+  }),
   sex: z.preprocess(
     (v) => (v === "" ? undefined : v),
     z.enum(["FEMALE", "MALE", "INTERSEX", "PREFER_NOT_TO_SAY"]).optional(),

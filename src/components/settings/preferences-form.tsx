@@ -4,7 +4,7 @@ import { useActionForm } from "@/components/forms/use-action-form";
 import { Field, FormSection } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { NativeSelect } from "@/components/ui/input";
-import { ThemeSegmented } from "@/components/shared/theme-toggle";
+import { ThemeSegmented, TransparencySwitch } from "@/components/shared/theme-toggle";
 
 export function PreferencesForm({
   values,
@@ -15,7 +15,10 @@ export function PreferencesForm({
   return (
     <div className="space-y-8">
       <FormSection title="Appearance">
-        <ThemeSegmented />
+        <div className="space-y-5">
+          <ThemeSegmented />
+          <TransparencySwitch />
+        </div>
       </FormSection>
       <form onSubmit={onSubmit} className="space-y-4">
         <FormSection

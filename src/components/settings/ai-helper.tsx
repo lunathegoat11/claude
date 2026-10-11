@@ -4,7 +4,12 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, Lock, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { removeAiKeyAction, saveAiKeyAction, setDocumentReadingAction } from "@/actions/ai";
+import {
+  removeAiKeyAction,
+  saveAiKeyAction,
+  setAiConsentAction,
+  setDocumentReadingAction,
+} from "@/actions/ai";
 import { useActionForm } from "@/components/forms/use-action-form";
 import { Field } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
@@ -25,11 +30,14 @@ export function AiHelperSettings({
   saved,
   isDemo,
   serverAi,
+  serverConsent,
 }: {
   saved: AiSettingsView | null;
   isDemo: boolean;
-  /** True when the server owner has set up an AI key for everyone. */
-  serverAi: boolean;
+  /** Who runs the AI service set up on this server, or null if there is none. */
+  serverAi: string | null;
+  /** Whether this user has agreed to use that service. */
+  serverConsent: boolean;
 }) {
   const [replacing, setReplacing] = useState(false);
   if (isDemo)
@@ -41,6 +49,7 @@ export function AiHelperSettings({
     );
   return (
     <div className="space-y-6">
+      {serverAi && !saved && <ServerAiConsent label={serverAi} initial={serverConsent} />}
       {saved && !replacing ? (
         <SavedKey saved={saved} onReplace={() => setReplacing(true)} />
       ) : (
@@ -50,13 +59,47 @@ export function AiHelperSettings({
         <Lock className="mt-0.5 size-4 shrink-0" />
         <p>
           Your key is encrypted before it is stored, is only used for your own questions and
-          documents, and is never shown again or sent back to your browser. Without a key,
-          {serverAi
-            ? " Kosha uses the AI service set up by whoever runs this app."
-            : " the helper still answers from your records using simple built-in summaries, and documents are read on this server."}
+          documents, and is never shown again or sent back to your browser. With your own key, what
+          you send is handled by your account with that company, under its terms. Without a key or
+          consent, the helper answers from your records with simple built-in summaries (no AI), and
+          documents are read on this server only. Kosha is not affiliated with Anthropic or OpenAI.
         </p>
       </div>
     </div>
+  );
+}
+
+function ServerAiConsent({ label, initial }: { label: string; initial: boolean }) {
+  const [on, setOn] = useState(initial);
+  const [pending, start] = useTransition();
+  return (
+    <label className="flex items-start justify-between gap-4 rounded-md border p-4">
+      <span className="text-sm">
+        <span className="block font-medium">Use AI for answers</span>
+        <span className="text-muted-foreground">
+          Optional. When on, your question, your recent messages in that conversation and the
+          records that relate to it are sent to {label}, which writes the answer. Uploaded reports
+          may also be sent to it to be read. You can turn this off at any time; nothing more is sent
+          after that.
+        </span>
+      </span>
+      <Switch
+        checked={on}
+        disabled={pending}
+        aria-label="Use AI for answers"
+        onCheckedChange={(next) => {
+          setOn(next);
+          start(async () => {
+            const res = await setAiConsentAction(next);
+            if (res.ok) toast.success(res.message);
+            else {
+              setOn(!next);
+              toast.error(res.error ?? "Couldn't change this setting");
+            }
+          });
+        }}
+      />
+    </label>
   );
 }
 
@@ -190,8 +233,8 @@ function KeyForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
             value={provider}
             onChange={(e) => setProvider(e.target.value as "anthropic" | "openai")}
           >
-            <option value="anthropic">Claude (recommended)</option>
-            <option value="openai">ChatGPT</option>
+            <option value="anthropic">Claude (Anthropic)</option>
+            <option value="openai">OpenAI</option>
           </NativeSelect>
         </Field>
         <Field label="API key" htmlFor="ai-key" error={err("apiKey")}>
@@ -207,14 +250,9 @@ function KeyForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
         </Field>
       </div>
       <label className="flex items-start gap-3 text-sm">
-        <input
-          type="checkbox"
-          name="readDocuments"
-          defaultChecked
-          className="accent-primary mt-0.5 size-4"
-        />
+        <input type="checkbox" name="readDocuments" className="accent-primary mt-0.5 size-4" />
         <span>
-          Let the AI read documents I upload.{" "}
+          Also let the AI read reports I upload (optional).{" "}
           <span className="text-muted-foreground">
             Photos and PDFs are sent to the AI service to read the results.
           </span>

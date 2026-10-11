@@ -2,7 +2,12 @@
 import { revalidatePath } from "next/cache";
 import { runAction, formToObject, type ActionState } from "@/server/action-utils";
 import { requireUserOrThrow, requestMeta } from "@/server/auth/session";
-import { removeAiKey, saveAiKey, setDocumentReading } from "@/server/services/ai-settings";
+import {
+  removeAiKey,
+  saveAiKey,
+  setAiConsent,
+  setDocumentReading,
+} from "@/server/services/ai-settings";
 import { audit } from "@/server/audit";
 import { AppError } from "@/server/errors";
 import { rateLimit } from "@/server/rate-limit";
@@ -50,5 +55,26 @@ export async function removeAiKeyAction(): Promise<ActionState> {
     await audit(user.id, "ai.key_removed", { type: "AiCredential" }, await requestMeta());
     revalidatePath("/settings");
     return { ok: true, message: "Key removed" };
+  });
+}
+
+/** Give or withdraw consent to use the AI service set up for this server. */
+export async function setAiConsentAction(on: boolean): Promise<ActionState> {
+  return runAction("setAiConsent", async () => {
+    const user = await requireUserOrThrow();
+    if (user.isDemo)
+      throw new AppError("FORBIDDEN", "This can't be changed on the shared demo account.");
+    await setAiConsent(user.id, on);
+    await audit(
+      user.id,
+      on ? "consent.ai_given" : "consent.ai_withdrawn",
+      { type: "User" },
+      await requestMeta(),
+    );
+    revalidatePath("/settings");
+    return {
+      ok: true,
+      message: on ? "AI answers are on" : "AI answers are off. Nothing more will be sent.",
+    };
   });
 }

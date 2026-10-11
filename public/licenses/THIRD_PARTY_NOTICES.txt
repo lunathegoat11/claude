@@ -1,0 +1,410 @@
+# Third-Party Notices
+
+Kosha includes or depends on the third-party software listed below. This file was generated on 2026-10-11 from the production dependency tree (`npm ls --omit=dev --all`, 221 packages) by reading each package's `package.json`. Each package's full license text is in its `LICENSE` file in `node_modules/<name>/` or at the repository URL shown.
+
+The production Docker image also includes the Prisma CLI (`prisma@6.19.3`) and Prisma engines (`@prisma/engines@6.19.3`), both Apache-2.0, for running migrations at start-up.
+
+## Notices for specific components
+
+### libvips and its bundled libraries (LGPL-3.0-or-later)
+
+The image-processing library `sharp` (Apache-2.0) loads prebuilt shared libraries from `@img/sharp-libvips-linux-x64@1.3.4` and `@img/sharp-libvips-linuxmusl-x64@1.3.4` (file `lib/libvips-cpp.so.8.18.7`). These libraries are licensed under the GNU Lesser General Public License v3.0 or later. libvips 8.18.7 and its LGPL components (glib, fribidi, libexif, libheif, librsvg, pango, proxy-libintl) are used unmodified and are dynamically linked. Other bundled libraries use permissive licenses (MIT, BSD, zlib, libpng, libtiff, freetype, fontconfig, and the Mozilla Public License 1.1 for cairo). See https://github.com/lovell/sharp-libvips for the list.
+
+- Source code: https://github.com/libvips/libvips (v8.18.7) and https://github.com/lovell/sharp-libvips (v1.3.4, build scripts and versions of all bundled libraries)
+- License text: /licenses/LGPL-3.0.txt and /licenses/GPL-3.0.txt (shipped with this app), also at https://www.gnu.org/licenses/lgpl-3.0.txt
+- You may replace `libvips-cpp.so.8.18.7` with a compatible build of your own. To do so, install a different `@img/sharp-libvips-*` package or build sharp against a globally installed libvips (https://sharp.pixelplumbing.com/install#building-from-source).
+
+### Geist font (SIL Open Font License 1.1)
+
+`public/fonts/Geist-Variable.woff2` is the Geist typeface, also distributed as the npm package `geist@1.7.2`. Its license text is shipped in `public/fonts/Geist-LICENSE.txt` and reproduced below:
+
+```
+Copyright (c) 2023 Vercel, in collaboration with basement.studio
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide
+development of collaborative font projects, to support the font creation
+efforts of academic and linguistic communities, and to provide a free and
+open framework in which fonts may be shared and improved in partnership
+with others.
+
+The OFL allows the licensed fonts to be used, studied, modified and
+redistributed freely as long as they are not sold by themselves. The
+fonts, including any derivative works, can be bundled, embedded,
+redistributed and/or sold with any software provided that any reserved
+names are not used by derivative works. The fonts and derivatives,
+however, cannot be released under any other type of license. The
+requirement for fonts to remain under this license does not apply
+to any document created using the fonts or their derivatives.
+
+DEFINITIONS
+"Font Software" refers to the set of files released by the Copyright
+Holder(s) under this license and clearly marked as such. This may
+include source files, build scripts and documentation.
+
+"Reserved Font Name" refers to any names specified as such after the
+copyright statement(s).
+
+"Original Version" refers to the collection of Font Software components as
+distributed by the Copyright Holder(s).
+
+"Modified Version" refers to any derivative made by adding to, deleting,
+or substituting -- in part or in whole -- any of the components of the
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
+
+"Author" refers to any designer, engineer, programmer, technical
+writer or other person who contributed to the Font Software.
+
+PERMISSION AND CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Font Software, to use, study, copy, merge, embed, modify,
+redistribute, and sell modified and unmodified copies of the Font
+Software, subject to the following conditions:
+
+1) Neither the Font Software nor any of its individual components,
+in Original or Modified Versions, may be sold by itself.
+
+2) Original or Modified Versions of the Font Software may be bundled,
+redistributed and/or sold with any software, provided that each copy
+contains the above copyright notice and this license. These can be
+included either as stand-alone text files, human-readable headers or
+in the appropriate machine-readable metadata fields within text or
+binary files as long as those fields can be easily viewed by the user.
+
+3) No Modified Version of the Font Software may use the Reserved Font
+Name(s) unless explicit written permission is granted by the corresponding
+Copyright Holder. This restriction only applies to the primary font name as
+presented to the users.
+
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
+Modified Version, except to acknowledge the contribution(s) of the
+Copyright Holder(s) and the Author(s) or with their explicit written
+permission.
+
+5) The Font Software, modified or unmodified, in part or in whole,
+must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to
+remain under this license does not apply to any document created
+using the Font Software.
+
+TERMINATION
+This license becomes null and void if any of the above conditions are
+not met.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+OTHER DEALINGS IN THE FONT SOFTWARE.
+```
+
+### Apache-2.0 components
+
+None of the Apache-2.0 packages listed below ships a `NOTICE` file, so there is no NOTICE text to reproduce under Section 4(d). The full license text is at https://www.apache.org/licenses/LICENSE-2.0. The OCR WebAssembly core `tesseract.js-core` is built from Tesseract OCR (https://github.com/tesseract-ocr/tesseract, Apache-2.0).
+
+### Tesseract English language data
+
+`@tesseract.js-data/eng@1.0.0` (package license: MIT) contains `eng.traineddata`. The file comes from the Tesseract project's tessdata repository (https://github.com/tesseract-ocr/tessdata), which is published under the Apache License 2.0.
+
+### caniuse-lite (CC-BY-4.0)
+
+`caniuse-lite` contains data from caniuse.com by Alexis Deveria, licensed under CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/). It is a dependency of Next.js.
+
+## Packages by license
+
+
+### MIT (149)
+
+| Package | Version | Repository / homepage |
+|---|---|---|
+| @anthropic-ai/sdk | 0.131.0 | https://github.com/anthropics/anthropic-sdk-typescript |
+| @babel/runtime | 7.29.7 | https://github.com/babel/babel |
+| @emnapi/core | 1.10.0 | https://github.com/toyobayashi/emnapi |
+| @emnapi/runtime | 1.11.3 | https://github.com/toyobayashi/emnapi |
+| @emnapi/wasi-threads | 1.2.1 | https://github.com/toyobayashi/emnapi |
+| @floating-ui/core | 1.8.0 | https://github.com/floating-ui/floating-ui |
+| @floating-ui/dom | 1.8.0 | https://github.com/floating-ui/floating-ui |
+| @floating-ui/react-dom | 2.1.9 | https://github.com/floating-ui/floating-ui |
+| @floating-ui/utils | 0.2.12 | https://github.com/floating-ui/floating-ui |
+| @img/colour | 1.1.0 | https://github.com/lovell/colour |
+| @napi-rs/wasm-runtime | 1.2.4 | https://github.com/napi-rs/napi-rs |
+| @next/env | 15.5.27 | https://github.com/vercel/next.js |
+| @next/swc-linux-x64-gnu | 15.5.27 | https://github.com/vercel/next.js |
+| @next/swc-linux-x64-musl | 15.5.27 | https://github.com/vercel/next.js |
+| @node-rs/argon2 | 2.2.1 | https://github.com/napi-rs/node-rs |
+| @node-rs/argon2-linux-x64-gnu | 2.2.1 | https://github.com/napi-rs/node-rs |
+| @node-rs/argon2-linux-x64-musl | 2.2.1 | https://github.com/napi-rs/node-rs |
+| @radix-ui/number | 1.1.3 | https://github.com/radix-ui/primitives |
+| @radix-ui/primitive | 1.1.7 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-alert-dialog | 1.1.23 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-arrow | 1.1.15 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-avatar | 1.2.6 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-checkbox | 1.3.11 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-collection | 1.1.15 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-compose-refs | 1.1.5 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-context | 1.2.2 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-dialog | 1.1.23 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-direction | 1.1.4 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-dismissable-layer | 1.1.19 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-dropdown-menu | 2.1.24 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-focus-guards | 1.1.6 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-focus-scope | 1.1.16 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-id | 1.1.4 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-label | 2.1.15 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-menu | 2.1.24 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-popover | 1.1.23 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-popper | 1.3.7 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-portal | 1.1.17 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-presence | 1.1.10 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-primitive | 2.1.10 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-roving-focus | 1.1.19 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-select | 2.3.7 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-separator | 1.1.15 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-slot | 1.3.3 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-switch | 1.3.7 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-tabs | 1.1.21 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-tooltip | 1.2.16 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-use-callback-ref | 1.1.4 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-use-controllable-state | 1.2.6 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-use-effect-event | 0.0.5 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-use-is-hydrated | 0.1.3 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-use-layout-effect | 1.1.4 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-use-previous | 1.1.4 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-use-rect | 1.1.4 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-use-size | 1.1.4 | https://github.com/radix-ui/primitives |
+| @radix-ui/react-visually-hidden | 1.2.11 | https://github.com/radix-ui/primitives |
+| @radix-ui/rect | 1.1.3 | https://github.com/radix-ui/primitives |
+| @stablelib/base64 | 1.0.1 | https://github.com/StableLib/stablelib |
+| @standard-schema/spec | 1.1.0 | https://github.com/standard-schema/standard-schema |
+| @tesseract.js-data/eng | 1.0.0 | https://github.com/naptha/tessdata |
+| @tybys/wasm-util | 0.10.4 | https://github.com/toyobayashi/wasm-util |
+| @types/d3-array | 3.2.2 | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| @types/d3-color | 3.1.3 | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| @types/d3-ease | 3.0.2 | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| @types/d3-interpolate | 3.0.4 | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| @types/d3-path | 3.1.1 | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| @types/d3-scale | 4.0.9 | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| @types/d3-shape | 3.2.0 | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| @types/d3-time | 3.0.4 | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| @types/d3-timer | 3.0.2 | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| @types/react | 19.3.0 | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| @types/react-dom | 19.3.0 | https://github.com/DefinitelyTyped/DefinitelyTyped |
+| aria-hidden | 1.2.6 | https://github.com/theKashey/aria-hidden |
+| bmp-js | 0.1.0 | https://github.com/shaozilee/bmp-js |
+| bowser | 2.14.1 | https://github.com/bowser-js/bowser |
+| c12 | 3.1.0 | https://github.com/unjs/c12 |
+| chokidar | 4.0.3 | https://github.com/paulmillr/chokidar |
+| citty | 0.1.6 | https://github.com/unjs/citty |
+| citty | 0.2.2 | https://github.com/unjs/citty |
+| client-only | 0.0.1 | https://reactjs.org/ |
+| clsx | 2.1.1 | https://github.com/lukeed/clsx |
+| confbox | 0.2.4 | https://github.com/unjs/confbox |
+| confbox | 0.3.1 | https://github.com/unjs/confbox |
+| consola | 3.4.2 | https://github.com/unjs/consola |
+| csstype | 3.2.3 | https://github.com/frenic/csstype |
+| date-fns | 4.4.0 | https://github.com/date-fns/date-fns |
+| decimal.js-light | 2.5.1 | https://github.com/MikeMcl/decimal.js-light |
+| defu | 6.1.7 | https://github.com/unjs/defu |
+| destr | 2.0.5 | https://github.com/unjs/destr |
+| detect-node-es | 1.1.0 | https://github.com/thekashey/detect-node |
+| dom-helpers | 5.2.1 | https://github.com/react-bootstrap/dom-helpers |
+| effect | 3.21.0 | https://github.com/Effect-TS/effect |
+| empathic | 2.0.0 | https://github.com/lukeed/empathic |
+| eventemitter3 | 4.0.7 | https://github.com/primus/eventemitter3 |
+| exsolve | 1.1.1 | https://github.com/unjs/exsolve |
+| fast-check | 3.23.2 | https://github.com/dubzzz/fast-check |
+| fast-equals | 5.4.3 | https://github.com/planttheidea/fast-equals |
+| get-nonce | 1.0.1 | git@github.com:theKashey/get-nonce |
+| giget | 2.0.0 | https://github.com/unjs/giget |
+| is-url | 1.2.4 | https://github.com/segmentio/is-url |
+| jiti | 2.7.0 | https://github.com/unjs/jiti |
+| js-tokens | 4.0.0 | https://github.com/lydell/js-tokens |
+| json-schema-to-ts | 3.1.1 | https://github.com/ThomasAribart/json-schema-to-ts |
+| lodash | 4.18.1 | https://github.com/lodash/lodash |
+| loose-envify | 1.4.0 | https://github.com/zertosh/loose-envify |
+| nanoid | 3.3.19 | https://github.com/ai/nanoid |
+| next | 15.5.27 | https://github.com/vercel/next.js |
+| next-themes | 0.4.6 | https://github.com/pacocoursey/next-themes |
+| node-fetch | 2.7.0 | https://github.com/bitinn/node-fetch |
+| node-fetch-native | 1.6.7 | https://github.com/unjs/node-fetch-native |
+| nypm | 0.6.10 | https://github.com/unjs/nypm |
+| object-assign | 4.1.1 | https://github.com/sindresorhus/object-assign |
+| ohash | 2.0.12 | https://github.com/unjs/ohash |
+| opencollective-postinstall | 2.0.3 | https://github.com/opencollective/opencollective-postinstall |
+| pathe | 2.0.3 | https://github.com/unjs/pathe |
+| perfect-debounce | 1.0.0 | https://github.com/unjs/perfect-debounce |
+| pkg-types | 2.3.3 | https://github.com/unjs/pkg-types |
+| postcss | 8.5.29 | https://github.com/postcss/postcss |
+| prop-types | 15.8.1 | https://github.com/facebook/prop-types |
+| pure-rand | 6.1.0 | https://github.com/dubzzz/pure-rand |
+| rc9 | 2.1.2 | https://github.com/unjs/rc9 |
+| react | 19.1.9 | https://github.com/react/react |
+| react-dom | 19.1.9 | https://github.com/react/react |
+| react-is | 18.3.1 | https://github.com/facebook/react |
+| react-is | 16.13.1 | https://github.com/facebook/react |
+| react-remove-scroll | 2.7.2 | https://github.com/theKashey/react-remove-scroll |
+| react-remove-scroll-bar | 2.3.8 | https://github.com/theKashey/react-remove-scroll-bar |
+| react-smooth | 4.0.4 | https://github.com/recharts/react-smooth |
+| react-style-singleton | 2.2.3 | https://github.com/theKashey/react-style-singleton |
+| readdirp | 4.1.2 | https://github.com/paulmillr/readdirp |
+| recharts | 2.15.4 | https://github.com/recharts/recharts |
+| recharts-scale | 0.4.5 | https://github.com/recharts/recharts-scale |
+| regenerator-runtime | 0.13.11 | https://github.com/facebook/regenerator/tree/main/packages/runtime |
+| scheduler | 0.26.0 | https://github.com/facebook/react |
+| server-only | 0.0.1 | https://reactjs.org/ |
+| sonner | 2.0.8 | https://github.com/emilkowalski/sonner |
+| standardwebhooks | 1.1.1 | https://github.com/standard-webhooks/standard-webhooks |
+| styled-jsx | 5.1.6 | https://github.com/vercel/styled-jsx |
+| tailwind-merge | 3.7.0 | https://github.com/dcastil/tailwind-merge |
+| tiny-invariant | 1.3.3 | https://github.com/alexreardon/tiny-invariant |
+| tinyexec | 1.3.1 | https://github.com/tinylibs/tinyexec |
+| tr46 | 0.0.3 | https://github.com/Sebmaster/tr46.js |
+| ts-algebra | 2.0.0 | https://github.com/ThomasAribart/ts-algebra |
+| unpdf | 1.8.1 | https://github.com/unjs/unpdf |
+| use-callback-ref | 1.3.3 | https://github.com/theKashey/use-callback-ref/ |
+| use-sidecar | 1.1.3 | https://github.com/theKashey/use-sidecar |
+| whatwg-url | 5.0.0 | https://github.com/jsdom/whatwg-url |
+| zlibjs | 0.3.1 | https://github.com/imaya/zlib.js |
+| zod | 3.25.76 | https://github.com/colinhacks/zod |
+
+### Apache-2.0 (44)
+
+| Package | Version | Repository / homepage |
+|---|---|---|
+| @aws-sdk/checksums | 3.1001.1 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/client-s3 | 3.1146.0 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/core | 3.978.1 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/credential-provider-env | 3.972.72 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/credential-provider-http | 3.972.74 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/credential-provider-ini | 3.973.17 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/credential-provider-login | 3.972.79 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/credential-provider-node | 3.972.84 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/credential-provider-process | 3.972.72 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/credential-provider-sso | 3.973.16 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/credential-provider-web-identity | 3.972.78 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/middleware-sdk-s3 | 3.972.77 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/nested-clients | 3.997.46 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/s3-request-presigner | 3.1146.0 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/signature-v4-multi-region | 3.996.47 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/token-providers | 3.1138.0 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/types | 3.974.6 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws-sdk/xml-builder | 3.972.41 | https://github.com/aws/aws-sdk-js-v3 |
+| @aws/lambda-invoke-store | 0.3.0 | https://github.com/awslabs/aws-lambda-invoke-store |
+| @img/sharp-linux-x64 | 0.35.5 | https://github.com/lovell/sharp |
+| @img/sharp-linuxmusl-x64 | 0.35.5 | https://github.com/lovell/sharp |
+| @prisma/client | 6.19.3 | https://github.com/prisma/prisma |
+| @prisma/config | 6.19.3 | https://github.com/prisma/prisma |
+| @prisma/debug | 6.19.3 | https://github.com/prisma/prisma |
+| @prisma/engines | 6.19.3 | https://github.com/prisma/prisma |
+| @prisma/engines-version | 7.1.1-3.c2990dca591cba766e3b7ef5d9e8a84796e47ab7 | https://github.com/prisma/engines-wrapper |
+| @prisma/fetch-engine | 6.19.3 | https://github.com/prisma/prisma |
+| @prisma/get-platform | 6.19.3 | https://github.com/prisma/prisma |
+| @smithy/core | 3.35.1 | https://github.com/smithy-lang/smithy-typescript |
+| @smithy/credential-provider-imds | 4.5.2 | https://github.com/smithy-lang/smithy-typescript |
+| @smithy/fetch-http-handler | 5.8.0 | https://github.com/smithy-lang/smithy-typescript |
+| @smithy/node-http-handler | 4.12.1 | https://github.com/smithy-lang/smithy-typescript |
+| @smithy/signature-v4 | 5.7.4 | https://github.com/smithy-lang/smithy-typescript |
+| @smithy/types | 4.19.0 | https://github.com/smithy-lang/smithy-typescript |
+| @swc/helpers | 0.5.15 | https://github.com/swc-project/swc |
+| class-variance-authority | 0.7.1 | https://github.com/joe-bell/cva |
+| detect-libc | 2.1.2 | https://github.com/lovell/detect-libc |
+| idb-keyval | 6.3.0 | https://github.com/jakearchibald/idb-keyval |
+| prisma | 6.19.3 | https://github.com/prisma/prisma |
+| sharp | 0.35.5 | https://github.com/lovell/sharp |
+| tesseract.js | 6.0.1 | https://github.com/naptha/tesseract.js |
+| tesseract.js-core | 6.1.2 | https://github.com/naptha/tesseract.js-core |
+| typescript | 5.9.3 | https://github.com/microsoft/TypeScript |
+| wasm-feature-detect | 1.9.0 | https://github.com/GoogleChromeLabs/wasm-feature-detect |
+
+### ISC (14)
+
+| Package | Version | Repository / homepage |
+|---|---|---|
+| d3-array | 3.2.4 | https://github.com/d3/d3-array |
+| d3-color | 3.1.0 | https://github.com/d3/d3-color |
+| d3-format | 3.1.2 | https://github.com/d3/d3-format |
+| d3-interpolate | 3.0.1 | https://github.com/d3/d3-interpolate |
+| d3-path | 3.1.0 | https://github.com/d3/d3-path |
+| d3-scale | 4.0.2 | https://github.com/d3/d3-scale |
+| d3-shape | 3.2.0 | https://github.com/d3/d3-shape |
+| d3-time | 3.1.0 | https://github.com/d3/d3-time |
+| d3-time-format | 4.1.0 | https://github.com/d3/d3-time-format |
+| d3-timer | 3.0.1 | https://github.com/d3/d3-timer |
+| internmap | 2.0.3 | https://github.com/mbostock/internmap |
+| lucide-react | 0.577.0 | https://github.com/lucide-icons/lucide |
+| picocolors | 1.1.1 | https://github.com/alexeyraspopov/picocolors |
+| semver | 7.8.5 | https://github.com/npm/node-semver |
+
+### BSD-3-Clause (4)
+
+| Package | Version | Repository / homepage |
+|---|---|---|
+| d3-ease | 3.0.1 | https://github.com/d3/d3-ease |
+| deepmerge-ts | 7.1.5 | https://github.com/RebeccaStevens/deepmerge-ts |
+| react-transition-group | 4.4.5 | https://github.com/reactjs/react-transition-group |
+| source-map-js | 1.2.2 | https://github.com/7rulnik/source-map-js |
+
+### LGPL-3.0-or-later (2)
+
+| Package | Version | Repository / homepage |
+|---|---|---|
+| @img/sharp-libvips-linux-x64 | 1.3.4 | https://github.com/lovell/sharp-libvips |
+| @img/sharp-libvips-linuxmusl-x64 | 1.3.4 | https://github.com/lovell/sharp-libvips |
+
+### BSD-2-Clause (2)
+
+| Package | Version | Repository / homepage |
+|---|---|---|
+| dotenv | 16.6.1 | https://github.com/motdotla/dotenv |
+| webidl-conversions | 3.0.1 | https://github.com/jsdom/webidl-conversions |
+
+### Apache-2.0 AND LGPL-3.0-or-later AND MIT (1)
+
+| Package | Version | Repository / homepage |
+|---|---|---|
+| @img/sharp-wasm32 | 0.35.5 | https://github.com/lovell/sharp |
+
+### SIL OPEN FONT LICENSE (1)
+
+| Package | Version | Repository / homepage |
+|---|---|---|
+| geist | 1.7.2 | https://github.com/vercel/geist-font |
+
+### 0BSD (1)
+
+| Package | Version | Repository / homepage |
+|---|---|---|
+| tslib | 2.8.1 | https://github.com/Microsoft/tslib |
+
+### CC-BY-4.0 (1)
+
+| Package | Version | Repository / homepage |
+|---|---|---|
+| caniuse-lite | 1.0.30001814 | https://github.com/browserslist/caniuse-lite |
+
+### MIT AND ISC (1)
+
+| Package | Version | Repository / homepage |
+|---|---|---|
+| victory-vendor | 36.9.2 | https://github.com/FormidableLabs/victory |
+
+### Unlicense (1)
+
+| Package | Version | Repository / homepage |
+|---|---|---|
+| fast-sha256 | 1.3.0 | https://github.com/dchest/fast-sha256-js |

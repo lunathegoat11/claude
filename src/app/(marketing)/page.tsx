@@ -44,7 +44,7 @@ export default async function LandingPage() {
   if (await getCurrentUser()) redirect("/dashboard");
   return (
     <div className="min-h-dvh">
-      <header className="bg-background/80 supports-[backdrop-filter]:bg-background/70 sticky top-0 z-30 border-b border-black/5 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10">
+      <header className="glass-bar sticky top-0 z-30">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8">
           <Link
             href="/"
@@ -153,9 +153,9 @@ export default async function LandingPage() {
             </Reveal>
             <Reveal className="surface p-8 md:col-span-2">
               <div className="figure text-primary text-[2.5rem] leading-none font-semibold">2</div>
-              <h3 className="mt-4 text-[21px] font-semibold">Every result is read</h3>
+              <h3 className="mt-4 text-[21px] font-semibold">Results are read for you</h3>
               <p className="text-muted-foreground mt-2 text-[15px]">
-                Value, unit, the printed range, the lab and the date.
+                Value, unit, the printed range, the lab and the date. Check them against the report.
               </p>
             </Reveal>
             <Reveal className="bg-primary text-primary-foreground rounded-[var(--radius)] p-8 md:col-span-2">
@@ -191,7 +191,7 @@ export default async function LandingPage() {
                 ],
                 [
                   "Your data stays yours",
-                  "Only you can see your records. Download everything or delete your account any time.",
+                  "Private to your account, never sold, no ads or tracking. Download your data or delete your account any time.",
                 ],
               ].map(([t, d]) => (
                 <div key={t} className="grid gap-1 px-6 py-5 sm:grid-cols-[14rem_1fr] sm:gap-6">

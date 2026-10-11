@@ -1,4 +1,5 @@
 import "server-only";
+import { SHARP_INPUT } from "@/server/extraction/sharp-options";
 
 export interface ImageQuality {
   /** Variance of the Laplacian on a normalised 1000px-wide greyscale copy. Low = blurry. */
@@ -22,7 +23,7 @@ const MIN_SIDE = 500;
  */
 export async function assessImage(buf: Buffer): Promise<ImageQuality> {
   const sharp = (await import("sharp")).default;
-  const base = sharp(buf, { failOn: "none" }).rotate();
+  const base = sharp(buf, SHARP_INPUT).rotate();
   const meta = await base.metadata();
   const width = meta.autoOrient?.width ?? meta.width ?? 0;
   const height = meta.autoOrient?.height ?? meta.height ?? 0;

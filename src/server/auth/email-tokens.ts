@@ -6,6 +6,7 @@ import { AppError } from "@/server/errors";
 import { passwordResetEmail, sendEmail, verificationEmail } from "@/server/email";
 import { generateSessionToken, hashToken } from "./tokens";
 import { hashPassword } from "./password";
+import { logger } from "@/server/logger";
 
 const TTL: Record<AuthTokenType, number> = {
   PASSWORD_RESET: 60 * 60 * 1000, // 1 hour
@@ -50,7 +51,11 @@ export async function requestPasswordReset(email: string) {
   });
   if (!user || user.isDemo || !user.passwordHash) return;
   const token = await issue(user.id, "PASSWORD_RESET");
-  await sendEmail(passwordResetEmail(user.email, link("/reset-password", token)));
+  // Sent in the background: waiting for it (or reporting a failure) would make the reply
+  // slower or different for real accounts, revealing who has one.
+  void sendEmail(passwordResetEmail(user.email, link("/reset-password", token))).catch((err) =>
+    logger.error("email.password_reset_failed", { err }),
+  );
   return { userId: user.id };
 }
 

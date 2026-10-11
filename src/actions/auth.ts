@@ -4,6 +4,7 @@ import { runAction, formToObject, type ActionState } from "@/server/action-utils
 import {
   signInSchema,
   signUpSchema,
+  renewConsentSchema,
   changePasswordSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
@@ -12,6 +13,7 @@ import {
   requestPasswordReset,
   resetPasswordWithToken,
   sendVerification,
+  verifyEmailWithToken,
 } from "@/server/auth/email-tokens";
 import { logger } from "@/server/logger";
 import { CONSENT_VERSION } from "@/lib/legal";
@@ -29,15 +31,7 @@ import { audit } from "@/server/audit";
 import { AppError } from "@/server/errors";
 import { env } from "@/server/env";
 import { db } from "@/server/db";
-
-function safeNext(next: unknown) {
-  return typeof next === "string" &&
-    next.startsWith("/") &&
-    !next.startsWith("//") &&
-    !next.startsWith("/\\")
-    ? next
-    : "/dashboard";
-}
+import { safeNext } from "@/lib/safe-next";
 
 export async function signInAction(_: ActionState, fd: FormData): Promise<ActionState> {
   let destination = "/dashboard";
@@ -51,7 +45,18 @@ export async function signInAction(_: ActionState, fd: FormData): Promise<Action
       await audit(null, "auth.sign_in_failed", undefined, meta);
       throw new AppError("UNAUTHENTICATED", "That email and password combination didn't work.");
     }
-    await db.user.update({ where: { id: user.id }, data: { ageConfirmedAt: new Date() } });
+    if (user.isDemo && !env().DEMO_LOGIN_ENABLED)
+      throw new AppError("UNAUTHENTICATED", "That email and password combination didn't work.");
+    // Keep the first age confirmation as the record; later ones only refresh lastAgeConfirmedAt.
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        lastAgeConfirmedAt: new Date(),
+        ...(user.ageConfirmedAt ? {} : { ageConfirmedAt: new Date() }),
+      },
+    });
+    // Never reuse a session that existed before signing in.
+    await invalidateCurrentSession();
     const { token, expiresAt } = await createSession(user.id, meta.userAgent);
     await setSessionCookie(token, expiresAt);
     await audit(user.id, "auth.sign_in", undefined, meta);
@@ -66,6 +71,7 @@ export async function signUpAction(_: ActionState, fd: FormData): Promise<Action
   const result = await runAction("signUp", async () => {
     const meta = await requestMeta();
     await rateLimit("signUp", `ip:${meta.ip}`);
+    await rateLimit("signUpGlobal", "all");
     const input = signUpSchema.parse(formToObject(fd));
     const user = await registerUser(input);
     const { token, expiresAt } = await createSession(user.id, meta.userAgent);
@@ -124,6 +130,7 @@ export async function changePasswordAction(_: ActionState, fd: FormData): Promis
     if (user.isDemo)
       throw new AppError("FORBIDDEN", "The demo account's password can't be changed.");
     const input = changePasswordSchema.parse(formToObject(fd));
+    await rateLimit("signIn", `user:${user.id}`);
     await changePassword(user.id, input.currentPassword, input.newPassword);
     await invalidateOtherSessions(user.id);
     await audit(user.id, "auth.password_changed", undefined, await requestMeta());
@@ -181,4 +188,34 @@ export async function resendVerificationAction(): Promise<ActionState> {
         : "Your email is already confirmed.",
     };
   });
+}
+
+/** Accept an updated version of the Terms and Privacy Policy. */
+export async function renewConsentAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const result = await runAction("renewConsent", async () => {
+    const user = await requireUserOrThrow();
+    renewConsentSchema.parse(formToObject(fd));
+    const now = new Date();
+    await db.user.update({
+      where: { id: user.id },
+      data: { termsAcceptedAt: now, healthDataConsentAt: now, consentVersion: CONSENT_VERSION },
+    });
+    await audit(user.id, "consent.renewed", { type: "User", id: user.id }, await requestMeta(), {
+      version: CONSENT_VERSION,
+    });
+    return { ok: true };
+  });
+  if (result.ok) redirect("/dashboard");
+  return result;
+}
+
+/**
+ * Confirm an email address. Done with a button press rather than on opening the link,
+ * because email scanners open links automatically and would use them up.
+ */
+export async function verifyEmailAction(fd: FormData) {
+  const token = String(fd.get("token") ?? "");
+  const result = await verifyEmailWithToken(token).catch(() => null);
+  if (result) await audit(result.userId, "auth.email_verified");
+  redirect(result ? "/verify-email?done=1" : "/verify-email?failed=1");
 }

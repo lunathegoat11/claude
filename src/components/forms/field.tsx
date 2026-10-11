@@ -49,7 +49,7 @@ export function FormSection({
   return (
     <section className="space-y-4">
       <div>
-        <h3 className="text-sm font-semibold">{title}</h3>
+        <h2 className="text-sm font-semibold">{title}</h2>
         {description && <p className="text-muted-foreground text-[13px]">{description}</p>}
       </div>
       {children}

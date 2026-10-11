@@ -7,7 +7,11 @@ describe("general reference ranges (India and US)", () => {
     const g = resolveGuides("GLU_FASTING", "mg/dL");
     expect(g.india?.source).toMatch(/ICMR/);
     expect(g.us?.source).toMatch(/NIDDK/);
-    expect(g.india?.bands.map((b) => b.label)).toEqual(["Normal", "Prediabetes", "Diabetes"]);
+    expect(g.india?.bands.map((b) => b.label)).toEqual([
+      "Normal",
+      "Prediabetes range",
+      "Diabetes range",
+    ]);
     expect(g.india?.bands[2].low).toBe(126);
   });
 

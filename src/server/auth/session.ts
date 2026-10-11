@@ -10,7 +10,8 @@ import { AppError } from "@/server/errors";
 
 export const SESSION_COOKIE =
   process.env.NODE_ENV === "production" ? "__Host-kosha_session" : "kosha_session";
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days, renewed while in use
+const SESSION_MAX_MS = 90 * 24 * 60 * 60 * 1000; // never longer than 90 days in total
 const REFRESH_AFTER_MS = 24 * 60 * 60 * 1000; // extend at most once a day
 
 export interface SessionUser {
@@ -64,7 +65,10 @@ export async function validateSessionToken(token: string): Promise<SessionUser |
     include: { user: { include: { profile: true } } },
   });
   if (!session) return null;
-  if (session.expiresAt.getTime() <= Date.now()) {
+  if (
+    session.expiresAt.getTime() <= Date.now() ||
+    Date.now() - session.createdAt.getTime() > SESSION_MAX_MS
+  ) {
     await db.session.delete({ where: { id: session.id } }).catch(() => undefined);
     return null;
   }
@@ -132,6 +136,13 @@ export async function invalidateOtherSessions(userId: string) {
 
 export async function requestMeta() {
   const h = await headers();
-  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
+  // The left of X-Forwarded-For is whatever the client sent; only the entry added by our
+  // own proxy (the right-most one) can be trusted.
+  const forwarded = h
+    .get("x-forwarded-for")
+    ?.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const ip = forwarded?.at(-1) || h.get("x-real-ip") || "unknown";
   return { ip, userAgent: h.get("user-agent") };
 }

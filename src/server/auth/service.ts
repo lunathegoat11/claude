@@ -37,7 +37,7 @@ export async function registerUser(input: { name: string; email: string; passwor
 export async function authenticate(email: string, password: string) {
   const user = await db.user.findUnique({
     where: { email },
-    select: { id: true, passwordHash: true },
+    select: { id: true, passwordHash: true, isDemo: true, ageConfirmedAt: true },
   });
   if (!user || !user.passwordHash) {
     await burnPasswordCheck(password);
@@ -46,7 +46,7 @@ export async function authenticate(email: string, password: string) {
   const ok = await verifyPassword(user.passwordHash, password);
   if (!ok) return null;
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-  return { id: user.id };
+  return { id: user.id, isDemo: user.isDemo, ageConfirmedAt: user.ageConfirmedAt };
 }
 
 export async function changePassword(userId: string, current: string, next: string) {

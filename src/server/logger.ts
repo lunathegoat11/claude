@@ -9,7 +9,17 @@ const REDACT =
 
 function redact(meta: unknown, depth = 0): unknown {
   if (meta == null || depth > 3) return meta;
-  if (meta instanceof Error) return { name: meta.name, message: meta.message, stack: meta.stack };
+  if (meta instanceof Error) {
+    // Database errors can quote the values in a query (which may be health data), so
+    // only their name and code are kept.
+    if (/^Prisma/.test(meta.name) || /^Prisma/.test(meta.constructor?.name ?? ""))
+      return { name: meta.constructor?.name ?? meta.name, code: (meta as { code?: string }).code };
+    return {
+      name: meta.name,
+      message: meta.message.slice(0, 300),
+      stack: meta.stack?.split("\n").slice(0, 6).join("\n"),
+    };
+  }
   if (Array.isArray(meta)) return meta.slice(0, 20).map((m) => redact(m, depth + 1));
   if (typeof meta === "object") {
     const out: Record<string, unknown> = {};
