@@ -14,10 +14,12 @@ export default async function SignUpPage() {
       <div className="space-y-2">
         <h1 className="text-[28px] font-semibold">Create your account</h1>
         <p className="text-muted-foreground text-[15px]">
-          Start organising your health records. It takes under a minute.
+          {env().SIGNUP_INVITE_CODE?.trim()
+            ? "Kosha is open to invited people for now. Enter the invite code you were given."
+            : "Start organising your health records. It takes under a minute."}
         </p>
       </div>
-      <SignUpForm />
+      <SignUpForm inviteOnly={!!env().SIGNUP_INVITE_CODE?.trim()} />
     </div>
   );
 }

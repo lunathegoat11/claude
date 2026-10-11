@@ -38,6 +38,7 @@ export const signUpSchema = z.object({
     errorMap: () => ({ message: "Kosha needs your consent to store your health information" }),
   }),
   improveReading: z.literal("on").optional(),
+  inviteCode: z.string().max(200).optional(),
 });
 
 export const renewConsentSchema = z.object({

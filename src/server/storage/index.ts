@@ -1,4 +1,5 @@
 import "server-only";
+import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { env } from "@/server/env";
 import { LocalStorage } from "./local";
@@ -6,6 +7,22 @@ import { S3Storage } from "./s3";
 import type { StorageDriver } from "./types";
 
 let driver: StorageDriver | undefined;
+
+/**
+ * Why uploads can't be kept safely on this server, or null if they can. On Railway the
+ * disk is wiped on every restart, so files stored there without a Volume would vanish.
+ */
+export function storageProblem(): string | null {
+  const e = env();
+  if (e.STORAGE_DRIVER !== "local" || process.env.NODE_ENV !== "production") return null;
+  const onRailway = !!(process.env.RAILWAY_ENVIRONMENT_NAME || process.env.RAILWAY_ENVIRONMENT);
+  if (!onRailway) return null;
+  const volume = process.env.RAILWAY_VOLUME_MOUNT_PATH;
+  const dir = path.resolve(e.STORAGE_LOCAL_DIR);
+  if (!volume || !(dir + path.sep).startsWith(path.resolve(volume) + path.sep))
+    return "File storage isn't set up on this server yet, so uploads are switched off to keep files from being lost. Attach a Volume and set STORAGE_LOCAL_DIR to its folder.";
+  return null;
+}
 
 export function storage(): StorageDriver {
   if (driver) return driver;

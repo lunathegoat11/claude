@@ -5,7 +5,13 @@ import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { AppError, notFound } from "@/server/errors";
 import { logger } from "@/server/logger";
-import { ALLOWED_MIME, newStorageKey, sniffMime, storage } from "@/server/storage";
+import {
+  ALLOWED_MIME,
+  newStorageKey,
+  sniffMime,
+  storage,
+  storageProblem,
+} from "@/server/storage";
 import { extractDocument } from "@/server/extraction/pipeline";
 import { cleanImage } from "@/server/extraction/image-clean";
 import { parseZonedInput, toDateInputValue } from "@/lib/format";
@@ -88,6 +94,8 @@ export async function uploadDocument(
   const autoType = !metaIn.type || metaIn.type === "AUTO";
   if (autoType) metaIn.type = "OTHER";
   const meta = documentMetaSchema.parse(metaIn);
+  const notSafe = storageProblem();
+  if (notSafe) throw new AppError("INTERNAL", notSafe);
   const maxBytes = env().MAX_UPLOAD_MB * 1024 * 1024;
   if (file.buffer.length === 0) throw new AppError("VALIDATION", "The file is empty.");
   if (file.buffer.length > maxBytes)

@@ -8,6 +8,7 @@
     "dev": "NEXT_TELEMETRY_DISABLED=1 next dev",
     "build": "prisma generate && NEXT_TELEMETRY_DISABLED=1 next build",
     "start": "NEXT_TELEMETRY_DISABLED=1 next start",
+    "launch-check": "node scripts/launch-check.mjs",
     "setup": "npm install && prisma migrate deploy && prisma generate",
     "update": "git pull && npm run setup",
     "lint": "eslint .",

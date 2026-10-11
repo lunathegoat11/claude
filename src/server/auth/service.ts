@@ -1,4 +1,5 @@
 import "server-only";
+import { timingSafeEqual } from "node:crypto";
 import { db } from "@/server/db";
 import { AppError } from "@/server/errors";
 import { burnPasswordCheck, hashPassword, verifyPassword } from "./password";
@@ -8,13 +9,26 @@ import { CONSENT_VERSION } from "@/lib/legal";
 /**
  * Pure account logic (no cookies) so it can be tested directly.
  */
+/** Compare two strings in constant time, so the invite code can't be guessed by timing. */
+function sameText(a: string, b: string) {
+  const x = Buffer.from(a);
+  const y = Buffer.from(b);
+  return x.length === y.length && timingSafeEqual(x, y);
+}
+
 export async function registerUser(input: {
   name: string;
   email: string;
   password: string;
   improveReading?: string;
+  inviteCode?: string;
 }) {
   if (!env().ALLOW_SIGNUP) throw new AppError("FORBIDDEN", "New sign-ups are currently closed.");
+  const invite = env().SIGNUP_INVITE_CODE?.trim();
+  if (invite && !sameText((input.inviteCode ?? "").trim(), invite))
+    throw new AppError("VALIDATION", "That invite code isn't right.", {
+      inviteCode: ["Check the invite code you were given"],
+    });
   const existing = await db.user.findUnique({ where: { email: input.email } });
   if (existing) {
     // Generic message: do not reveal more than necessary about which emails are registered.

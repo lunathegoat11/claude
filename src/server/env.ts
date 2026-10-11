@@ -15,10 +15,17 @@ const schema = z.object({
     .string()
     .optional()
     .transform((v) => v !== "false"),
+  // The shared demo account never works on a live website, whatever this is set to:
+  // anyone could put real health data into it and everyone else would see it.
   DEMO_LOGIN_ENABLED: z
     .string()
     .optional()
-    .transform((v) => v === "true"),
+    .transform((v) => v === "true" && process.env.NODE_ENV !== "production"),
+  /**
+   * Invite-only sign-up for a soft launch: when set, new accounts need this code.
+   * Share it only with the people you invite.
+   */
+  SIGNUP_INVITE_CODE: z.string().optional(),
   STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
   STORAGE_LOCAL_DIR: z.string().default("./storage"),
   MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(100).default(15),

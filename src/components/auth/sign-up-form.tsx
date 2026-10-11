@@ -7,11 +7,23 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { Input } from "@/components/ui/input";
 import { AGE_LABEL, ConsentBox } from "./consent-box";
 
-export function SignUpForm() {
+export function SignUpForm({ inviteOnly = false }: { inviteOnly?: boolean }) {
   const { state, onSubmit, pending, err } = useActionForm(signUpAction);
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       {state.error && !state.fieldErrors && <FormError message={state.error} />}
+      {inviteOnly && (
+        <Field label="Invite code" htmlFor="inviteCode" error={err("inviteCode")}>
+          <Input
+            id="inviteCode"
+            name="inviteCode"
+            autoComplete="off"
+            spellCheck={false}
+            required
+            aria-invalid={!!err("inviteCode")}
+          />
+        </Field>
+      )}
       <Field label="Your name" htmlFor="name" error={err("name")}>
         <Input id="name" name="name" autoComplete="name" required aria-invalid={!!err("name")} />
       </Field>

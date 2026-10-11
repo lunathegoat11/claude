@@ -96,7 +96,7 @@ All variables are documented in [`.env.example`](.env.example) and validated at 
 | Variable                                                                                                   | Required        | Default                 | Purpose                                                                                |
 | ---------------------------------------------------------------------------------------------------------- | --------------- | ----------------------- | -------------------------------------------------------------------------------------- |
 | `DATABASE_URL`                                                                                             | yes             | —                       | PostgreSQL connection string                                                           |
-| `APP_SECRET`                                                                                               | yes             | —                       | ≥ 32 chars. Encrypts saved AI keys and signs tokens                         |
+| `APP_SECRET`                                                                                               | yes             | —                       | ≥ 32 chars. Encrypts saved AI keys and signs tokens                                    |
 | `APP_URL`                                                                                                  | no              | `http://localhost:3000` | Public origin, used for same-origin checks                                             |
 | `ALLOW_SIGNUP`                                                                                             | no              | `true`                  | Set `false` to close registration                                                      |
 | `DEMO_LOGIN_ENABLED`                                                                                       | no              | `false`                 | Shows the "Explore the demo account" button. **Keep off in production**                |
@@ -176,11 +176,14 @@ APP_URL=https://<your-domain>
 APP_SECRET=<openssl rand -hex 32>
 STORAGE_DRIVER=local
 STORAGE_LOCAL_DIR=/app/storage
-DEMO_LOGIN_ENABLED=false
 RAILWAY_RUN_UID=0
+# Optional: invite-only sign-up for a soft launch
+SIGNUP_INVITE_CODE=<a code you share with invited people>
 ```
 
-Migrations run automatically on every start.
+Migrations run automatically on every start, and the launch checklist is printed in the deploy logs. Uploads are switched off on Railway until a Volume holds `STORAGE_LOCAL_DIR`, so files can't be lost on a restart. The shared demo account never works in production.
+
+**Launch check:** `npm run launch-check` (or `railway run npm run launch-check`) lists, in plain English, what still has to be set before real people use Kosha: web address, secret, email, file storage, database, legal details and lawyer review.
 
 ### Option B — Docker
 

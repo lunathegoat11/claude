@@ -22,6 +22,7 @@ COPY --from=build --chown=kosha:kosha /app/.next/standalone ./
 COPY --from=build --chown=kosha:kosha /app/.next/static ./.next/static
 COPY --from=build --chown=kosha:kosha /app/public ./public
 COPY --from=build --chown=kosha:kosha /app/prisma ./prisma
+COPY --from=build --chown=kosha:kosha /app/scripts ./scripts
 # Prisma CLI + engines for `migrate deploy` at start-up.
 COPY --from=build --chown=kosha:kosha /app/node_modules/prisma ./node_modules/prisma
 COPY --from=build --chown=kosha:kosha /app/node_modules/@prisma ./node_modules/@prisma
