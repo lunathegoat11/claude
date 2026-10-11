@@ -178,7 +178,7 @@ export function LabPanelForm({
       {error && (
         <FormError
           message={
-            anyResultErrors ? "Some results need your attention — see the highlighted rows." : error
+            anyResultErrors ? "Some results need your attention. See the highlighted rows." : error
           }
         />
       )}
@@ -280,7 +280,7 @@ export function LabPanelForm({
               <li
                 key={r.key}
                 className={cn(
-                  "bg-card rounded-[var(--radius)] border p-4 transition",
+                  "surface p-4 transition",
                   !r.include && "opacity-55",
                   idx >= 0 &&
                     (resultErr(idx, "value") ||
@@ -498,7 +498,7 @@ export function LabPanelForm({
         />
       </Field>
 
-      <div className="bg-card sticky bottom-20 z-10 flex items-center justify-between gap-2 rounded-[var(--radius)] border p-2.5 shadow-lg sm:p-3 lg:bottom-4">
+      <div className="surface sticky bottom-20 z-10 flex items-center justify-between gap-2 p-2.5 shadow-lg sm:p-3 lg:bottom-4">
         <span className="text-muted-foreground hidden px-1 text-sm sm:inline">
           {included.length} result{included.length === 1 ? "" : "s"}{" "}
           {mode === "import" ? "selected" : ""}

@@ -65,7 +65,7 @@ export default async function DashboardPage({
 
   return (
     <div className="space-y-10">
-      <header className="flex flex-col gap-5 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-[2rem] font-semibold sm:text-[2.5rem]">
             {sp.welcome ? `Welcome, ${firstName}` : `${greeting(tz)}, ${firstName}`}
@@ -73,7 +73,8 @@ export default async function DashboardPage({
           <p className="text-muted-foreground mt-1">{formatDateLong(new Date(), tz)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button asChild size="lg">
+          {/* On computers "Add a report" lives in the top bar. */}
+          <Button asChild size="lg" className="lg:hidden">
             <Link href="/documents?upload=1">
               <Upload /> Add a report
             </Link>
@@ -94,7 +95,7 @@ export default async function DashboardPage({
       )}
 
       {pending.length > 0 && (
-        <div className="bg-card flex flex-col gap-3 rounded-[var(--radius)] border p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <p>
             <span className="font-medium">
               Values from “{pending[0].document?.name}” need a look.
@@ -161,7 +162,7 @@ export default async function DashboardPage({
                     : "Open report"}
                 </SectionLink>
               </div>
-              <div className="bg-card rounded-[var(--radius)] border">
+              <div className="surface">
                 <ResultLedger
                   label={`Results from ${latest.name}`}
                   results={latestRows.map((r) => ({
@@ -182,7 +183,7 @@ export default async function DashboardPage({
             </section>
           )}
 
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] [&>*]:min-w-0">
             <div className="space-y-10">
               <section aria-labelledby="readings">
                 <div className="mb-3 flex items-end justify-between">
@@ -192,7 +193,7 @@ export default async function DashboardPage({
                   <SectionLink href="/tracking">All readings</SectionLink>
                 </div>
                 {readings.length ? (
-                  <ul className="bg-card divide-y rounded-[var(--radius)] border">
+                  <ul className="surface divide-y">
                     {readings.map((c) => (
                       <MetricRow key={c.key} card={c} prefs={user.prefs} timezone={tz} />
                     ))}
@@ -219,7 +220,7 @@ export default async function DashboardPage({
                     </h2>
                     <SectionLink href="/labs">All lab results</SectionLink>
                   </div>
-                  <ul className="bg-card divide-y rounded-[var(--radius)] border">
+                  <ul className="surface divide-y">
                     {labTrends.map((c) => (
                       <MetricRow key={c.key} card={c} prefs={user.prefs} timezone={tz} />
                     ))}
@@ -245,10 +246,7 @@ export default async function DashboardPage({
                 )}
               </section>
 
-              <section
-                aria-labelledby="ask"
-                className="border-primary/25 bg-accent/50 rounded-[var(--radius)] border p-5"
-              >
+              <section aria-labelledby="ask" className="surface p-6">
                 <h2 id="ask" className="text-lg font-semibold">
                   Ask about your records
                 </h2>

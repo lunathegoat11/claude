@@ -51,7 +51,7 @@ function measurementSection(s: MeasurementSeries, b: ContextBundle): string[] {
       ? `${formatNumber(x, 0)}/${formatNumber(y, 0)}`
       : formatNumber(x, s.decimals);
   L.push(
-    `**${s.metricName} — ${b.analysis.range.from ? b.analysis.range.label : "recent readings"}**`,
+    `**${s.metricName}, ${b.analysis.range.from ? b.analysis.range.label : "recent readings"}**`,
   );
   const shown = Math.min(8, s.points.length);
   L.push(
@@ -59,7 +59,7 @@ function measurementSection(s: MeasurementSeries, b: ContextBundle): string[] {
   );
   for (const p of s.points.slice(0, 8)) {
     L.push(
-      `- ${formatDateTime(p.at, tz)} — ${fmt(p.value, p.value2)} ${s.unit}${p.context ? ` (${CONTEXT_LABELS[p.context] ?? p.context})` : ""} [${p.ref}]`,
+      `- ${formatDateTime(p.at, tz)}: ${fmt(p.value, p.value2)} ${s.unit}${p.context ? ` (${CONTEXT_LABELS[p.context] ?? p.context})` : ""} [${p.ref}]`,
     );
   }
   if (s.stats && s.stats.count > 1) {
@@ -162,7 +162,7 @@ export function composeGroundedAnswer(b: ContextBundle): string {
     return [
       `I couldn't find anything in your records that matches this question for ${b.analysis.range.label}.`,
       "",
-      "You can add readings under **Health Tracking**, lab reports under **Lab Results**, or upload documents under **Documents** — I'll be able to summarise them here afterwards.",
+      "You can add readings under **Readings**, lab reports under **Lab results**, or upload documents under **Reports & files**, and I'll be able to summarise them here afterwards.",
     ].join("\n");
   }
 
@@ -204,18 +204,16 @@ export function composeGroundedAnswer(b: ContextBundle): string {
   if ((i.has("LAB_SUMMARY") || i.has("GENERAL")) && !i.has("LAB_COMPARE") && b.panels.length) {
     out.push(i.has("GENERAL") ? "**Most recent lab report**" : "**Your recent lab reports**");
     for (const p of b.panels.slice(0, i.has("GENERAL") ? 1 : 3)) {
-      out.push(
-        `${p.name} — ${formatDate(p.at, tz)}${p.labName ? `, ${p.labName}` : ""} [${p.ref}]`,
-      );
+      out.push(`${p.name}, ${formatDate(p.at, tz)}${p.labName ? `, ${p.labName}` : ""} [${p.ref}]`);
       for (const r of p.results) {
         const range = formatRange(r.refLow, r.refHigh, r.refText);
         const flag =
           r.flag === "HIGH"
-            ? " — above report range"
+            ? ", above the report's range"
             : r.flag === "LOW"
-              ? " — below report range"
+              ? ", below the report's range"
               : r.flag === "ABNORMAL"
-                ? " — flagged by lab"
+                ? ", flagged by the lab"
                 : "";
         if (flag) outOfRange = true;
         out.push(
@@ -231,7 +229,7 @@ export function composeGroundedAnswer(b: ContextBundle): string {
       out.push(`**Documents that mention this** (${b.documents.length})`);
       for (const d of b.documents)
         out.push(
-          `- ${d.name} — ${d.type}, ${formatDate(d.at, tz)} [${d.ref}]${d.snippet ? `\n  “${d.snippet}”` : ""}`,
+          `- ${d.name}, ${d.type}, ${formatDate(d.at, tz)} [${d.ref}]${d.snippet ? `\n  “${d.snippet}”` : ""}`,
         );
     } else out.push("I couldn't find any uploaded documents mentioning this.");
     out.push("");
@@ -242,11 +240,11 @@ export function composeGroundedAnswer(b: ContextBundle): string {
       out.push(
         i.has("GENERAL")
           ? "**Recent medical events**"
-          : `**Your doctor visits and medical events — ${b.analysis.range.label}**`,
+          : `**Your doctor visits and medical events, ${b.analysis.range.label}**`,
       );
       for (const r of b.records.slice(0, i.has("GENERAL") ? 4 : 8)) {
         const who = [r.doctorName, r.specialty, r.facilityName].filter(Boolean).join(", ");
-        const note = r.notes ? ` — ${r.notes.split(/(?<=\.)\s/)[0].slice(0, 180)}` : "";
+        const note = r.notes ? `: ${r.notes.split(/(?<=\.)\s/)[0].slice(0, 180)}` : "";
         out.push(
           `- ${formatDate(r.at, tz)}: ${r.title} (${r.type}${who ? `, ${who}` : ""})${note} [${r.ref}]`,
         );

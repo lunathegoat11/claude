@@ -15,11 +15,11 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content>) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 fixed inset-0 z-50 bg-black/45" />
+      <DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 fixed inset-0 z-50 bg-black/35" />
       <DialogPrimitive.Content
         className={cn(
-          "bg-card fixed z-50 grid w-full gap-4 border p-5 shadow-xl sm:p-6",
-          "inset-x-0 bottom-0 max-h-[92dvh] overflow-y-auto rounded-t-2xl pb-[max(1.25rem,env(safe-area-inset-bottom))]",
+          "bg-card fixed z-50 grid w-full gap-4 p-5 shadow-2xl shadow-black/10 sm:p-7",
+          "inset-x-0 bottom-0 max-h-[92dvh] overflow-y-auto rounded-t-[1.75rem] pb-[max(1.25rem,env(safe-area-inset-bottom))]",
           "sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[88dvh] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[var(--radius)]",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-4 sm:data-[state=open]:zoom-in-[0.98] sm:data-[state=open]:slide-in-from-bottom-0",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
@@ -28,7 +28,7 @@ function DialogContent({
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="text-muted-foreground hover:bg-muted hover:text-foreground absolute top-3.5 right-3.5 rounded-md p-1.5 transition-colors">
+        <DialogPrimitive.Close className="text-muted-foreground bg-muted hover:text-foreground absolute top-4 right-4 rounded-full p-1.5 transition-colors">
           <X className="size-4" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>

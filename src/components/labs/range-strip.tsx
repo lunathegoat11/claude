@@ -3,8 +3,8 @@ import { cn } from "@/lib/utils";
 /**
  * Where a result sits against the reference range printed on its own report.
  *
- * The printed range is drawn as an ink-washed band on a ruled line; the result is a
- * tick: ink when inside the band, sindoor when outside. Purely visual; the text
+ * A soft capsule track with the printed range as a green segment; the result is a dot,
+ * green inside the range and red outside. Purely visual; the text
  * next to it always states the value, the range and the status.
  */
 export function RangeStrip({
@@ -43,16 +43,16 @@ export function RangeStrip({
   const clipped = value < min || value > max;
   return (
     <div className={cn("relative h-3", className)} aria-hidden>
-      <div className="bg-border absolute inset-x-0 top-1/2 h-px" />
+      <div className="bg-secondary absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full" />
       <div
-        className="bg-primary/14 border-primary/30 absolute top-0.5 bottom-0.5 rounded-[2px] border-x"
+        className="bg-success/30 absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full"
         style={{ left: `${bandFrom}%`, width: `${Math.max(bandTo - bandFrom, 1)}%` }}
       />
       <div
         className={cn(
-          "absolute top-0 bottom-0 w-[3px] -translate-x-1/2 rounded-full",
-          outside ? "bg-destructive" : "bg-primary",
-          clipped && "w-[5px]",
+          "ring-card absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2",
+          outside ? "bg-destructive" : "bg-success",
+          clipped && "size-3.5",
         )}
         style={{ left: `${at}%` }}
       />

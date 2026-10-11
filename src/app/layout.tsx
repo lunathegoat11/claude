@@ -1,8 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource/mukta/400.css";
-import "@fontsource/mukta/500.css";
-import "@fontsource/mukta/600.css";
-import "@fontsource-variable/anek-latin/wdth.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,8 +20,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#eff2ec" },
-    { media: "(prefers-color-scheme: dark)", color: "#11151f" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f5f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f0f11" },
   ],
 };
 

@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 import { getCurrentUser } from "@/server/auth/session";
 import { Logo } from "@/components/shared/logo";
-import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/legal/site-footer";
 import { RangeStrip } from "@/components/labs/range-strip";
+import { Reveal } from "@/components/shared/reveal";
 
-/** A made-up report, shown the way Kosha shows a real one. */
+/** A made-up report, shown exactly the way Kosha shows a real one. */
 const SAMPLE = [
   { test: "HbA1c", value: "5.7", unit: "%", low: 4, high: 5.6, range: "4.0 – 5.6", status: "High" },
   {
@@ -39,67 +40,53 @@ const SAMPLE = [
   },
 ];
 
-const STEPS = [
-  {
-    title: "Add a report",
-    body: "Upload the PDF from your lab, or take a photo of the printed report. If the photo is blurry, Kosha tells you straight away so you can take another.",
-  },
-  {
-    title: "Kosha reads every result",
-    body: "Each test is saved with its value, unit and the range printed on that report, along with the lab's name and the date the sample was taken.",
-  },
-  {
-    title: "See how your numbers change",
-    body: "Open any test to see every result you've had, report by report. Take it to your next appointment instead of a folder of papers.",
-  },
-];
-
 export default async function LandingPage() {
   if (await getCurrentUser()) redirect("/dashboard");
   return (
     <div className="min-h-dvh">
-      <header className="border-b">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-          <Link href="/" aria-label="Kosha home">
-            <Logo />
+      <header className="bg-background/80 supports-[backdrop-filter]:bg-background/70 sticky top-0 z-30 border-b border-black/5 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8">
+          <Link href="/" aria-label="Kosha home" className="rounded-full">
+            <Logo compact />
           </Link>
-          <nav className="flex items-center gap-1.5">
-            <ThemeToggle />
-            <Button asChild variant="ghost">
+          <nav className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
               <Link href="/sign-in">Sign in</Link>
             </Button>
-            <Button asChild className="hidden sm:inline-flex">
-              <Link href="/sign-up">Create an account</Link>
+            <Button asChild size="sm">
+              <Link href="/sign-up">Get started</Link>
             </Button>
           </nav>
         </div>
       </header>
 
       <main>
-        <section className="mx-auto grid max-w-6xl gap-12 px-5 pt-14 pb-20 sm:px-8 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center">
-          <div>
-            <h1 className="text-[2.6rem] leading-[1.02] font-semibold text-balance sm:text-[3.75rem]">
-              Every lab report you&apos;ve had, read and kept in order.
-            </h1>
-            <p className="text-muted-foreground mt-6 max-w-xl text-lg text-pretty">
-              Upload or photograph a report and Kosha saves each result with the lab&apos;s name and
-              the date. Your family&apos;s health history, in one place you can open at the
-              doctor&apos;s.
-            </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg">
-                <Link href="/sign-up">Create a free account</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/sign-in">Sign in</Link>
-              </Button>
-            </div>
+        <section className="enter mx-auto max-w-4xl px-5 pt-16 text-center sm:px-8 sm:pt-24">
+          <h1 className="text-[2.75rem] leading-[1.05] font-semibold sm:text-[4rem]">
+            Every lab report, read and kept for you.
+          </h1>
+          <p className="text-muted-foreground mx-auto mt-5 max-w-xl text-[19px] sm:text-[21px]">
+            Photograph a report and Kosha saves each result with its date, so you can see how your
+            numbers change.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Button asChild size="lg">
+              <Link href="/sign-up">Get started</Link>
+            </Button>
+            <Link
+              href="/sign-in"
+              className="text-info inline-flex items-center text-[17px] hover:underline"
+            >
+              Sign in <ChevronRight className="size-4" />
+            </Link>
           </div>
+        </section>
 
-          {/* The product itself, not an illustration of it: one report as Kosha shows it. */}
-          <figure className="bg-card rounded-[var(--radius)] border">
-            <div className="border-b px-5 py-4">
-              <div className="font-display text-xl font-semibold">
+        {/* The product itself: one report, as Kosha shows it. */}
+        <Reveal as="figure" className="mx-auto mt-14 max-w-2xl px-5 sm:mt-20 sm:px-8">
+          <div className="surface overflow-hidden">
+            <div className="px-6 pt-6 pb-4">
+              <div className="font-display text-[22px] font-semibold">
                 Diabetes &amp; thyroid profile
               </div>
               <div className="text-muted-foreground text-[15px]">
@@ -112,7 +99,7 @@ export default async function LandingPage() {
                 return (
                   <li
                     key={r.test}
-                    className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 px-5 py-3.5"
+                    className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 px-6 py-4"
                   >
                     <span className="font-medium">{r.test}</span>
                     <span className="text-right whitespace-nowrap">
@@ -123,7 +110,7 @@ export default async function LandingPage() {
                     </span>
                     <div className="col-span-2">
                       <RangeStrip value={Number(r.value)} low={r.low} high={r.high} />
-                      <div className="text-muted-foreground mt-1 flex justify-between text-[13px]">
+                      <div className="text-muted-foreground mt-1.5 flex justify-between text-[13px]">
                         <span>Report range {r.range}</span>
                         <span
                           className={
@@ -138,71 +125,93 @@ export default async function LandingPage() {
                 );
               })}
             </ul>
-            <figcaption className="text-muted-foreground border-t px-5 py-3 text-[13px]">
-              A made-up example. High and low are judged only against the range printed on the
-              report itself.
-            </figcaption>
-          </figure>
-        </section>
+          </div>
+          <figcaption className="text-muted-foreground mt-4 text-center text-[13px]">
+            A made-up example. High and low are judged only against the range printed on the report.
+          </figcaption>
+        </Reveal>
 
-        <section className="border-t">
-          <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
-            <h2 className="text-[2rem] font-semibold">How it works</h2>
-            <ol className="mt-10 grid gap-10 md:grid-cols-3">
-              {STEPS.map((s, i) => (
-                <li key={s.title} className="border-primary border-t-[3px] pt-4">
-                  <div className="figure text-primary text-[2.25rem] leading-none font-semibold">
-                    {i + 1}
-                  </div>
-                  <h3 className="mt-3 text-xl font-semibold">{s.title}</h3>
-                  <p className="text-muted-foreground mt-2 text-pretty">{s.body}</p>
-                </li>
-              ))}
-            </ol>
+        {/* How it works: three steps, laid out as tiles of different sizes. */}
+        <section className="mx-auto mt-24 max-w-6xl px-5 sm:mt-32 sm:px-8">
+          <Reveal>
+            <h2 className="text-center text-[2rem] font-semibold sm:text-[3rem]">
+              Three steps. That&apos;s all.
+            </h2>
+          </Reveal>
+          <div className="mt-10 grid gap-4 md:grid-cols-6">
+            <Reveal className="surface p-8 md:col-span-4 md:row-span-2 md:p-10">
+              <div className="figure text-primary text-[3.5rem] leading-none font-semibold">1</div>
+              <h3 className="mt-6 text-[28px] font-semibold">Add a report</h3>
+              <p className="text-muted-foreground mt-3 max-w-md text-[17px]">
+                Upload the PDF from your lab, or take a photo of the printed page. If the photo is
+                blurry, Kosha tells you straight away so you can take another.
+              </p>
+            </Reveal>
+            <Reveal className="surface p-8 md:col-span-2">
+              <div className="figure text-primary text-[2.5rem] leading-none font-semibold">2</div>
+              <h3 className="mt-4 text-[21px] font-semibold">Every result is read</h3>
+              <p className="text-muted-foreground mt-2 text-[15px]">
+                Value, unit, the printed range, the lab and the date.
+              </p>
+            </Reveal>
+            <Reveal className="bg-primary text-primary-foreground rounded-[var(--radius)] p-8 md:col-span-2">
+              <div className="figure text-[2.5rem] leading-none font-semibold opacity-80">3</div>
+              <h3 className="mt-4 text-[21px] font-semibold">See what changed</h3>
+              <p className="mt-2 text-[15px] opacity-85">
+                Each test, report by report. Ready for your next appointment.
+              </p>
+            </Reveal>
           </div>
         </section>
 
-        <section className="border-t">
-          <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 sm:px-8 sm:py-20 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
-            <h2 className="text-[2rem] font-semibold">Also in your file</h2>
-            <dl className="divide-y border-y">
+        <section className="mx-auto mt-24 max-w-3xl px-5 sm:mt-32 sm:px-8">
+          <Reveal>
+            <h2 className="text-center text-[2rem] font-semibold sm:text-[3rem]">
+              Also in your file
+            </h2>
+          </Reveal>
+          <Reveal className="surface mt-10">
+            <dl className="divide-y">
               {[
                 [
                   "Readings",
-                  "Blood pressure, sugar (fasting or after meals), weight, SpO₂ and anything else you want to track.",
+                  "Blood pressure, sugar before and after meals, weight, SpO₂ and anything else you track.",
                 ],
                 [
                   "Visits and medicines",
-                  "Doctor visits, hospital stays, vaccinations, allergies and the medicines you've been prescribed.",
+                  "Doctor visits, hospital stays, vaccinations, allergies and prescriptions.",
                 ],
                 [
                   "Questions about your records",
-                  "Ask “How has my HbA1c changed?” and get an answer built only from what you've saved, with links to the reports.",
+                  "Ask “How has my HbA1c changed?” and get an answer built only from what you saved.",
                 ],
                 [
                   "Your data stays yours",
-                  "Only you can see your records. Download everything or delete your account whenever you like.",
+                  "Only you can see your records. Download everything or delete your account any time.",
                 ],
               ].map(([t, d]) => (
-                <div key={t} className="grid gap-1 py-4 sm:grid-cols-[13rem_1fr] sm:gap-6">
+                <div key={t} className="grid gap-1 px-6 py-5 sm:grid-cols-[14rem_1fr] sm:gap-6">
                   <dt className="font-semibold">{t}</dt>
                   <dd className="text-muted-foreground">{d}</dd>
                 </div>
               ))}
             </dl>
-          </div>
+          </Reveal>
         </section>
 
-        <section className="border-t">
-          <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-14 sm:px-8 md:flex-row md:items-center md:justify-between">
-            <p className="font-display max-w-xl text-[1.75rem] leading-tight font-semibold">
-              Start with the report on your table today.
-            </p>
+        <Reveal
+          as="section"
+          className="mx-auto mt-24 max-w-3xl px-5 pb-24 text-center sm:mt-32 sm:px-8"
+        >
+          <h2 className="text-[2rem] font-semibold sm:text-[3rem]">
+            Start with the report on your table.
+          </h2>
+          <div className="mt-8">
             <Button asChild size="lg">
-              <Link href="/sign-up">Create a free account</Link>
+              <Link href="/sign-up">Get started</Link>
             </Button>
           </div>
-        </section>
+        </Reveal>
       </main>
       <SiteFooter />
     </div>

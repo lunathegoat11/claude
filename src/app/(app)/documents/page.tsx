@@ -111,7 +111,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
               >
                 <Link
                   href={`/documents/${d.id}`}
-                  className="group bg-card hover:border-primary/30 flex h-full flex-col overflow-hidden rounded-[var(--radius)] border transition hover:shadow-sm"
+                  className="group surface flex h-full flex-col overflow-hidden transition hover:shadow-[0_2px_4px_rgb(29_29_31/0.05),0_12px_32px_rgb(29_29_31/0.08)]"
                 >
                   <div className="bg-muted/60 relative flex h-32 items-center justify-center overflow-hidden border-b">
                     {isImage ? (

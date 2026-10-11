@@ -209,7 +209,7 @@ export function Chat({
             <span className="bg-accent text-accent-foreground flex size-8 items-center justify-center rounded-md">
               <Bot className="size-4" />
             </span>
-            <div className="bg-card text-muted-foreground flex items-center gap-2 rounded-[var(--radius)] border px-4 py-3 text-sm">
+            <div className="text-muted-foreground surface flex items-center gap-2 px-4 py-3 text-sm">
               <Loader2 className="size-4 animate-spin" /> Looking through your records…
             </div>
           </div>
@@ -222,7 +222,7 @@ export function Chat({
           e.preventDefault();
           send(input);
         }}
-        className="bg-card sticky bottom-20 rounded-[var(--radius)] border p-2 shadow-lg shadow-black/[0.04] lg:bottom-4"
+        className="surface sticky bottom-20 p-2 shadow-lg shadow-black/[0.04] lg:bottom-4"
       >
         <label htmlFor="ask" className="sr-only">
           Ask about your records
@@ -249,8 +249,7 @@ export function Chat({
           </Button>
         </div>
         <p className="text-muted-foreground px-3 pb-1 text-[11px]">
-          Not for emergencies — call 112. Answers can be incomplete; always check the linked
-          records.
+          Not for emergencies: call 112. Answers can be incomplete; always check the linked records.
         </p>
       </form>
     </div>

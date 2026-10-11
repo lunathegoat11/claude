@@ -4,90 +4,104 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Kosha design tokens — "the family health file".
+ * Kosha design tokens.
  *
- * Drawn from the things people already keep: the hospital file and the lab
- * register. File-paper surfaces (a faint green-white, not cream), royal-blue
- * fountain-pen ink for actions and emphasis, sindoor red and leaf green only
- * for out-of-range / in-range results, and marigold only for "please check".
- * Status colours always come with words.
+ * Calm and clear, in the spirit of apple.com: a soft grey page, white rounded surfaces,
+ * near-black text, and ONE accent (blue) for actions and links. Green, red and orange
+ * are reserved for result status (in range, outside range, please check) and always
+ * come with words.
+ *
+ * Shape rule: buttons and chips are pills; surfaces are 20px; inputs are 12px.
  */
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/Geist-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 :root {
-  --radius: 0.625rem;
+  --radius: 1.25rem;
 
-  --background: #eff2ec; /* file paper */
-  --foreground: #1a2238; /* blue-black ink */
-  --card: #fafbf8; /* a fresh sheet */
+  --background: #f5f5f7;
+  --foreground: #1d1d1f;
+  --card: #ffffff;
   --card-foreground: var(--foreground);
-  --popover: #fdfdfb;
+  --popover: #ffffff;
   --popover-foreground: var(--foreground);
-  --primary: #2a3f9d; /* royal-blue ink */
-  --primary-foreground: #f6f7fc;
-  --secondary: #e3e8df;
-  --secondary-foreground: #1f2840;
-  --muted: #e6eae2;
-  --muted-foreground: #566072;
-  --accent: #e3e8f7; /* ink wash */
-  --accent-foreground: #22357f;
-  --destructive: #b4361e; /* sindoor */
-  --destructive-foreground: #fdf6f4;
-  --success: #2b7552; /* leaf */
-  --warning: #9a6400; /* marigold, dark enough for text */
-  --marigold: #e9a21b;
-  --info: #2a6aa8;
-  --border: #d4dacf; /* ruled line */
-  --input: #c3cbbe;
-  --ring: #2a3f9d;
+  --primary: #0071e3;
+  --primary-foreground: #ffffff;
+  --secondary: #e8e8ed;
+  --secondary-foreground: #1d1d1f;
+  --muted: #f0f0f3;
+  --muted-foreground: #6e6e73;
+  --accent: #eaf3fe;
+  --accent-foreground: #0058b0;
+  --destructive: #d70015;
+  --destructive-foreground: #ffffff;
+  --success: #248a3d;
+  --warning: #b25000;
+  --marigold: #ff9500;
+  --info: #0066cc;
+  --border: #e3e3e8;
+  --input: #d2d2d7;
+  --ring: #0071e3;
 
-  --chart-1: #2a3f9d;
-  --chart-2: #b4361e;
-  --chart-3: #c98908;
-  --chart-4: #2b7552;
-  --chart-5: #7a4fa0;
-  --chart-grid: #dce1d7;
+  --chart-1: #0071e3;
+  --chart-2: #d70015;
+  --chart-3: #ff9500;
+  --chart-4: #248a3d;
+  --chart-5: #8944ab;
+  --chart-grid: #ececf0;
 
-  --sidebar: #e8ece4;
+  --sidebar: #f5f5f7;
+  --shadow-surface: 0 1px 2px rgb(29 29 31 / 0.04), 0 4px 16px rgb(29 29 31 / 0.04);
 }
 
 .dark {
-  --background: #11151f; /* the file at night */
-  --foreground: #e6e9f1;
-  --card: #181d29;
+  --background: #0f0f11;
+  --foreground: #f5f5f7;
+  --card: #1c1c1e;
   --card-foreground: var(--foreground);
-  --popover: #1c2230;
+  --popover: #2c2c2e;
   --popover-foreground: var(--foreground);
-  --primary: #a3b4f6;
-  --primary-foreground: #10162b;
-  --secondary: #232a3a;
-  --secondary-foreground: #e1e5ee;
-  --muted: #1f2533;
-  --muted-foreground: #a0a8b9;
-  --accent: #242d4b;
-  --accent-foreground: #c8d2fa;
-  --destructive: #f0806a;
+  --primary: #2997ff;
+  --primary-foreground: #ffffff;
+  --secondary: #2c2c2e;
+  --secondary-foreground: #f5f5f7;
+  --muted: #232326;
+  --muted-foreground: #a1a1a6;
+  --accent: #102a46;
+  --accent-foreground: #8ec5ff;
+  --destructive: #ff453a;
   --destructive-foreground: #1d0c08;
-  --success: #73c99f;
-  --warning: #f2b844;
-  --marigold: #f2b844;
-  --info: #84b5ec;
-  --border: #2a3142;
-  --input: #363e52;
-  --ring: #a3b4f6;
+  --success: #30d158;
+  --warning: #ff9f0a;
+  --marigold: #ff9f0a;
+  --info: #64b5ff;
+  --border: #2c2c2e;
+  --input: #3a3a3c;
+  --ring: #2997ff;
 
-  --chart-1: #a3b4f6;
-  --chart-2: #f0806a;
-  --chart-3: #f2b844;
-  --chart-4: #73c99f;
-  --chart-5: #c4a0e6;
-  --chart-grid: #262d3d;
+  --chart-1: #2997ff;
+  --chart-2: #ff453a;
+  --chart-3: #ff9f0a;
+  --chart-4: #30d158;
+  --chart-5: #bf5af2;
+  --chart-grid: #2a2a2d;
 
-  --sidebar: #141925;
+  --sidebar: #0f0f11;
+  --shadow-surface: 0 0 0 1px rgb(255 255 255 / 0.06);
 }
 
 @theme inline {
-  /* Both families are by Ek Type (Mumbai) and have Devanagari companions for a Hindi version. */
-  --font-sans: "Mukta", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Anek Latin Variable", "Mukta", ui-sans-serif, system-ui, sans-serif;
+  /* San Francisco on Apple devices (zero download); Geist everywhere else. */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Geist", "Segoe UI", ui-sans-serif, system-ui,
+    sans-serif;
+  --font-display:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "Geist", "Segoe UI", ui-sans-serif,
+    system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   --color-background: var(--background);
@@ -134,14 +148,16 @@
   html {
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
-    /* Mukta sets small for its size; a 17px base keeps text comfortable for older eyes. */
+    /* 17px base, like iOS body text: comfortable for older eyes. */
     font-size: 106.25%;
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground antialiased;
-    line-height: 1.55;
+    line-height: 1.5;
+    letter-spacing: -0.011em;
+    font-feature-settings: "kern";
   }
-  /* Only 400/500/600 of Mukta are loaded (fewer bytes on slow phones); keep bold at 600. */
   strong,
   b {
     font-weight: 600;
@@ -151,9 +167,12 @@
   h3,
   .font-display {
     font-family: var(--font-display);
-    font-stretch: 88%;
-    letter-spacing: -0.005em;
-    line-height: 1.15;
+    letter-spacing: -0.022em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
   }
   ::selection {
     background: color-mix(in oklch, var(--primary) 22%, transparent);
@@ -185,24 +204,64 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Result values: the display face, tabular, so columns of numbers line up. */
+/* Result values: display face, tabular, so columns of numbers line up. */
 @utility figure {
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
-  font-stretch: 92%;
+  letter-spacing: -0.02em;
 }
 
-/* Long lists: let the browser skip laying out and painting rows that are off screen. */
-@utility lazy-row {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 4.5rem;
+/* A white rounded surface on the grey page (Apple-style tile / grouped list). */
+@utility surface {
+  background-color: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-surface);
 }
 
-@utility safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
+/* Press feedback, like a physical button. Transform-only, so it is cheap. */
+@utility pressable {
+  transition:
+    transform 160ms cubic-bezier(0.25, 0.1, 0.25, 1),
+    background-color 200ms cubic-bezier(0.25, 0.1, 0.25, 1),
+    color 200ms,
+    box-shadow 200ms;
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* One gentle entrance per page, as on apple.com. */
+@utility enter {
+  animation: kosha-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes kosha-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Scroll reveal on the landing page only (see components/shared/reveal.tsx). Content is
+   visible by default; JavaScript hides it just before first paint and fades it in once. */
+@utility reveal {
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  &[data-shown="false"] {
+    opacity: 0;
+    transform: translateY(20px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
   *,
   *::before,
   *::after {

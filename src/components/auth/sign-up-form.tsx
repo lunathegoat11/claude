@@ -41,7 +41,7 @@ export function SignUpForm() {
           aria-invalid={!!err("password")}
         />
       </Field>
-      <fieldset className="bg-card space-y-3 rounded-[var(--radius)] border p-4">
+      <fieldset className="bg-muted space-y-3 rounded-2xl p-4">
         <legend className="sr-only">Consent</legend>
         <ConsentBox name="ageConfirmed" error={err("ageConfirmed")}>
           {AGE_LABEL}

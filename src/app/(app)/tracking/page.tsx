@@ -64,7 +64,7 @@ export default async function TrackingPage() {
               <Link
                 key={metric.id}
                 href={`/tracking/${metric.key}`}
-                className="group bg-card hover:border-primary/30 rounded-[var(--radius)] border p-5 transition hover:shadow-sm"
+                className="group surface p-5 transition hover:shadow-[0_2px_4px_rgb(29_29_31/0.05),0_12px_32px_rgb(29_29_31/0.08)]"
               >
                 <div className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
                   <span className="bg-accent text-accent-foreground flex size-7 items-center justify-center rounded-lg">

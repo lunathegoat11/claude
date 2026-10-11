@@ -70,7 +70,7 @@ export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: 
       {demoEnabled && (
         <>
           <div className="text-muted-foreground relative text-center text-xs">
-            <span className="bg-background relative z-10 px-3">or</span>
+            <span className="bg-card relative z-10 px-3">or</span>
             <span className="bg-border absolute inset-x-0 top-1/2 h-px" />
           </div>
           <Button

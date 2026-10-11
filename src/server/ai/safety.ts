@@ -39,7 +39,7 @@ export function classifyQuestion(q: string): QuestionFlags {
 
 export function emergencyResponse(selfHarm: boolean): string {
   const lines = [
-    "**This may need urgent help — please don't rely on this app right now.**",
+    "**This may need urgent help. Please don't rely on this app right now.**",
     "",
     `- Call **${INDIA_EMERGENCY.unified}** (national emergency number) or **${INDIA_EMERGENCY.ambulance}** for an ambulance.`,
     "- If you can, ask someone nearby to stay with you, or go to the nearest hospital emergency department.",
@@ -63,7 +63,7 @@ export const DOSING_NOTE =
   "I can't advise on starting, stopping or changing any medicine or its dose. Please discuss medication questions with your doctor or pharmacist.";
 
 export const DIAGNOSIS_NOTE =
-  "I can't tell you whether you have a condition — only a qualified doctor can make a diagnosis. Below is what your records show.";
+  "I can't tell you whether you have a condition; only a qualified doctor can make a diagnosis. Below is what your records show.";
 
 const DOSING_ADVICE =
   /\b(take|taking|increase|decrease|reduce|raise|lower|double|halve|stop|start|skip|switch|adjust)\b[^.\n]{0,80}?\b\d+(?:\.\d+)?\s?(mg|mcg|µg|units?|iu|ml|tablets?|pills?|capsules?)\b/i;

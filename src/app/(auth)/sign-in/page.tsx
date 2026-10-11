@@ -17,7 +17,7 @@ export default async function SignInPage({
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">Welcome back</h1>
+        <h1 className="text-[28px] font-semibold">Welcome back</h1>
         <p className="text-muted-foreground text-[15px]">Sign in to see your health records.</p>
       </div>
       {reset && (

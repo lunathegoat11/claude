@@ -24,7 +24,7 @@ export default async function VerifyEmailPage({
       >
         {result ? <CheckCircle2 className="size-6" /> : <XCircle className="size-6" />}
       </span>
-      <h1 className="text-2xl font-semibold">
+      <h1 className="text-[28px] font-semibold">
         {result ? "Email confirmed" : "This link didn't work"}
       </h1>
       <p className="text-muted-foreground text-[15px]">

@@ -155,7 +155,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
       ) : view === "timeline" ? (
         <RecordsTimeline items={items} tz={user.timezone} />
       ) : (
-        <ul className="bg-card divide-y overflow-hidden rounded-[var(--radius)] border">
+        <ul className="surface divide-y overflow-hidden">
           {items.map((r) => {
             const Icon = RECORD_ICONS[r.type];
             return (
@@ -240,7 +240,7 @@ function RecordsTimeline({
                   </span>
                   <Link
                     href={`/records/${r.id}`}
-                    className="bg-card hover:border-primary/30 block rounded-[var(--radius)] border p-4 transition hover:shadow-sm"
+                    className="surface block p-4 transition hover:shadow-[0_2px_4px_rgb(29_29_31/0.05),0_12px_32px_rgb(29_29_31/0.08)]"
                   >
                     <div className="text-muted-foreground text-xs font-medium">
                       {formatDate(r.date, tz)}, {RECORD_TYPE_LABELS[r.type]}

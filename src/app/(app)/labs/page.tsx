@@ -140,7 +140,7 @@ export default async function LabsPage({
                     >
                       {CATEGORY_LABELS[cat]}
                     </h2>
-                    <ul className="bg-card divide-y overflow-hidden rounded-[var(--radius)] border">
+                    <ul className="surface divide-y overflow-hidden">
                       {grouped.get(cat)!.map((s) => {
                         const latest = toNum(s.latest.valueNumeric);
                         const prev =
@@ -191,7 +191,7 @@ export default async function LabsPage({
             </div>
           ) : (
             <>
-              <ul className="bg-card divide-y overflow-hidden rounded-[var(--radius)] border">
+              <ul className="surface divide-y overflow-hidden">
                 {panels.items.map((p) => (
                   <li key={p.id} className="lazy-row">
                     <Link

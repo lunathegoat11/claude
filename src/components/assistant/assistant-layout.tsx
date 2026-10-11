@@ -51,7 +51,7 @@ export function AssistantLayout({
       <div className="min-w-0">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-[1.75rem] font-semibold sm:text-[2.125rem]">Ask Kosha</h1>
+            <h1 className="text-[2rem] font-semibold sm:text-[2.5rem]">Ask Kosha</h1>
           </div>
           <div className="flex items-center gap-2">
             {actions}

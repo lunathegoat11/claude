@@ -91,7 +91,7 @@ export default async function MetricPage({
             <Icon className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold">{metric.name}</h1>
+            <h1 className="text-[2rem] font-semibold sm:text-[2.5rem]">{metric.name}</h1>
             {latest && (
               <p className="text-muted-foreground text-sm">
                 Latest:{" "}
@@ -248,12 +248,12 @@ export default async function MetricPage({
           </Card>
           <p className="text-muted-foreground mt-3 text-xs">
             Charts show what you recorded. They don&apos;t indicate whether values are healthy for
-            you — ask your doctor about your personal targets.
+            you. Ask your doctor about your personal targets.
           </p>
 
           <section className="mt-8">
             <h2 className="mb-3 text-base font-semibold">All readings</h2>
-            <ul className="bg-card divide-y overflow-hidden rounded-[var(--radius)] border">
+            <ul className="surface divide-y overflow-hidden">
               {list.items.map((m) => {
                 const pres = presentMeasurement(
                   metric,

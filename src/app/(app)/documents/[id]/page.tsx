@@ -110,7 +110,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
           )}
           <DocumentPreview id={doc.id} mimeType={doc.mimeType} name={doc.name} />
           {doc.extractedText && (
-            <details className="group bg-card rounded-[var(--radius)] border">
+            <details className="group surface">
               <summary className="flex cursor-pointer list-none items-center gap-2 px-5 py-4 text-sm font-medium">
                 <ScanText className="text-muted-foreground size-4" /> Text found in this document
                 <span className="text-muted-foreground ml-auto text-xs font-normal group-open:hidden">

@@ -43,7 +43,7 @@ export default async function LabReportPage({
       </Link>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-[1.75rem] font-semibold sm:text-[2.125rem]">{panel.name}</h1>
+          <h1 className="text-[2rem] font-semibold sm:text-[2.5rem]">{panel.name}</h1>
           <p className="text-muted-foreground mt-1 flex flex-wrap items-center gap-2 text-[15px]">
             {formatDate(panel.collectedAt, tz)}
             {panel.labName && `, ${panel.labName}`}
@@ -107,7 +107,7 @@ export default async function LabReportPage({
         </div>
       )}
 
-      <div className="bg-card rounded-[var(--radius)] border">
+      <div className="surface">
         <ResultLedger
           label={`Results for ${panel.name}`}
           results={panel.results.map((r) => {
@@ -135,7 +135,7 @@ export default async function LabReportPage({
       <div className="text-muted-foreground mt-4 space-y-1 text-[13px]">
         <p>
           Status compares each value only with the reference range printed on this report. It is not
-          a diagnosis — please discuss results with your doctor.
+          a diagnosis. Please discuss results with your doctor.
         </p>
         <p>
           {SOURCE_LABELS[panel.source]}.{panel.notes && ` ${panel.notes}`}

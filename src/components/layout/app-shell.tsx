@@ -1,11 +1,12 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { Sidebar } from "./sidebar";
+import { TopNav } from "./top-nav";
 import { MobileNav } from "./mobile-nav";
 import { SearchBox } from "./search-box";
 import { UserMenu } from "./user-menu";
-import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { LogoMark } from "@/components/shared/logo";
+import { Logo } from "@/components/shared/logo";
+import { Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { VerifyEmailBanner } from "./verify-email-banner";
 
@@ -24,23 +25,28 @@ export function AppShell({
       >
         Skip to content
       </a>
-      <Sidebar />
-      <div className="lg:pl-64">
-        <header className="bg-background sticky top-0 z-20 border-b">
-          <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
-            <Link href="/dashboard" className="lg:hidden" aria-label="Kosha dashboard">
-              <LogoMark />
+      <div>
+        {/* Translucent bar, as on apple.com. The blur is limited to this one small sticky element. */}
+        <header className="bg-background/80 supports-[backdrop-filter]:bg-background/70 sticky top-0 z-20 border-b border-black/5 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10">
+          <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6 lg:gap-5 lg:px-8">
+            <Link href="/dashboard" className="shrink-0 rounded-full" aria-label="Kosha home">
+              <Logo compact />
             </Link>
-            <Suspense fallback={<div className="h-10 flex-1" />}>
-              <SearchBox className="max-w-md flex-1" />
+            <TopNav />
+            <Suspense fallback={<div className="h-9 flex-1" />}>
+              <SearchBox className="max-w-md flex-1 lg:ml-auto lg:max-w-56" />
             </Suspense>
-            <div className="ml-auto flex items-center gap-1.5">
+            <div className="flex shrink-0 items-center gap-2">
               {user.isDemo && (
-                <Badge variant="demo" className="hidden sm:inline-flex">
-                  Demo account
+                <Badge variant="demo" className="hidden xl:inline-flex">
+                  Demo
                 </Badge>
               )}
-              <ThemeToggle />
+              <Button asChild size="sm" className="hidden lg:inline-flex">
+                <Link href="/documents?upload=1">
+                  <Upload /> Add a report
+                </Link>
+              </Button>
               <UserMenu name={user.name} email={user.email} />
             </div>
           </div>
@@ -48,7 +54,7 @@ export function AppShell({
         </header>
         <main
           id="main"
-          className="mx-auto max-w-6xl px-4 pt-6 pb-28 sm:px-6 sm:pt-8 lg:px-8 lg:pb-16"
+          className="enter mx-auto max-w-6xl px-4 pt-6 pb-28 sm:px-6 sm:pt-10 lg:px-8 lg:pb-20"
         >
           {children}
         </main>

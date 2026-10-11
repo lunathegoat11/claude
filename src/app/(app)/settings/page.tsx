@@ -432,8 +432,8 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-muted-foreground text-sm">
-            Download a copy of everything you&apos;ve stored — records, lab results, readings,
-            health summary and assistant conversations. Files can be downloaded individually from
+            Download a copy of everything you&apos;ve stored: records, lab results, readings, health
+            summary and assistant conversations. Files can be downloaded individually from
             Documents.
           </p>
           <ExportButton />

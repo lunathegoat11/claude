@@ -18,11 +18,7 @@ export function EmptyState({
 }) {
   return (
     <div
-      className={cn(
-        "bg-card flex flex-col items-start rounded-[var(--radius)] border",
-        compact ? "p-5" : "p-6 sm:p-8",
-        className,
-      )}
+      className={cn("surface flex flex-col items-start", compact ? "p-5" : "p-6 sm:p-8", className)}
     >
       <Icon className="text-primary mb-3 size-6" aria-hidden />
       <h3 className="text-xl font-semibold">{title}</h3>

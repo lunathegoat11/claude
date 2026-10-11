@@ -168,8 +168,7 @@ export function looksLikeMissingDecimal(value: string, low: number | null, high:
   return [10, 100].some((d) => v / d >= lo * 0.5 && v / d <= high * 2);
 }
 
-export const OUTSIDE_RANGE_CHECK =
-  "Outside the printed range — check this value against the photo.";
+export const OUTSIDE_RANGE_CHECK = "Outside the printed range. Check this value against the photo.";
 
 /** Reasons a parsed value deserves a closer look. Never changes the value itself. */
 export function candidateWarnings(
@@ -188,7 +187,7 @@ export function candidateWarnings(
     looksLikeMissingDecimal(value, low, high) ||
     (fromPhoto && usualDecimals > 0 && !value.includes(".") && Number(value) >= 10 && !fitsRange)
   ) {
-    w.push("This value may be missing a decimal point — check the report.");
+    w.push("This value may be missing a decimal point. Check the report.");
   }
   const v = Number(value);
   if (low !== null && high !== null && low > high) {
@@ -496,7 +495,7 @@ export function mergeReports(reads: ParsedReport[]): ParsedReport {
         refHigh: high,
         confidence: 0.4,
         warnings: [
-          `The photo read as ${ca.value} once and ${cb.value} once — check the report.`,
+          `The photo read as ${ca.value} once and ${cb.value} once. Check the report.`,
           ...(pick.warnings ?? []),
         ],
       });

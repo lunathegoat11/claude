@@ -63,7 +63,7 @@ export async function syncRecordEvent(
     sourceId: r.id,
     category: RECORD_CATEGORY[r.type],
     title: r.title,
-    summary: [RECORD_TYPE_LABELS[r.type], who || r.specialty].filter(Boolean).join(" — "),
+    summary: [RECORD_TYPE_LABELS[r.type], who || r.specialty].filter(Boolean).join(", "),
     occurredAt: r.date,
     importance:
       r.type === "HOSPITALIZATION" || r.type === "PROCEDURE" || r.type === "DIAGNOSIS" ? 3 : 2,

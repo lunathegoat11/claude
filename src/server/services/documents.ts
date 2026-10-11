@@ -41,7 +41,7 @@ function resultsFrom(report: ParsedReport) {
   const out: LabResultInput[] = [];
   for (const c of report.candidates) {
     const checks = [...(c.warnings ?? [])];
-    if (c.confidence < 0.5) checks.push("Read with low confidence — check it against the report.");
+    if (c.confidence < 0.5) checks.push("Read with low confidence. Check it against the report.");
     // If a decimal point may have been lost, don't judge high/low from the misread numbers:
     // keep the range as printed in the note instead of a possibly false alarm.
     // (An "outside the range, please check" note keeps the range: the flag may well be right.)

@@ -18,9 +18,9 @@ export function MobileNav() {
     <>
       <nav
         aria-label="Main"
-        className="bg-card safe-bottom fixed inset-x-0 bottom-0 z-40 border-t lg:hidden"
+        className="bg-card/85 supports-[backdrop-filter]:bg-card/70 safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-black/5 backdrop-blur-xl backdrop-saturate-150 lg:hidden dark:border-white/10"
       >
-        <ul className="mx-auto grid h-16 max-w-lg grid-cols-5">
+        <ul className="mx-auto grid h-[3.25rem] max-w-lg grid-cols-5">
           {primary.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -35,7 +35,7 @@ export function MobileNav() {
                       : "text-muted-foreground border-transparent",
                   )}
                 >
-                  <item.icon className="size-[22px]" strokeWidth={active ? 2.2 : 1.8} />
+                  <item.icon className="size-6" strokeWidth={active ? 2 : 1.6} />
                   {item.short ?? item.label}
                 </Link>
               </li>
@@ -53,7 +53,7 @@ export function MobileNav() {
                   : "text-muted-foreground border-transparent",
               )}
             >
-              <MoreHorizontal className="size-[22px]" />
+              <MoreHorizontal className="size-6" strokeWidth={1.6} />
               More
             </button>
           </li>
@@ -70,9 +70,8 @@ export function MobileNav() {
                   href={item.href}
                   onClick={() => setOpen(false)}
                   className={cn(
-                    "hover:bg-muted flex items-center gap-3 rounded-md border p-3.5 text-[15px] font-medium transition-colors",
-                    isActive(pathname, item.href) &&
-                      "border-primary/40 bg-accent text-accent-foreground",
+                    "hover:bg-muted flex items-center gap-3 rounded-xl px-3 py-3 text-[17px] transition-colors",
+                    isActive(pathname, item.href) && "bg-accent text-accent-foreground",
                   )}
                 >
                   <item.icon className="text-primary size-5" />

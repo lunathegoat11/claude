@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 export const fieldBase =
-  "w-full min-w-0 rounded-lg border border-input bg-card px-3 text-[15px] shadow-xs transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive aria-invalid:ring-destructive/20 sm:text-sm";
+  "w-full min-w-0 rounded-xl border border-input bg-card px-3.5 text-[16px] transition-[border-color,box-shadow] duration-200 placeholder:text-muted-foreground/80 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive aria-invalid:ring-destructive/20 sm:text-sm";
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
@@ -11,7 +11,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       data-slot="input"
       className={cn(
         fieldBase,
-        "h-10 py-2 file:border-0 file:bg-transparent file:text-sm file:font-medium",
+        "h-11 py-2 file:border-0 file:bg-transparent file:text-sm file:font-medium",
         className,
       )}
       {...props}
@@ -34,7 +34,7 @@ function NativeSelect({ className, children, ...props }: React.ComponentProps<"s
     <div className="relative">
       <select
         data-slot="select"
-        className={cn(fieldBase, "h-10 appearance-none py-2 pr-9", className)}
+        className={cn(fieldBase, "h-11 appearance-none py-2 pr-9", className)}
         {...props}
       >
         {children}

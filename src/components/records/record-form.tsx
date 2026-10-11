@@ -34,7 +34,7 @@ const TITLE_HINTS: Record<string, string> = {
   VACCINATION: "e.g. Hepatitis B, dose 2",
   ALLERGY: "e.g. Allergy to sulfa drugs",
   CONDITION: "e.g. Asthma",
-  FAMILY_HISTORY: "e.g. Mother — high blood pressure",
+  FAMILY_HISTORY: "e.g. Mother: high blood pressure",
   OTHER: "Give this record a short title",
 };
 

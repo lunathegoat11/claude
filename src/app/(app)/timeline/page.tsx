@@ -47,7 +47,7 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
     <div className="mx-auto max-w-3xl">
       <PageHeader
         title="Your health timeline"
-        description="Every visit, report, document and reading — in the order it happened."
+        description="Every visit, report, document and reading, in the order it happened."
       />
       <div className="mb-6 space-y-3">
         <nav

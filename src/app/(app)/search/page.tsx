@@ -51,9 +51,7 @@ function Section({
         <Icon className="text-primary size-4" /> {title}{" "}
         <span className="text-muted-foreground font-normal">{count}</span>
       </h2>
-      <ul className="bg-card divide-y overflow-hidden rounded-[var(--radius)] border">
-        {children}
-      </ul>
+      <ul className="surface divide-y overflow-hidden">{children}</ul>
     </section>
   );
 }

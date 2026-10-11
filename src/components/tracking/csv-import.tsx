@@ -104,7 +104,7 @@ export function CsvImport({ timezone }: { timezone: string }) {
               </Button>
             </div>
           </div>
-          <div className="bg-card max-h-[60vh] overflow-auto rounded-[var(--radius)] border">
+          <div className="surface max-h-[60vh] overflow-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted text-muted-foreground sticky top-0 border-b text-left text-xs">
                 <tr>

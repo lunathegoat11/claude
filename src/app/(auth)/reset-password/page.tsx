@@ -17,7 +17,7 @@ export default async function ResetPasswordPage({
   if (!valid) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold">This link has expired</h1>
+        <h1 className="text-[28px] font-semibold">This link has expired</h1>
         <p className="text-muted-foreground text-[15px]">
           Password reset links work once, for 1 hour. Please request a new one.
         </p>
@@ -30,7 +30,7 @@ export default async function ResetPasswordPage({
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">Choose a new password</h1>
+        <h1 className="text-[28px] font-semibold">Choose a new password</h1>
         <p className="text-muted-foreground text-[15px]">
           Pick something you don&apos;t use anywhere else.
         </p>
