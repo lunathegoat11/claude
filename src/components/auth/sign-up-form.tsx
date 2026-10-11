@@ -71,7 +71,13 @@ export function SignUpForm() {
           this service to me. I can download or delete it at any time.
         </ConsentBox>
       </fieldset>
-      <SubmitButton pending={pending} className="w-full" size="lg" pendingLabel="Creating account…">
+      <SubmitButton
+        pending={pending}
+        className="w-full"
+        size="lg"
+        pendingLabel="Creating account…"
+        loadingKind="signUp"
+      >
         Create account
       </SubmitButton>
       <p className="text-muted-foreground text-center text-sm">

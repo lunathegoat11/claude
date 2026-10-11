@@ -107,7 +107,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
             href={qs({ view: undefined, page: undefined })}
             aria-current={view === "list" ? "true" : undefined}
             className={cn(
-              "text-muted-foreground inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm font-medium",
+              "text-muted-foreground inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm font-medium pointer-coarse:h-10",
               view === "list" && "bg-card text-foreground shadow-sm",
             )}
           >
@@ -117,7 +117,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
             href={qs({ view: "timeline", page: undefined })}
             aria-current={view === "timeline" ? "true" : undefined}
             className={cn(
-              "text-muted-foreground inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm font-medium",
+              "text-muted-foreground inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm font-medium pointer-coarse:h-10",
               view === "timeline" && "bg-card text-foreground shadow-sm",
             )}
           >

@@ -57,7 +57,7 @@ export function ThemeSegmented() {
           role="radio"
           aria-checked={mounted && theme === o.v}
           onClick={() => setTheme(o.v)}
-          className="text-muted-foreground aria-checked:bg-card aria-checked:text-foreground inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition aria-checked:shadow-sm"
+          className="text-muted-foreground aria-checked:bg-card aria-checked:text-foreground inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition aria-checked:shadow-sm pointer-coarse:h-10"
         >
           <o.icon className="size-4" /> {o.label}
         </button>

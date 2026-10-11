@@ -46,7 +46,11 @@ export default async function LandingPage() {
     <div className="min-h-dvh">
       <header className="bg-background/80 supports-[backdrop-filter]:bg-background/70 sticky top-0 z-30 border-b border-black/5 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8">
-          <Link href="/" aria-label="Kosha home" className="rounded-full">
+          <Link
+            href="/"
+            aria-label="Kosha home"
+            className="inline-flex min-h-11 items-center rounded-full"
+          >
             <Logo compact />
           </Link>
           <nav className="flex items-center gap-2">
@@ -75,7 +79,7 @@ export default async function LandingPage() {
             </Button>
             <Link
               href="/sign-in"
-              className="text-info inline-flex items-center text-[17px] hover:underline"
+              className="text-info inline-flex min-h-11 items-center text-[17px] hover:underline"
             >
               Sign in <ChevronRight className="size-4" />
             </Link>

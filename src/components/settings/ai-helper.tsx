@@ -1,7 +1,8 @@
 "use client";
+import { BusyContent } from "@/components/shared/delayed-loader";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Loader2, Lock, Trash2 } from "lucide-react";
+import { KeyRound, Lock, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { removeAiKeyAction, saveAiKeyAction, setDocumentReadingAction } from "@/actions/ai";
 import { useActionForm } from "@/components/forms/use-action-form";
@@ -125,7 +126,9 @@ function SavedKey({ saved, onReplace }: { saved: AiSettingsView; onReplace: () =
             })
           }
         >
-          {pending ? <Loader2 className="animate-spin" /> : <Trash2 />} Remove key
+          <BusyContent active={pending} kind="save" icon={<Trash2 />}>
+            Remove key
+          </BusyContent>
         </Button>
       </div>
     </div>
@@ -218,7 +221,7 @@ function KeyForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
         </span>
       </label>
       <div className="flex flex-wrap gap-2">
-        <SubmitButton pending={pending} pendingLabel="Checking the key…">
+        <SubmitButton pending={pending} pendingLabel="Checking the key…" loadingKind="aiKey">
           Save key
         </SubmitButton>
         {canCancel && (

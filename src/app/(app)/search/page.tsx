@@ -114,7 +114,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           <Link
             href={qs({ type: undefined })}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-sm",
+              "rounded-full border px-3 py-1.5 text-sm pointer-coarse:py-2.5",
               !type
                 ? "border-primary bg-accent text-accent-foreground font-medium"
                 : "text-muted-foreground hover:bg-muted",
@@ -127,7 +127,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               key={t}
               href={qs({ type: t })}
               className={cn(
-                "rounded-full border px-3 py-1.5 text-sm",
+                "rounded-full border px-3 py-1.5 text-sm pointer-coarse:py-2.5",
                 type === t
                   ? "border-primary bg-accent text-accent-foreground font-medium"
                   : "text-muted-foreground hover:bg-muted",

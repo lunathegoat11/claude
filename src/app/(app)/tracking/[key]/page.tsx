@@ -139,7 +139,7 @@ export default async function MetricPage({
                       href={qs({ context: undefined })}
                       scroll={false}
                       className={cn(
-                        "rounded-full border px-2.5 py-1 text-xs font-medium",
+                        "rounded-full border px-2.5 py-1 text-xs font-medium pointer-coarse:px-3.5 pointer-coarse:py-3",
                         !context
                           ? "border-primary bg-accent text-accent-foreground"
                           : "text-muted-foreground hover:bg-muted",
@@ -155,7 +155,7 @@ export default async function MetricPage({
                           href={qs({ context: c })}
                           scroll={false}
                           className={cn(
-                            "rounded-full border px-2.5 py-1 text-xs font-medium",
+                            "rounded-full border px-2.5 py-1 text-xs font-medium pointer-coarse:px-3.5 pointer-coarse:py-3",
                             context === c
                               ? "border-primary bg-accent text-accent-foreground"
                               : "text-muted-foreground hover:bg-muted",

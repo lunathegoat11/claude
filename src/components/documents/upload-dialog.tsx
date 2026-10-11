@@ -1,7 +1,8 @@
 "use client";
+import { DelayedLoader } from "@/components/shared/delayed-loader";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Camera, FileUp, Loader2, Upload, X } from "lucide-react";
+import { Camera, FileUp, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -200,7 +201,11 @@ export function UploadDialog({
                 </div>
               </div>
             )}
-            {!file ? (
+            {busy && (
+              // Reading a photo can take 10+ seconds: say what's happening, one step at a time.
+              <DelayedLoader kind="upload" className="bg-muted min-h-40 rounded-2xl px-4 py-6" />
+            )}
+            {busy ? null : !file ? (
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -254,7 +259,7 @@ export function UploadDialog({
                 </Button>
               </div>
             )}
-            {file && (
+            {file && !busy && (
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
                   label="Name"
@@ -331,8 +336,7 @@ export function UploadDialog({
                 Cancel
               </Button>
               <Button type="submit" disabled={!file || busy}>
-                {busy && <Loader2 className="animate-spin" />}{" "}
-                {busy ? "Reading your document…" : "Upload"}
+                {busy ? "Reading…" : "Upload"}
               </Button>
             </DialogFooter>
           </form>

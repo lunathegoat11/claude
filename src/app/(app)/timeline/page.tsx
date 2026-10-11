@@ -60,7 +60,7 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
               href={qs({ category: f.key || undefined, before: undefined })}
               aria-current={filter.key === f.key ? "true" : undefined}
               className={cn(
-                "shrink-0 rounded-full border px-3 py-1.5 text-sm transition",
+                "shrink-0 rounded-full border px-3 py-1.5 text-sm transition pointer-coarse:py-2.5",
                 filter.key === f.key
                   ? "border-primary bg-accent text-accent-foreground font-medium"
                   : "text-muted-foreground hover:bg-muted",

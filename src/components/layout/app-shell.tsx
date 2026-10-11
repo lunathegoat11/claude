@@ -29,11 +29,15 @@ export function AppShell({
         {/* Translucent bar, as on apple.com. The blur is limited to this one small sticky element. */}
         <header className="bg-background/80 supports-[backdrop-filter]:bg-background/70 sticky top-0 z-20 border-b border-black/5 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10">
           <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6 lg:gap-5 lg:px-8">
-            <Link href="/dashboard" className="shrink-0 rounded-full" aria-label="Kosha home">
+            <Link
+              href="/dashboard"
+              className="inline-flex min-h-11 shrink-0 items-center rounded-full"
+              aria-label="Kosha home"
+            >
               <Logo compact />
             </Link>
             <TopNav />
-            <Suspense fallback={<div className="h-9 flex-1" />}>
+            <Suspense fallback={<div className="h-9 flex-1 pointer-coarse:h-11" />}>
               <SearchBox className="max-w-md flex-1 lg:ml-auto lg:max-w-56" />
             </Suspense>
             <div className="flex shrink-0 items-center gap-2">
@@ -54,7 +58,7 @@ export function AppShell({
         </header>
         <main
           id="main"
-          className="enter mx-auto max-w-6xl px-4 pt-6 pb-28 sm:px-6 sm:pt-10 lg:px-8 lg:pb-20"
+          className="enter mx-auto max-w-6xl px-4 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-10 lg:px-8 lg:pb-20"
         >
           {children}
         </main>

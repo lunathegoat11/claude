@@ -48,7 +48,7 @@ export function FilterBar({
           defaultValue={q}
           placeholder={placeholder}
           aria-label={placeholder}
-          className="border-input bg-card focus:border-ring focus:ring-ring/20 h-10 w-full rounded-lg border pr-3 pl-9 text-sm shadow-xs outline-none focus:ring-3"
+          className="border-input bg-card focus:border-ring focus:ring-ring/20 h-10 w-full rounded-lg border pr-3 pl-9 text-[16px] shadow-xs outline-none focus:ring-3 pointer-coarse:h-11 pointer-fine:text-sm"
         />
       </div>
       <div className="flex flex-wrap gap-2">{children}</div>

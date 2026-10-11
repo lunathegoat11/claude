@@ -1,4 +1,5 @@
 "use client";
+import { BusyContent } from "@/components/shared/delayed-loader";
 import Link from "next/link";
 import { signInAction, demoSignInAction } from "@/actions/auth";
 import { useActionForm } from "@/components/forms/use-action-form";
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useTransition } from "react";
 import { AGE_LABEL, ConsentBox } from "./consent-box";
 import { toast } from "sonner";
-import { Loader2, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: boolean }) {
   const { state, onSubmit, pending, err } = useActionForm(signInAction);
@@ -63,7 +64,13 @@ export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: 
         >
           {AGE_LABEL}
         </ConsentBox>
-        <SubmitButton pending={pending} className="w-full" size="lg" pendingLabel="Signing in…">
+        <SubmitButton
+          pending={pending}
+          className="w-full"
+          size="lg"
+          pendingLabel="Signing in…"
+          loadingKind="signIn"
+        >
           Sign in
         </SubmitButton>
       </form>
@@ -86,8 +93,9 @@ export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: 
               });
             }}
           >
-            {demoPending ? <Loader2 className="animate-spin" /> : <Sparkles />} Explore the demo
-            account
+            <BusyContent active={demoPending} kind="signIn" icon={<Sparkles />}>
+              Explore the demo account
+            </BusyContent>
           </Button>
           <p className="text-muted-foreground text-center text-xs">
             The demo uses a fictional patient. Please don&apos;t add real information to it.

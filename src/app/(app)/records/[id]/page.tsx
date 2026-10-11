@@ -110,7 +110,11 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                 <div className="text-muted-foreground text-xs">Tags</div>
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   {r.tags.map((t) => (
-                    <Link key={t} href={`/records?tag=${encodeURIComponent(t)}`}>
+                    <Link
+                      key={t}
+                      href={`/records?tag=${encodeURIComponent(t)}`}
+                      className="inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
+                    >
                       <Badge variant="secondary">#{t}</Badge>
                     </Link>
                   ))}

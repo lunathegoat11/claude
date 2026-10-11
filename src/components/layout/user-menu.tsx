@@ -1,7 +1,8 @@
 "use client";
+import { BusyContent } from "@/components/shared/delayed-loader";
 import { useTransition } from "react";
 import Link from "next/link";
-import { Loader2, LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, User } from "lucide-react";
 import { signOutAction } from "@/actions/auth";
 import {
   DropdownMenu,
@@ -18,7 +19,7 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="bg-accent text-accent-foreground ring-offset-background focus-visible:ring-ring flex size-9 items-center justify-center rounded-full text-[13px] font-semibold ring-offset-2 outline-none focus-visible:ring-2"
+        className="bg-accent text-accent-foreground ring-offset-background focus-visible:ring-ring flex size-9 items-center justify-center rounded-full text-[13px] font-semibold ring-offset-2 outline-none focus-visible:ring-2 pointer-coarse:size-11"
         aria-label="Account menu"
       >
         {initials(name)}
@@ -46,7 +47,9 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
           disabled={signingOut}
           onSelect={() => startSignOut(() => signOutAction())}
         >
-          {signingOut ? <Loader2 className="animate-spin" /> : <LogOut />} Sign out
+          <BusyContent active={signingOut} kind="signOut" icon={<LogOut />}>
+            Sign out
+          </BusyContent>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

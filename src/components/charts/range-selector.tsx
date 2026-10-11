@@ -27,7 +27,7 @@ export function RangeSelector({
           aria-current={value === o.key ? "true" : undefined}
           aria-label={o.full}
           className={cn(
-            "text-muted-foreground hover:text-foreground inline-flex h-8 min-w-10 items-center justify-center rounded-lg px-2.5 text-[13px] font-medium transition",
+            "text-muted-foreground hover:text-foreground inline-flex h-8 min-w-10 items-center justify-center rounded-lg px-2.5 text-[13px] font-medium transition pointer-coarse:h-10",
             value === o.key && "bg-card text-foreground shadow-sm",
           )}
         >

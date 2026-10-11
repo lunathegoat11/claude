@@ -222,7 +222,7 @@ export function MeasurementDialog({
                   <label
                     key={c}
                     className={cn(
-                      "has-[:focus-visible]:ring-ring/30 cursor-pointer rounded-full border px-3 py-1.5 text-sm transition has-[:focus-visible]:ring-3",
+                      "has-[:focus-visible]:ring-ring/30 cursor-pointer rounded-full border px-3 py-1.5 text-sm transition has-[:focus-visible]:ring-3 pointer-coarse:py-2.5",
                       context === c
                         ? "border-primary bg-accent text-accent-foreground font-medium"
                         : "hover:bg-muted",
@@ -278,7 +278,7 @@ export function MeasurementDialog({
             <button
               type="button"
               onClick={() => setShowNote(true)}
-              className="text-primary -my-2 py-2 text-sm font-medium"
+              className="text-primary -my-2 py-2 text-sm font-medium pointer-coarse:py-3"
             >
               + Add a note
             </button>

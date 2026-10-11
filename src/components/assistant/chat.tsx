@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ArrowUp, Bot, Info, Loader2, ShieldAlert } from "lucide-react";
+import { AlertTriangle, ArrowUp, Bot, Info, ShieldAlert } from "lucide-react";
+import { Spinner, useLoadingPhase } from "@/components/shared/delayed-loader";
 import { toast } from "sonner";
 import { askAction } from "@/actions/assistant";
 import type { Citation } from "@/server/ai/types";
@@ -27,6 +28,23 @@ const SUGGESTIONS = [
   "What questions could I ask my doctor at my next visit?",
   "What does TSH measure?",
 ];
+
+/** The answer is on its way: a spinner after a second, then words that change. */
+function AssistantWaiting() {
+  const { spinner, message } = useLoadingPhase(true, "assistant");
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="text-muted-foreground surface flex min-h-11 items-center gap-2.5 px-4 py-3 text-[15px]"
+    >
+      {spinner ? <Spinner className="size-5" label="Writing an answer" /> : null}
+      <span key={message ?? "start"} className={message ? "kosha-fade-in" : undefined}>
+        {message ?? (spinner ? "" : "…")}
+      </span>
+    </div>
+  );
+}
 
 function providerLabel(p: string | null) {
   if (p === "demo") return "Summary built from your records";
@@ -209,9 +227,7 @@ export function Chat({
             <span className="bg-accent text-accent-foreground flex size-8 items-center justify-center rounded-md">
               <Bot className="size-4" />
             </span>
-            <div className="text-muted-foreground surface flex items-center gap-2 px-4 py-3 text-sm">
-              <Loader2 className="size-4 animate-spin" /> Looking through your records…
-            </div>
+            <AssistantWaiting />
           </div>
         )}
         <div ref={endRef} />

@@ -172,7 +172,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                   {r.panelId ? (
                     <Link
                       href={`/labs/reports/${r.panelId}`}
-                      className="hover:text-primary hover:underline"
+                      className="hover:text-primary inline-flex items-center hover:underline pointer-coarse:min-h-11"
                     >
                       {formatDate(r.observedAt, tz)}
                     </Link>

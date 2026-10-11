@@ -1,8 +1,9 @@
 "use client";
+import { BusyContent } from "@/components/shared/delayed-loader";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, ChevronDown, Loader2, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, ChevronDown, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { confirmImportAction, saveLabPanelAction } from "@/actions/labs";
 import { Field, FormError } from "@/components/forms/field";
@@ -400,7 +401,7 @@ export function LabPanelForm({
                       return n;
                     })
                   }
-                  className="text-primary mt-1 inline-flex min-h-9 items-center gap-1 text-[13px] font-medium"
+                  className="text-primary mt-1 inline-flex min-h-9 items-center gap-1 text-[13px] font-medium pointer-coarse:min-h-11"
                   aria-expanded={rangeOpen}
                 >
                   <ChevronDown
@@ -512,12 +513,13 @@ export function LabPanelForm({
             className="flex-1 sm:flex-none"
             disabled={pending || included.length === 0}
           >
-            {pending && <Loader2 className="animate-spin" />}
-            {mode === "import"
-              ? "Confirm & save values"
-              : mode === "edit"
-                ? "Save changes"
-                : "Save lab report"}
+            <BusyContent active={pending} kind="save">
+              {mode === "import"
+                ? "Confirm & save values"
+                : mode === "edit"
+                  ? "Save changes"
+                  : "Save lab report"}
+            </BusyContent>
           </Button>
         </div>
       </div>

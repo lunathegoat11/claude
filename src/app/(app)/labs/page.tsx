@@ -119,7 +119,7 @@ export default async function LabsPage({
                 href={k === "tests" ? "/labs" : "/labs?tab=reports"}
                 aria-current={tab === k ? "page" : undefined}
                 className={cn(
-                  "text-muted-foreground inline-flex h-8 items-center rounded-lg px-4 text-sm font-medium",
+                  "text-muted-foreground inline-flex h-8 items-center rounded-lg px-4 text-sm font-medium pointer-coarse:h-10",
                   tab === k && "bg-card text-foreground shadow-sm",
                 )}
               >

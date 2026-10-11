@@ -147,6 +147,8 @@
   }
   html {
     -webkit-text-size-adjust: 100%;
+    /* Feels like an app on phones: no grey flash on tap; pressable gives the feedback instead. */
+    -webkit-tap-highlight-color: transparent;
     text-rendering: optimizeLegibility;
     /* 17px base, like iOS body text: comfortable for older eyes. */
     font-size: 106.25%;
@@ -200,6 +202,13 @@
   }
 }
 
+/* Room for the iPhone home bar and notch when the app runs full screen. */
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
@@ -245,6 +254,25 @@
   }
 }
 
+/* iOS-style activity indicator: the spokes rotate in twelve steps. */
+.kosha-spinner {
+  animation: kosha-spin 1s steps(12) infinite;
+}
+@keyframes kosha-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.kosha-fade-in {
+  animation: kosha-fade 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes kosha-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
 /* Scroll reveal on the landing page only (see components/shared/reveal.tsx). Content is
    visible by default; JavaScript hides it just before first paint and fades it in once. */
 @utility reveal {
@@ -258,6 +286,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* A spinner that doesn't turn still says "busy"; the changing text carries progress. */
+  .kosha-spinner {
+    animation: none !important;
+  }
   .reveal {
     opacity: 1 !important;
     transform: none !important;

@@ -1,6 +1,7 @@
 "use client";
+import { BusyContent } from "@/components/shared/delayed-loader";
 import { useState, useTransition } from "react";
-import { Loader2, Mail, X } from "lucide-react";
+import { Mail, X } from "lucide-react";
 import { toast } from "sonner";
 import { resendVerificationAction } from "@/actions/auth";
 
@@ -28,7 +29,9 @@ export function VerifyEmailBanner({ email }: { email: string }) {
           }
           className="text-primary hover:bg-card inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 font-medium disabled:opacity-60"
         >
-          {pending && <Loader2 className="size-3.5 animate-spin" />} Resend link
+          <BusyContent active={pending} kind="email">
+            Resend link
+          </BusyContent>
         </button>
         <button
           type="button"

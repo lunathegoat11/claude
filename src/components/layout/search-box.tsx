@@ -44,7 +44,7 @@ export function SearchBox({ className }: { className?: string }) {
         type="search"
         aria-label="Search your health records"
         placeholder="Search…"
-        className="bg-secondary placeholder:text-muted-foreground focus:border-ring focus:bg-card focus:ring-ring/20 h-9 w-full rounded-full border border-transparent pr-10 pl-9 text-[15px] transition outline-none focus:ring-4"
+        className="bg-secondary placeholder:text-muted-foreground focus:border-ring focus:bg-card focus:ring-ring/20 h-9 w-full rounded-full border border-transparent pr-10 pl-9 text-[16px] transition outline-none focus:ring-4 pointer-coarse:h-11 pointer-fine:text-[15px]"
       />
       <kbd className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 text-[12px] sm:block">
         /

@@ -1,7 +1,8 @@
 "use client";
+import { BusyContent } from "@/components/shared/delayed-loader";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Download, FileSpreadsheet, Loader2, XCircle } from "lucide-react";
+import { CheckCircle2, Download, FileSpreadsheet, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { importCsvAction, previewCsvAction } from "@/actions/tracking";
 import { useActionForm } from "@/components/forms/use-action-form";
@@ -78,7 +79,7 @@ export function CsvImport({ timezone }: { timezone: string }) {
               accept=".csv,text/csv"
               required
               aria-label="CSV file"
-              className="file:bg-secondary block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:px-3 file:py-2 file:text-sm file:font-medium"
+              className="file:bg-secondary block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:px-3 file:py-2 file:text-sm file:font-medium pointer-coarse:file:py-3"
             />
             <SubmitButton pending={checking} variant="secondary" pendingLabel="Checking…">
               <FileSpreadsheet /> Check file
@@ -100,7 +101,9 @@ export function CsvImport({ timezone }: { timezone: string }) {
                 Cancel
               </Button>
               <Button onClick={confirm} disabled={pending || valid === 0}>
-                {pending && <Loader2 className="animate-spin" />} Import {valid} readings
+                <BusyContent active={pending} kind="import">
+                  Import {valid} readings
+                </BusyContent>
               </Button>
             </div>
           </div>

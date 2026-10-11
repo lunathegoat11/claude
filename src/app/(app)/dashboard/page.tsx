@@ -72,14 +72,14 @@ export default async function DashboardPage({
           </h1>
           <p className="text-muted-foreground mt-1">{formatDateLong(new Date(), tz)}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           {/* On computers "Add a report" lives in the top bar. */}
-          <Button asChild size="lg" className="lg:hidden">
+          <Button asChild size="lg" className="w-full sm:w-auto lg:hidden">
             <Link href="/documents?upload=1">
               <Upload /> Add a report
             </Link>
           </Button>
-          <Button asChild size="lg" variant="outline">
+          <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
             <Link href="/tracking?add=1">
               <Plus /> Add a reading
             </Link>

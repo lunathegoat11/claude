@@ -1,7 +1,8 @@
 "use client";
+import { BusyContent } from "@/components/shared/delayed-loader";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -82,7 +83,9 @@ export function ConfirmDelete({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
           <Button variant="destructive" onClick={confirm} disabled={pending}>
-            {pending && <Loader2 className="animate-spin" />} {confirmLabel}
+            <BusyContent active={pending} kind="delete">
+              {confirmLabel}
+            </BusyContent>
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

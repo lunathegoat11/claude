@@ -44,7 +44,13 @@ export function ForgotPasswordForm() {
           aria-invalid={!!err("email")}
         />
       </Field>
-      <SubmitButton pending={pending} className="w-full" size="lg" pendingLabel="Sending…">
+      <SubmitButton
+        pending={pending}
+        className="w-full"
+        size="lg"
+        pendingLabel="Sending…"
+        loadingKind="email"
+      >
         Send reset link
       </SubmitButton>
       <p className="text-muted-foreground text-center text-sm">

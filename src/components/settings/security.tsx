@@ -1,6 +1,8 @@
 "use client";
+import { useState } from "react";
+import { BusyContent } from "@/components/shared/delayed-loader";
 import { useTransition } from "react";
-import { Download, Loader2, LogOut } from "lucide-react";
+import { Download, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { changePasswordAction, revokeOtherSessionsAction } from "@/actions/auth";
 import { deleteAccountAction } from "@/actions/settings";
@@ -76,17 +78,40 @@ export function RevokeSessionsButton() {
         })
       }
     >
-      {pending ? <Loader2 className="animate-spin" /> : <LogOut />} Sign out other devices
+      <BusyContent active={pending} kind="signOut" icon={<LogOut />}>
+        Sign out other devices
+      </BusyContent>
     </Button>
   );
 }
 
 export function ExportButton() {
+  const [busy, setBusy] = useState(false);
+  async function download() {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/export");
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error?.message ?? "The download didn't work. Please try again.");
+      }
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `kosha-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "The download didn't work. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
-    <Button asChild variant="outline">
-      <a href="/api/export" download>
-        <Download /> Download my data (JSON)
-      </a>
+    <Button variant="outline" onClick={download} disabled={busy} aria-busy={busy}>
+      <BusyContent active={busy} kind="export" icon={<Download />}>
+        Download my data
+      </BusyContent>
     </Button>
   );
 }

@@ -9,10 +9,10 @@ export function SiteFooter() {
           treatment or emergency services. In an emergency, call 112.
         </p>
         <nav className="flex gap-4" aria-label="Legal">
-          <Link href="/privacy" className="hover:text-foreground hover:underline">
+          <Link href="/privacy" className="hover:text-foreground py-3 hover:underline">
             Privacy Policy
           </Link>
-          <Link href="/terms" className="hover:text-foreground hover:underline">
+          <Link href="/terms" className="hover:text-foreground py-3 hover:underline">
             Terms of Use
           </Link>
         </nav>

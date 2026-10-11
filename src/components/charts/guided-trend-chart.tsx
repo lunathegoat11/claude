@@ -82,7 +82,7 @@ export function GuidedTrendChart({
               aria-pressed={on[s]}
               onClick={() => toggle(s)}
               className={cn(
-                "inline-flex min-h-9 items-center gap-2 rounded-full border px-3 text-[13px] font-medium transition-colors",
+                "inline-flex min-h-9 items-center gap-2 rounded-full border px-3 text-[13px] font-medium transition-colors pointer-coarse:min-h-11",
                 on[s]
                   ? "border-primary bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:text-foreground",

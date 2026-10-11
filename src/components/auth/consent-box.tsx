@@ -15,7 +15,7 @@ export function ConsentBox({
 }) {
   return (
     <div>
-      <label className="text-muted-foreground flex items-start gap-3 text-sm leading-relaxed">
+      <label className="text-muted-foreground flex items-start gap-3 text-sm leading-relaxed pointer-coarse:py-2.5">
         <input
           type="checkbox"
           name={name}
