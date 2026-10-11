@@ -81,6 +81,7 @@ export async function signUpAction(_: ActionState, fd: FormData): Promise<Action
       version: CONSENT_VERSION,
       terms: true,
       healthData: true,
+      improveReading: input.improveReading === "on",
     });
     // A failed email must not block sign-up; the user can resend from the app.
     await sendVerification(user.id).catch((err) =>
@@ -194,11 +195,17 @@ export async function resendVerificationAction(): Promise<ActionState> {
 export async function renewConsentAction(_: ActionState, fd: FormData): Promise<ActionState> {
   const result = await runAction("renewConsent", async () => {
     const user = await requireUserOrThrow();
-    renewConsentSchema.parse(formToObject(fd));
+    const input = renewConsentSchema.parse(formToObject(fd));
     const now = new Date();
     await db.user.update({
       where: { id: user.id },
-      data: { termsAcceptedAt: now, healthDataConsentAt: now, consentVersion: CONSENT_VERSION },
+      data: {
+        termsAcceptedAt: now,
+        healthDataConsentAt: now,
+        consentVersion: CONSENT_VERSION,
+        // Ticking the optional box turns learning on; leaving it unticked changes nothing.
+        ...(input.improveReading === "on" ? { improveReadingAt: now } : {}),
+      },
     });
     await audit(user.id, "consent.renewed", { type: "User", id: user.id }, await requestMeta(), {
       version: CONSENT_VERSION,

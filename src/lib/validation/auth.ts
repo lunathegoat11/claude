@@ -37,9 +37,11 @@ export const signUpSchema = z.object({
   healthDataConsent: z.literal("on", {
     errorMap: () => ({ message: "Kosha needs your consent to store your health information" }),
   }),
+  improveReading: z.literal("on").optional(),
 });
 
 export const renewConsentSchema = z.object({
+  improveReading: z.literal("on").optional(),
   acceptTerms: z.literal("on", {
     errorMap: () => ({ message: "Please accept the Terms of Use and Privacy Policy" }),
   }),

@@ -8,7 +8,12 @@ import { CONSENT_VERSION } from "@/lib/legal";
 /**
  * Pure account logic (no cookies) so it can be tested directly.
  */
-export async function registerUser(input: { name: string; email: string; password: string }) {
+export async function registerUser(input: {
+  name: string;
+  email: string;
+  password: string;
+  improveReading?: string;
+}) {
   if (!env().ALLOW_SIGNUP) throw new AppError("FORBIDDEN", "New sign-ups are currently closed.");
   const existing = await db.user.findUnique({ where: { email: input.email } });
   if (existing) {
@@ -28,6 +33,7 @@ export async function registerUser(input: { name: string; email: string; passwor
       ageConfirmedAt: now,
       healthDataConsentAt: now,
       consentVersion: CONSENT_VERSION,
+      improveReadingAt: input.improveReading === "on" ? now : null,
       profile: { create: { fullName: input.name } },
     },
     select: { id: true, email: true },

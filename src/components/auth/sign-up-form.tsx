@@ -47,6 +47,7 @@ export function SignUpForm() {
           {AGE_LABEL}
         </ConsentBox>
         <TermsConsents err={err} />
+        <ImproveReadingConsent />
       </fieldset>
       <SubmitButton
         pending={pending}
@@ -96,5 +97,15 @@ export function TermsConsents({ err }: { err: (k: string) => string[] | undefine
         service to me. I can download or delete it at any time.
       </ConsentBox>
     </>
+  );
+}
+
+/** Optional: let corrections improve report reading. Left unticked unless chosen. */
+export function ImproveReadingConsent() {
+  return (
+    <ConsentBox name="improveReading">
+      Optional: when I correct values read from a report, Kosha may learn the kind of mistake it
+      made (never the values themselves). I can change this in Settings.
+    </ConsentBox>
   );
 }

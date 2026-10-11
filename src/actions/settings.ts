@@ -18,6 +18,7 @@ import { rateLimit } from "@/server/rate-limit";
 import { db } from "@/server/db";
 import { AppError } from "@/server/errors";
 import { uuid } from "@/lib/validation/common";
+import { setImproveReading } from "@/server/services/reading-patterns";
 
 export async function updateProfileAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction("updateProfile", async () => {
@@ -103,4 +104,27 @@ export async function deleteAccountAction(_: ActionState, fd: FormData): Promise
   });
   if (res.ok) redirect("/?deleted=1");
   return res;
+}
+
+/** Opt in or out of letting corrections improve report reading (anonymous patterns only). */
+export async function setImproveReadingAction(on: boolean): Promise<ActionState> {
+  return runAction("setImproveReading", async () => {
+    const user = await requireUserOrThrow();
+    if (user.isDemo)
+      throw new AppError("FORBIDDEN", "This can't be changed on the shared demo account.");
+    await setImproveReading(user.id, on);
+    await audit(
+      user.id,
+      on ? "consent.improve_given" : "consent.improve_withdrawn",
+      { type: "User" },
+      await requestMeta(),
+    );
+    revalidatePath("/settings");
+    return {
+      ok: true,
+      message: on
+        ? "Thanks! Your corrections will help Kosha read reports better."
+        : "Turned off. Your corrections won't be used.",
+    };
+  });
 }

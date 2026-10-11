@@ -1,0 +1,1 @@
+ALTER TABLE "LabPanel" ADD COLUMN "editedAt" TIMESTAMP(3);

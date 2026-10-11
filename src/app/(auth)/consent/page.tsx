@@ -20,9 +20,11 @@ export default async function ConsentPage() {
       <div className="space-y-2">
         <h1 className="text-[28px] font-semibold">We&apos;ve updated our terms</h1>
         <p className="text-muted-foreground text-[15px]">
-          The Terms of Use and Privacy Policy changed on {LEGAL_LAST_UPDATED}. They now explain more
-          clearly who handles your data, that AI is optional and off unless you switch it on, and
-          how long deleted items are kept. Please read and accept them to continue.
+          The Terms of Use and Privacy Policy changed on {LEGAL_LAST_UPDATED}. Deleted items are now
+          removed for good at once, and there&apos;s a new, optional way to help Kosha read reports
+          better by learning from your corrections (only the kind of mistake is kept, never your
+          values). AI stays optional and off unless you switch it on. Please read and accept them to
+          continue.
         </p>
       </div>
       <RenewConsentForm />

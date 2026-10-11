@@ -1,4 +1,5 @@
 import "server-only";
+import { loadPatterns, suggestFromSwaps } from "@/server/services/reading-patterns";
 import { SHARP_INPUT } from "@/server/extraction/sharp-options";
 import { logger } from "@/server/logger";
 import type { ResolvedAI } from "@/server/services/ai-settings";
@@ -142,7 +143,9 @@ export async function extractDocument(
       const texts = passes.texts.map((t) => t.trim());
       const text = texts[0];
       if (text.replace(/\s/g, "").length < 20) return result("FAILED", "ocr");
-      const report = mergeReports(texts.map((t) => parseLabText(t, { source: "ocr" })));
+      const patterns = await loadPatterns();
+      const report = mergeReports(texts.map((t) => parseLabText(t, { source: "ocr", patterns })));
+      report.candidates = report.candidates.map((c) => suggestFromSwaps(c, patterns.digitSwaps));
       const labName = (passes.header && findLabName(passes.header)) || report.labName;
       report.labName = labName ? tidyLabName(labName, texts.join("\n")) : null;
       return result("COMPLETED", "ocr", text, report);

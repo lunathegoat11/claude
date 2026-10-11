@@ -10,6 +10,7 @@ import { deleteHealthItemAction } from "@/actions/settings";
 import { PageHeader } from "@/components/shared/page-header";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { PreferencesForm } from "@/components/settings/preferences-form";
+import { ImproveReadingSwitch } from "@/components/settings/improve-reading";
 import { AiHelperSettings } from "@/components/settings/ai-helper";
 import { AI_PROVIDER_LABELS, getAiSettings, serverAiLabel } from "@/server/services/ai-settings";
 import { HealthItemDialog } from "@/components/settings/health-item-dialog";
@@ -332,6 +333,7 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
         termsAcceptedAt: true,
         healthDataConsentAt: true,
         consentVersion: true,
+        improveReadingAt: true,
       },
     }),
   ]);
@@ -339,6 +341,16 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
   const currentHash = current ? hashToken(current) : null;
   return (
     <div className="space-y-6">
+      {!isDemo && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Help improve report reading</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ImproveReadingSwitch initial={!!account?.improveReadingAt} />
+          </CardContent>
+        </Card>
+      )}
       <Card>
         <CardContent className="space-y-3 pt-5 text-sm sm:pt-6">
           <div className="flex items-center gap-2 font-medium">

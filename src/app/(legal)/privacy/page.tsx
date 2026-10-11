@@ -3,7 +3,6 @@ import Link from "next/link";
 import { LegalDoc, legalParties } from "@/components/legal/legal-doc";
 import { env } from "@/server/env";
 import { serverAiLabel } from "@/server/services/ai-settings";
-import { DELETED_KEEP_DAYS } from "@/server/services/retention";
 
 export const metadata: Metadata = { title: "Privacy Policy" };
 
@@ -33,7 +32,7 @@ export default function PrivacyPage() {
           <li>
             Your records are private to your account. We don&apos;t share them with doctors,
             hospitals, insurers or employers. The companies that run Kosha for us (listed in section
-            5) handle them only on our instructions.
+            6) handle them only on our instructions.
           </li>
           <li>
             AI is optional. Nothing is sent to an AI company unless you switch it on, and you can
@@ -42,6 +41,11 @@ export default function PrivacyPage() {
           <li>
             You can download your data or delete your account, and everything in it, at any time.
           </li>
+          <li>
+            If you choose, corrections you make to values Kosha read from a report help it read
+            reports better. Only the kind of mistake is kept, never your values.
+          </li>
+          <li>We keep nothing for longer than it&apos;s needed.</li>
           <li>There are no ads, analytics or tracking tools in Kosha.</li>
         </ul>
       </section>
@@ -99,14 +103,18 @@ export default function PrivacyPage() {
           </li>
           <li>To answer your questions in the assistant, using only your own records.</li>
           <li>
+            Only if you choose: to learn from your corrections so Kosha reads reports better
+            (section 5).
+          </li>
+          <li>
             To keep your account secure, prevent abuse, and send account emails (verification and
             password resets). Emails never contain health information.
           </li>
         </ul>
         <p>
           We process your health information because you consent to it when you create your account.
-          Using AI is a separate, optional consent. You can withdraw either at any time (see section
-          9).
+          Using AI and learning from your corrections are separate, optional consents. You can
+          withdraw any of them at any time (see section 10).
         </p>
       </section>
 
@@ -149,7 +157,36 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2>5. Who handles your data</h2>
+        <h2>5. Learning from your corrections (optional)</h2>
+        <p>
+          This is off unless you tick it when you sign up or switch on &ldquo;Learn from my
+          corrections&rdquo; in Settings → Privacy &amp; security. You can switch it off at any
+          time.
+        </p>
+        <p>
+          When it is on and you correct values Kosha read from a report, Kosha compares, in memory,
+          what it read with what you saved, and keeps only the kind of mistake it made:
+        </p>
+        <ul>
+          <li>a character it misread, for example a 7 read as a 1;</li>
+          <li>a line that isn&apos;t a test result, such as &ldquo;Received&rdquo;;</li>
+          <li>a test name it didn&apos;t recognise, and which test it really was.</li>
+        </ul>
+        <p>
+          The comparison is thrown away as soon as this is done. Nothing kept for learning contains
+          your values, name, dates, reports or account. Lines and test names are kept only in a
+          scrambled (hashed) form, and only once three different people have made the same
+          correction. Until then they are held briefly in the server&apos;s memory, and are
+          forgotten after a day at most, when the server restarts, or when you switch learning off.
+          The patterns learned are anonymous and are used only to read reports better for everyone.
+          They are never sent to another company or used to train an AI model, and they can&apos;t
+          be traced back to you, so they can&apos;t be deleted with your account. Your corrected
+          report itself stays in your records as usual.
+        </p>
+      </section>
+
+      <section>
+        <h2>6. Who handles your data</h2>
         <p>We do not sell or rent your information. Besides us, it is handled only by:</p>
         <ul>
           <li>
@@ -172,7 +209,7 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2>6. Where and how it is stored</h2>
+        <h2>7. Where and how it is stored</h2>
         <p>
           Your information is stored in {p.location}. If you switch on an AI service, the
           information sent to it may be processed in other countries, such as the United States.
@@ -187,7 +224,7 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2>7. Cookies and storage on your device</h2>
+        <h2>8. Cookies and storage on your device</h2>
         <p>
           Kosha uses one essential cookie to keep you signed in. It lasts up to 30 days while you
           use Kosha, and never more than 90 days in total. Your device also remembers a few display
@@ -197,13 +234,20 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2>8. How long we keep it</h2>
+        <h2>9. How long we keep it</h2>
         <ul>
-          <li>Your information is kept while your account is open.</li>
           <li>
-            When you delete something (a record, report, result, reading or document), uploaded
-            files are removed at once. The rest is kept for {DELETED_KEEP_DAYS} days so a mistake
-            can be put right, then removed for good.
+            We keep your information only while it is needed: while your account is open, so you can
+            see it.
+          </li>
+          <li>
+            When you delete something (a record, report, result, reading or document), it is removed
+            for good at once, including any uploaded file and the text read from it.
+          </li>
+          <li>
+            When you correct a report, the old values are replaced at once and not kept. If learning
+            from corrections is on, the comparison is thrown away as soon as the anonymous pattern
+            is noted (section 5).
           </li>
           <li>
             When you delete your account, everything is removed at once, including files and the
@@ -217,7 +261,7 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2>9. Your rights</h2>
+        <h2>10. Your rights</h2>
         <ul>
           <li>
             <strong>Access and portability:</strong> see your information in the app, or download it
@@ -232,16 +276,17 @@ export default function PrivacyPage() {
             &amp; security).
           </li>
           <li>
-            <strong>Withdraw consent:</strong> switch AI off at any time in Settings → AI helper. To
-            withdraw consent to all processing, delete your account. Withdrawing doesn&apos;t affect
-            what was done before.
+            <strong>Withdraw consent:</strong> switch AI off at any time in Settings → AI helper,
+            and learning from corrections off in Settings → Privacy &amp; security. To withdraw
+            consent to all processing, delete your account. Withdrawing doesn&apos;t affect what was
+            done before.
           </li>
           <li>
             <strong>Nominate</strong> someone to act for you if you die or can&apos;t act yourself,
             by writing to the Grievance Officer.
           </li>
           <li>
-            <strong>Complain:</strong> to our Grievance Officer (section 12). If you&apos;re not
+            <strong>Complain:</strong> to our Grievance Officer (section 13). If you&apos;re not
             satisfied, you can complain to the Data Protection Board of India.
           </li>
         </ul>
@@ -253,7 +298,7 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2>10. Children</h2>
+        <h2>11. Children</h2>
         <p>
           Kosha is only for adults (18+), and asks you to confirm this. A child&apos;s records
           should be kept by a parent or legal guardian in the guardian&apos;s own account. If we
@@ -262,7 +307,7 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2>11. Data breaches</h2>
+        <h2>12. Data breaches</h2>
         <p>
           If a security incident affects your personal data, we will tell you without delay, in
           plain language, what happened, what it may mean for you and what we are doing about it. We
@@ -272,7 +317,7 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2>12. Grievance Officer and contact</h2>
+        <h2>13. Grievance Officer and contact</h2>
         <p>
           {p.officer}, Grievance Officer,{" "}
           <a className={link} href={`mailto:${p.officerEmail}`}>
@@ -284,7 +329,7 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2>13. Changes to this policy</h2>
+        <h2>14. Changes to this policy</h2>
         <p>
           If we make important changes, we will show you the new version in the app and ask you to
           accept it before you continue.

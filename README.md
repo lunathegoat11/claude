@@ -298,6 +298,8 @@ The assistant cannot modify records — it has no write path.
 - Uploaded photos are stored upright, at most 3000 px, with all metadata (GPS location, phone model, time stamps) removed. Photos sent to an AI provider are resized and stripped the same way.
 - Automatic clean-up (every few hours, on sign-in): expired sessions, used or expired email links, unconfirmed read values after 30 days, activity log after one year.
 - Only name, email and password are required; every other profile field is optional.
+- Deleting anything removes it for good at once (row, file and text read from it); editing a report replaces the old values instead of keeping them.
+- **Learning from corrections (opt-in):** when someone who agreed corrects values read from a report, the before/after rows are compared in memory and dropped. Only anonymous patterns are kept in `ReadingPattern`: misread characters (e.g. `1`→`7`), and keyed hashes of line labels people delete or rename, stored only after three different people make the same correction (until then held in memory for at most a day). The reader skips learned junk lines, links learned labels to tests, and suggests likely misread digits without ever changing a value. See `src/server/services/reading-patterns.ts`.
 
 ## Low-end devices
 

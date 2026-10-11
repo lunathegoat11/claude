@@ -4,8 +4,11 @@ import { logger } from "@/server/logger";
 
 const DAY = 86_400_000;
 const EVERY = 6 * 60 * 60_000;
-/** How long deleted items can still be recovered before they are removed for good. */
-export const DELETED_KEEP_DAYS = 30;
+/**
+ * Deleting now removes things for good at once. This only clears anything left marked as
+ * deleted by older versions of Kosha.
+ */
+export const DELETED_KEEP_DAYS = 0;
 let lastRun = 0;
 
 /**
@@ -15,8 +18,7 @@ let lastRun = 0;
  * - Email links (verification / password reset): removed a day after they expire or are used.
  * - Values read from a document that were never confirmed or were discarded: removed after 30 days.
  * - Account activity log: kept for one year (security), then removed.
- * - Anything you deleted (records, reports, results, readings, documents): kept for 30
- *   days so a mistake can be put right, then removed for good. (Files are removed at once.)
+ * - Anything still marked as deleted by an older version of Kosha: removed for good.
  */
 export async function purgeExpiredData(now = Date.now(), force = false) {
   if (!force && now - lastRun < EVERY) return;

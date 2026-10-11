@@ -4,6 +4,7 @@ import { safeNext } from "@/lib/safe-next";
 import { isAtLeast18, profileSchema } from "@/lib/validation/health";
 import { deleteAccount, exportUserData } from "@/server/services/profile";
 import { purgeExpiredData } from "@/server/services/retention";
+import { deleteMeasurement } from "@/server/services/measurements";
 import { aiForUser, documentReaderLabel, setAiConsent } from "@/server/services/ai-settings";
 import { audit } from "@/server/audit";
 import { cleanup, makeUser, metricId } from "./helpers/factory";
@@ -95,31 +96,28 @@ describe("download my data", () => {
 });
 
 describe("deleted items", () => {
-  it("are kept for 30 days, then removed for good", async () => {
+  it("are removed for good at once", async () => {
+    const metric = await metricId("weight");
+    const m = await db.healthMeasurement.create({
+      data: { userId: alice.id, metricId: metric, value: 70, unit: "kg", measuredAt: new Date() },
+    });
+    await deleteMeasurement(alice.id, m.id);
+    expect(await db.healthMeasurement.findUnique({ where: { id: m.id } })).toBeNull();
+  });
+  it("left marked as deleted by older versions are cleared on the next clean-up", async () => {
     const metric = await metricId("weight");
     const old = await db.healthMeasurement.create({
-      data: {
-        userId: alice.id,
-        metricId: metric,
-        value: 70,
-        unit: "kg",
-        measuredAt: new Date(),
-        deletedAt: new Date(Date.now() - 31 * DAY),
-      },
-    });
-    const recent = await db.healthMeasurement.create({
       data: {
         userId: alice.id,
         metricId: metric,
         value: 71,
         unit: "kg",
         measuredAt: new Date(),
-        deletedAt: new Date(Date.now() - 2 * DAY),
+        deletedAt: new Date(Date.now() - DAY),
       },
     });
     await purgeExpiredData(Date.now(), true);
     expect(await db.healthMeasurement.findUnique({ where: { id: old.id } })).toBeNull();
-    expect(await db.healthMeasurement.findUnique({ where: { id: recent.id } })).not.toBeNull();
   });
 });
 

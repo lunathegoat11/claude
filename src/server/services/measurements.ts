@@ -211,10 +211,7 @@ export async function updateMeasurement(userId: string, id: string, raw: unknown
 
 export async function deleteMeasurement(userId: string, id: string) {
   await db.$transaction(async (tx) => {
-    const res = await tx.healthMeasurement.updateMany({
-      where: { id, userId, deletedAt: null },
-      data: { deletedAt: new Date() },
-    });
+    const res = await tx.healthMeasurement.deleteMany({ where: { id, userId, deletedAt: null } });
     if (!res.count) throw notFound("Reading");
     await removeTimelineEvent(tx, "MEASUREMENT", id);
   });

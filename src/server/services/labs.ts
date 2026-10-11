@@ -1,4 +1,5 @@
 import "server-only";
+import { learnFromCorrection } from "./reading-patterns";
 import { Prisma, type DataSource, type LabFlag } from "@prisma/client";
 import { db, type Tx } from "@/server/db";
 import { AppError, notFound } from "@/server/errors";
@@ -68,10 +69,8 @@ export async function writePanel(
     : await tx.labPanel.create({ data: { ...data, userId, source } });
 
   if (panelId) {
-    await tx.labResult.updateMany({
-      where: { panelId, userId, deletedAt: null },
-      data: { deletedAt: new Date() },
-    });
+    // The old values are replaced, not kept: nothing needs them once the edit is saved.
+    await tx.labResult.deleteMany({ where: { panelId, userId, deletedAt: null } });
   }
   const results = input.results.map((r) => ({
     ...normaliseResult(r),
@@ -113,29 +112,54 @@ export async function updateLabPanel(userId: string, panelId: string, raw: unkno
     throw new AppError("VALIDATION", "Sample date is not valid.", {
       collectedAt: ["Sample date is not valid"],
     });
-  return db.$transaction(async (tx) => {
+  const result = await db.$transaction(async (tx) => {
     const existing = await tx.labPanel.findFirst({
       where: { id: panelId, userId, deletedAt: null },
-      select: { id: true },
+      select: {
+        id: true,
+        source: true,
+        editedAt: true,
+        results: {
+          where: { deletedAt: null },
+          select: { testName: true, biomarkerCode: true, valueNumeric: true, valueText: true },
+        },
+      },
     });
     if (!existing) throw notFound("Lab report");
-    return writePanel(tx, userId, input, collectedAt, "MANUAL", panelId);
+    const panel = await writePanel(tx, userId, input, collectedAt, "MANUAL", panelId);
+    await tx.labPanel.update({ where: { id: panelId }, data: { editedAt: new Date() } });
+    // Only the first correction of values read automatically says anything about reading.
+    const learnable =
+      !existing.editedAt && ["IMAGE_IMPORT", "PDF_IMPORT"].includes(existing.source);
+    return { panel, learnable, before: existing.results };
   });
+  if (result.learnable) {
+    const row = (r: {
+      testName: string;
+      biomarkerCode?: string | null;
+      valueNumeric?: unknown;
+      valueText?: string | null;
+      value?: string | null;
+    }) => ({
+      testName: r.testName,
+      biomarkerCode: r.biomarkerCode ?? null,
+      value:
+        r.value ??
+        (r.valueNumeric != null ? String(Number(r.valueNumeric)) : (r.valueText ?? null)),
+    });
+    // Compared in memory, then dropped: only anonymous patterns are kept (if allowed).
+    await learnFromCorrection(userId, result.before.map(row), input.results.map(row));
+  }
+  return result.panel;
 }
 
 export async function deleteLabPanel(userId: string, panelId: string) {
   await db.$transaction(async (tx) => {
-    const now = new Date();
-    const res = await tx.labPanel.updateMany({
-      where: { id: panelId, userId, deletedAt: null },
-      data: { deletedAt: now },
-    });
-    if (!res.count) throw notFound("Lab report");
-    await tx.labResult.updateMany({
-      where: { panelId, userId, deletedAt: null },
-      data: { deletedAt: now },
-    });
+    // Removed for good straight away: there's no reason to keep what someone deleted.
     await removeTimelineEvent(tx, "LAB_PANEL", panelId);
+    await tx.labResult.deleteMany({ where: { panelId, userId } });
+    const res = await tx.labPanel.deleteMany({ where: { id: panelId, userId, deletedAt: null } });
+    if (!res.count) throw notFound("Lab report");
   });
 }
 
@@ -284,10 +308,7 @@ export async function getTestHistory(userId: string, key: string) {
 }
 
 export async function deleteLabResult(userId: string, resultId: string) {
-  const res = await db.labResult.updateMany({
-    where: { id: resultId, userId, deletedAt: null },
-    data: { deletedAt: new Date() },
-  });
+  const res = await db.labResult.deleteMany({ where: { id: resultId, userId, deletedAt: null } });
   if (!res.count) throw notFound("Lab result");
 }
 

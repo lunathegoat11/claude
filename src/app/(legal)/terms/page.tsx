@@ -91,7 +91,17 @@ export default function TermsPage() {
         </ul>
       </section>
       <section>
-        <h2>6. Price</h2>
+        <h2>6. Learning from corrections</h2>
+        <p>
+          If you choose to let Kosha learn from your corrections, you allow it to keep the anonymous
+          patterns described in the Privacy Policy (section 5) and use them to read reports better
+          for everyone. Those patterns contain none of your health information and can&apos;t be
+          linked to you. You can stop this at any time in Settings; patterns already learned stay,
+          because they can&apos;t be traced back to you.
+        </p>
+      </section>
+      <section>
+        <h2>7. Price</h2>
         <p>
           Kosha is free to use. It has no paid plans, subscriptions or in-app purchases, and never
           asks for payment details. If you add your own AI key, the AI company may charge you
@@ -99,7 +109,7 @@ export default function TermsPage() {
         </p>
       </section>
       <section>
-        <h2>7. Availability</h2>
+        <h2>8. Availability</h2>
         <p>
           We work to keep Kosha available and your data safe, but the service is provided &quot;as
           is&quot;. Keep your original medical documents — Kosha is not a substitute for official
@@ -107,7 +117,7 @@ export default function TermsPage() {
         </p>
       </section>
       <section>
-        <h2>8. Liability</h2>
+        <h2>9. Liability</h2>
         <p>
           To the extent permitted by law, {p.org} is not liable for decisions made based on
           information in Kosha, for errors in values read automatically or answers written by AI, or
@@ -116,7 +126,7 @@ export default function TermsPage() {
         </p>
       </section>
       <section>
-        <h2>9. Open-source software</h2>
+        <h2>10. Open-source software</h2>
         <p>
           Kosha is built with open-source software, used under its licences. See the{" "}
           <a
@@ -129,14 +139,14 @@ export default function TermsPage() {
         </p>
       </section>
       <section>
-        <h2>10. Ending your use</h2>
+        <h2>11. Ending your use</h2>
         <p>
           You can delete your account at any time. We may suspend accounts that break these terms,
           and will tell you why where we can.
         </p>
       </section>
       <section>
-        <h2>11. Changes and law</h2>
+        <h2>12. Changes and law</h2>
         <p>
           We will show you important changes to these terms in the app and ask you to accept them
           before you continue. These terms are governed by the laws of India, and the courts of{" "}

@@ -45,7 +45,7 @@ function resultsFrom(report: ParsedReport) {
     // If a decimal point may have been lost, don't judge high/low from the misread numbers:
     // keep the range as printed in the note instead of a possibly false alarm.
     // (An "outside the range, please check" note keeps the range: the flag may well be right.)
-    const doubtful = (c.warnings ?? []).some((w) => w !== OUTSIDE_RANGE_CHECK);
+    const doubtful = (c.warnings ?? []).some((w) => !w.startsWith(OUTSIDE_RANGE_CHECK));
     if (doubtful && c.refText) checks.push(`Range as read: ${c.refText}.`);
     const parsed = labResultInputSchema.safeParse({
       testName: c.testName,
@@ -334,10 +334,7 @@ export async function updateDocument(userId: string, id: string, rawMeta: unknow
   });
 }
 
-/**
- * Delete a document: metadata is soft-deleted (for audit consistency) and the
- * file itself is removed from storage immediately, along with extracted text.
- */
+/** Delete a document for good: its details, the text read from it and the file itself. */
 export async function deleteDocument(userId: string, id: string) {
   const doc = await db.medicalDocument.findFirst({
     where: { id, ...ownedActive(userId) },
@@ -345,15 +342,8 @@ export async function deleteDocument(userId: string, id: string) {
   });
   if (!doc) throw notFound("Document");
   await db.$transaction(async (tx) => {
-    await tx.medicalDocument.update({
-      where: { id },
-      data: { deletedAt: new Date(), extractedText: null },
-    });
-    await tx.importJob.updateMany({
-      where: { documentId: id, status: "AWAITING_REVIEW" },
-      data: { status: "DISCARDED" },
-    });
     await removeTimelineEvent(tx, "DOCUMENT", id);
+    await tx.medicalDocument.delete({ where: { id } });
   });
   await storage()
     .delete(doc.storageKey)

@@ -352,9 +352,8 @@ describe("document access control", () => {
     await deleteDocument(alice.id, id);
     expect(store.files.has(res.document.storageKey)).toBe(false);
     await code(openDocumentFile(alice.id, id), "NOT_FOUND");
-    const row = await db.medicalDocument.findUnique({ where: { id } });
-    expect(row?.deletedAt).not.toBeNull();
-    expect(row?.extractedText).toBeNull();
+    // Removed for good: no row, no text read from it.
+    expect(await db.medicalDocument.findUnique({ where: { id } })).toBeNull();
   });
 
   it("cannot attach a document to another user's record", async () => {

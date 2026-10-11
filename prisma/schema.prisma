@@ -43,6 +43,9 @@ model User {
   /// Null means no consent: answers then come from the built-in summary, and reports are
   /// read on this server only. A user's own AI key is a separate choice (AiCredential).
   aiConsentAt         DateTime?
+  /// Optional consent to let corrections to report values improve report reading for
+  /// everyone (only anonymous patterns are kept; see ReadingPattern). Null means no.
+  improveReadingAt    DateTime?
 
   profile         Profile?
   accounts        Account[]
@@ -359,6 +362,8 @@ model LabPanel {
   reportedAt  DateTime?
   labName     String?
   providerId  String?    @db.Uuid
+  /// When the person first changed the values read from the report (null: never).
+  editedAt    DateTime?
   documentId  String?    @db.Uuid
   source      DataSource @default(MANUAL)
   notes       String?
@@ -662,4 +667,21 @@ model AuditLog {
 
   @@index([userId, createdAt(sort: Desc)])
   @@index([action, createdAt])
+}
+
+/// What Kosha has learned from people correcting values read from reports. Holds only
+/// anonymous patterns, never a person, a value, a date or a report:
+/// - DIGIT: one character the photo reader confused with another ("1" read for "7");
+/// - JUNK / ALIAS: a keyed hash of a line label that people delete as not-a-result, or
+///   rename to a known test. A label is only stored once three different people have
+///   made the same correction, so a name or address on one person's report never is.
+model ReadingPattern {
+  id        String   @id @default(uuid()) @db.Uuid
+  kind      String
+  key       String
+  target    String
+  count     Int      @default(1)
+  updatedAt DateTime @updatedAt
+
+  @@unique([kind, key, target])
 }

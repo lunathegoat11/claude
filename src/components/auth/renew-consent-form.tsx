@@ -4,7 +4,7 @@ import { useActionForm } from "@/components/forms/use-action-form";
 import { FormError } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Button } from "@/components/ui/button";
-import { TermsConsents } from "./sign-up-form";
+import { ImproveReadingConsent, TermsConsents } from "./sign-up-form";
 
 export function RenewConsentForm() {
   const { state, onSubmit, pending, err } = useActionForm(renewConsentAction);
@@ -15,6 +15,7 @@ export function RenewConsentForm() {
         <fieldset className="bg-muted space-y-3 rounded-2xl p-4">
           <legend className="sr-only">Consent</legend>
           <TermsConsents err={err} />
+          <ImproveReadingConsent />
         </fieldset>
         <SubmitButton pending={pending} className="w-full" size="lg" loadingKind="save">
           Accept and continue

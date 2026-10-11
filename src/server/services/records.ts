@@ -126,18 +126,15 @@ export async function updateRecord(userId: string, id: string, raw: unknown, tz:
   });
 }
 
-/** Soft delete; attached documents are kept but unlinked. */
+/** Delete for good; attached documents are kept but unlinked. */
 export async function deleteRecord(userId: string, id: string) {
   await db.$transaction(async (tx) => {
-    const res = await tx.medicalRecord.updateMany({
-      where: { id, ...ownedActive(userId) },
-      data: { deletedAt: new Date() },
-    });
-    if (res.count === 0) throw notFound("Medical record");
     await tx.medicalDocument.updateMany({
       where: { recordId: id, userId },
       data: { recordId: null },
     });
+    const res = await tx.medicalRecord.deleteMany({ where: { id, ...ownedActive(userId) } });
+    if (res.count === 0) throw notFound("Medical record");
     await removeTimelineEvent(tx, "MEDICAL_RECORD", id);
   });
 }

@@ -203,6 +203,7 @@ export async function exportUserData(userId: string) {
         ageConfirmedAt: true,
         lastAgeConfirmedAt: true,
         aiConsentAt: true,
+        improveReadingAt: true,
       },
     }),
     db.profile.findUnique({ where: { userId } }),

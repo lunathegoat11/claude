@@ -17,6 +17,8 @@ export type AuditAction =
   | "consent.ai_given"
   | "consent.ai_withdrawn"
   | "consent.renewed"
+  | "consent.improve_given"
+  | "consent.improve_withdrawn"
   | "record.create"
   | "record.update"
   | "record.delete"

@@ -2,6 +2,7 @@ import {
   BIOMARKERS,
   CATEGORY_LABELS,
   matchBiomarker,
+  getBiomarker,
   type BiomarkerCategory,
   type BiomarkerDef,
 } from "@/lib/catalog/biomarkers";
@@ -402,7 +403,14 @@ export function reportNameFor(candidates: { biomarkerCode: string | null }[]): s
   return "Lab report";
 }
 
-export function parseLabText(text: string, opts: { source?: "text" | "ocr" } = {}): ParsedReport {
+export function parseLabText(
+  text: string,
+  opts: {
+    source?: "text" | "ocr";
+    /** Patterns learned from people's corrections (see reading-patterns.ts). */
+    patterns?: { isJunk(label: string): boolean; aliasFor(label: string): string | null };
+  } = {},
+): ParsedReport {
   const candidates: LabCandidate[] = [];
   const seen = new Set<string>();
   const unitRe = new RegExp(`^${UNIT_PATTERN}(?![a-z])`, "i");
@@ -458,6 +466,8 @@ export function parseLabText(text: string, opts: { source?: "text" | "ocr" } = {
     const name = generic[1].replace(/[\s:.-]+$/, "").trim();
     if (name.replace(/[^A-Za-z]/g, "").length < 2 || NOT_A_TEST.test(name)) continue;
     if (DATE_AFTER_VALUE.test(generic[2])) continue;
+    // Lines people have repeatedly deleted as "not a result" are skipped.
+    if (opts.patterns?.isJunk(name)) continue;
     const row = parseRow(generic[2], unitRe);
     // Without a unit or a range, a number next to a word is too often not a result.
     if (!row || (!row.unit && !row.refText)) continue;
@@ -466,11 +476,15 @@ export function parseLabText(text: string, opts: { source?: "text" | "ocr" } = {
     if (seen.has(key)) continue;
     seen.add(key);
     const { low, high } = parseReferenceRange(row.refText);
+    // A label people have repeatedly renamed to a known test is linked to that test.
+    const learned = getBiomarker(opts.patterns?.aliasFor(name));
+    if (learned && seen.has(learned.code)) continue;
+    if (learned) seen.add(learned.code);
     candidates.push({
-      testName: name.slice(0, 120),
-      biomarkerCode: null,
+      testName: learned?.name ?? name.slice(0, 120),
+      biomarkerCode: learned?.code ?? null,
       value: row.value,
-      unit: row.unit,
+      unit: row.unit ?? learned?.units[0] ?? null,
       refText: row.refText,
       refLow: low,
       refHigh: high,
