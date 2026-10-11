@@ -38,7 +38,7 @@ export function MetricRow({
     };
   }
   return (
-    <li>
+    <li className="lazy-row">
       <Link
         href={card.href}
         className="group hover:bg-muted/50 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-4 py-3.5 sm:grid-cols-[minmax(0,1fr)_6.5rem_auto] sm:px-5"

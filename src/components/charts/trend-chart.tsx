@@ -5,6 +5,7 @@ import {
   Line,
   LineChart,
   ReferenceArea,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -36,7 +37,28 @@ interface Props {
   band?: { low: number | null; high: number | null; label: string } | null;
   height?: number;
   showDots?: boolean;
+  /**
+   * General reference ranges (e.g. India / US guidance). "fill" draws shaded zones,
+   * "line" draws dashed lines at each threshold, so both can be shown together.
+   */
+  guides?: ChartGuide[];
 }
+
+export type GuideTone = "low" | "normal" | "borderline" | "high";
+export interface ChartGuide {
+  style: "fill" | "line";
+  bands: { low: number | null; high: number | null; label: string; tone: GuideTone }[];
+  /** Explicit values to draw as lines (otherwise the band boundaries are used). */
+  lines?: number[];
+  color?: string;
+}
+
+const TONE_FILL: Record<GuideTone, string> = {
+  normal: "var(--success)",
+  borderline: "var(--marigold)",
+  high: "var(--destructive)",
+  low: "var(--destructive)",
+};
 
 function ChartTooltip({
   active,
@@ -96,17 +118,28 @@ export function TrendChart({
   band,
   height = 280,
   showDots,
+  guides,
 }: Props) {
   const data = useMemo(() => points.map((p) => ({ ...p, t: new Date(p.at).getTime() })), [points]);
   const domain = useMemo(() => {
     const vals = data.flatMap((d) => [d.value, ...(dual && d.value2 != null ? [d.value2] : [])]);
     if (band?.low != null) vals.push(band.low);
     if (band?.high != null) vals.push(band.high);
+    // Bring nearby guide thresholds into view (e.g. an anaemia cut-off just below the data),
+    // without letting a far-away one squash the line flat.
+    const dMin = Math.min(...vals),
+      dMax = Math.max(...vals);
+    const reach = Math.max(dMax - dMin, Math.abs(dMax) * 0.1);
+    for (const g of guides ?? []) {
+      for (const y of g.lines ?? thresholds(g.bands)) {
+        if (y >= dMin - reach && y <= dMax + reach) vals.push(y);
+      }
+    }
     const min = Math.min(...vals),
       max = Math.max(...vals);
     const pad = (max - min || Math.abs(max) || 1) * 0.15;
     return [Math.max(0, Math.floor(min - pad)), Math.ceil(max + pad)] as [number, number];
-  }, [data, dual, band]);
+  }, [data, dual, band, guides]);
   const spanDays = data.length > 1 ? (data[data.length - 1].t - data[0].t) / 86_400_000 : 0;
   const dots = showDots ?? data.length <= 40;
 
@@ -120,6 +153,33 @@ export function TrendChart({
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 10, right: 12, bottom: 4, left: -8 }}>
           <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
+          {guides
+            ?.filter((g) => g.style === "fill")
+            .flatMap((g) => g.bands)
+            .map((b, i) => (
+              <ReferenceArea
+                key={`gf-${i}`}
+                y1={b.low ?? domain[0]}
+                y2={b.high ?? domain[1]}
+                fill={TONE_FILL[b.tone]}
+                fillOpacity={b.tone === "normal" ? 0.1 : 0.08}
+                stroke="none"
+                ifOverflow="hidden"
+              />
+            ))}
+          {guides
+            ?.filter((g) => g.style === "line")
+            .flatMap((g) => (g.lines ?? thresholds(g.bands)).map((y) => ({ y, c: g.color })))
+            .map(({ y, c }, i) => (
+              <ReferenceLine
+                key={`gl-${i}-${y}`}
+                y={y}
+                stroke={c ?? "var(--info)"}
+                strokeDasharray="5 4"
+                strokeWidth={1.5}
+                ifOverflow="hidden"
+              />
+            ))}
           {band && (band.low != null || band.high != null) && (
             <ReferenceArea
               y1={band.low ?? domain[0]}
@@ -188,8 +248,8 @@ export function TrendChart({
                 : false
             }
             activeDot={{ r: 6, fill: "var(--chart-1)", stroke: "var(--card)", strokeWidth: 2 }}
-            isAnimationActive={data.length < 200}
-            animationDuration={500}
+            // No animation: it costs a lot of CPU on low-end phones and adds nothing.
+            isAnimationActive={false}
           />
           {dual && (
             <Line
@@ -204,12 +264,26 @@ export function TrendChart({
                   : false
               }
               activeDot={{ r: 6, fill: "var(--chart-2)", stroke: "var(--card)", strokeWidth: 2 }}
-              isAnimationActive={data.length < 200}
-              animationDuration={500}
+              isAnimationActive={false}
             />
           )}
         </LineChart>
       </ResponsiveContainer>
     </div>
   );
+}
+
+/**
+ * The cut-off values between bands, e.g. 100 and 126 for fasting glucose. Where one band
+ * ends at 125 and the next starts at 126, only the start of the next band is drawn.
+ */
+function thresholds(bands: ChartGuide["bands"]) {
+  const lows = bands.map((b) => b.low).filter((v): v is number => v != null);
+  const ys = new Set<number>(lows);
+  for (const b of bands) {
+    if (b.high == null) continue;
+    const h = b.high;
+    if (!lows.some((l) => l > h && l - h <= Math.max(1, h * 0.02))) ys.add(h);
+  }
+  return [...ys];
 }

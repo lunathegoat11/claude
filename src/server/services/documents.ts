@@ -7,6 +7,7 @@ import { AppError, notFound } from "@/server/errors";
 import { logger } from "@/server/logger";
 import { ALLOWED_MIME, newStorageKey, sniffMime, storage } from "@/server/storage";
 import { extractDocument } from "@/server/extraction/pipeline";
+import { cleanImage } from "@/server/extraction/image-clean";
 import { parseZonedInput, toDateInputValue } from "@/lib/format";
 import {
   documentMetaSchema,
@@ -84,6 +85,8 @@ export async function uploadDocument(
       "Only PDF, JPG, PNG, WebP and HEIC files are supported.",
     );
   }
+  // Strip hidden photo metadata (e.g. GPS location) before anything is read or stored.
+  file = { ...file, buffer: await cleanImage(file.buffer, sniffed) };
   if (meta.recordId) {
     const rec = await db.medicalRecord.findFirst({
       where: { id: meta.recordId, ...ownedActive(userId) },

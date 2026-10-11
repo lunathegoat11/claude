@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import "@fontsource/mukta/400.css";
 import "@fontsource/mukta/500.css";
 import "@fontsource/mukta/600.css";
-import "@fontsource/mukta/700.css";
 import "@fontsource-variable/anek-latin/wdth.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/shared/theme-provider";

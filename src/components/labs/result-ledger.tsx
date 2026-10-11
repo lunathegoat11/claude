@@ -32,7 +32,7 @@ export function ResultLedger({ results, label }: { results: LedgerResult[]; labe
         return (
           <li
             key={r.id}
-            className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 px-4 py-3.5 sm:grid-cols-[minmax(0,1.25fr)_7.5rem_minmax(9rem,1fr)_7rem] sm:items-center sm:px-5"
+            className="lazy-row grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 px-4 py-3.5 sm:grid-cols-[minmax(0,1.25fr)_7.5rem_minmax(9rem,1fr)_7rem] sm:items-center sm:px-5"
           >
             <div className="min-w-0">
               <Link

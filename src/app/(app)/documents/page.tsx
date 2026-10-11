@@ -103,9 +103,12 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((d) => {
             const Icon = DOCUMENT_ICONS[d.type];
-            const isImage = d.mimeType.startsWith("image/") && d.mimeType !== "image/heic";
+            const isImage = ["image/jpeg", "image/png", "image/webp"].includes(d.mimeType);
             return (
-              <li key={d.id}>
+              <li
+                key={d.id}
+                className="[contain-intrinsic-size:auto_15rem] [content-visibility:auto]"
+              >
                 <Link
                   href={`/documents/${d.id}`}
                   className="group bg-card hover:border-primary/30 flex h-full flex-col overflow-hidden rounded-[var(--radius)] border transition hover:shadow-sm"
@@ -114,7 +117,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
                     {isImage ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={`/api/documents/${d.id}/file`}
+                        src={`/api/documents/${d.id}/file?size=thumb`}
                         alt=""
                         loading="lazy"
                         decoding="async"

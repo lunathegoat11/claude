@@ -135,7 +135,7 @@ export async function listSessions(userId: string) {
   return db.session.findMany({
     where: { userId, expiresAt: { gt: new Date() } },
     orderBy: { lastUsedAt: "desc" },
-    select: { id: true, tokenHash: true, createdAt: true, lastUsedAt: true, userAgent: true },
+    select: { id: true, tokenHash: true, createdAt: true, lastUsedAt: true, device: true },
   });
 }
 

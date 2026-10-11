@@ -159,7 +159,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
           {items.map((r) => {
             const Icon = RECORD_ICONS[r.type];
             return (
-              <li key={r.id}>
+              <li key={r.id} className="lazy-row">
                 <Link
                   href={`/records/${r.id}`}
                   className="hover:bg-muted/60 flex items-start gap-4 px-4 py-4 transition-colors sm:px-5"

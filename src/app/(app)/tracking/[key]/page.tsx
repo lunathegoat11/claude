@@ -11,7 +11,8 @@ import {
   listMeasurements,
 } from "@/server/services/measurements";
 import { AppError } from "@/server/errors";
-import { LazyTrendChart as TrendChart } from "@/components/charts/lazy-trend-chart";
+import { GuidedTrendChart as TrendChart } from "@/components/charts/guided-trend-chart";
+import { resolveGuides } from "@/lib/catalog/reference-guides";
 import { ChartLegend } from "@/components/charts/chart-legend";
 import { RangeSelector, RANGE_OPTIONS } from "@/components/charts/range-selector";
 import { MeasurementDialog } from "@/components/tracking/measurement-dialog";
@@ -181,6 +182,11 @@ export default async function MetricPage({
                       />
                     </div>
                   )}
+                  {metric.key === "blood_glucose" && !context && (
+                    <p className="text-muted-foreground mb-2 text-[13px]">
+                      Choose Fasting, Before meal or After meal above to see general ranges.
+                    </p>
+                  )}
                   <TrendChart
                     points={shown}
                     unit={sample.unit}
@@ -191,6 +197,12 @@ export default async function MetricPage({
                       metric.secondaryLabel ?? "Value 2",
                     ]}
                     timezone={tz}
+                    guides={resolveGuides(
+                      metric.key === "blood_glucose"
+                        ? `blood_glucose:${context ?? ""}`
+                        : metric.key,
+                      sample.unit,
+                    )}
                   />
                 </>
               ) : (

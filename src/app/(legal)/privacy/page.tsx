@@ -49,9 +49,15 @@ export default function PrivacyPage() {
             phone number, city/state and an emergency contact — only if you choose to add them.
           </li>
           <li>
-            <strong>Security information:</strong> sign-in sessions, the type of device/browser, and
-            a scrambled (pseudonymised) form of your IP address in our security log. The security
-            log never contains your health information.
+            <strong>Security information:</strong> your signed-in sessions with a short device label
+            (for example &ldquo;Chrome on Android&rdquo;), and a log of account activity (for
+            example &ldquo;signed in&rdquo; or &ldquo;uploaded a document&rdquo;) with dates. We
+            don&apos;t store your IP address or your browser&apos;s full details, and the log never
+            contains your health information.
+          </li>
+          <li>
+            <strong>Photos you upload</strong> are stored without their hidden details, such as the
+            GPS location and phone model that cameras add.
           </li>
         </ul>
         <p>We do not ask for Aadhaar, ABHA or other government ID numbers.</p>
@@ -118,13 +124,19 @@ export default function PrivacyPage() {
           file is removed immediately. When you delete your account, all your records and files are
           deleted; copies in backups are removed within [30] days.
         </p>
+        <p>
+          Some things are removed automatically even while your account is active: expired sign-ins
+          as soon as they expire, email links a day after they are used or expire, values read from
+          a document that you didn&apos;t keep after 30 days, and the account activity log after one
+          year.
+        </p>
       </section>
       <section>
         <h2>8. Your rights</h2>
         <ul>
           <li>
-            <strong>Access:</strong> see your information in the app, or download it all (Profile
-            &amp; Settings → Privacy &amp; security → Download my data).
+            <strong>Access:</strong> see your information in the app, or download it all (Settings →
+            Privacy &amp; security → Download my data).
           </li>
           <li>
             <strong>Correction:</strong> edit or delete any record yourself.

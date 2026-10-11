@@ -38,31 +38,6 @@ const TABS = [
   { key: "privacy", label: "Privacy & security" },
 ] as const;
 
-function describeUA(ua: string | null) {
-  if (!ua) return "Unknown device";
-  const browser = /Edg\//.test(ua)
-    ? "Edge"
-    : /Chrome\//.test(ua)
-      ? "Chrome"
-      : /Firefox\//.test(ua)
-        ? "Firefox"
-        : /Safari\//.test(ua)
-          ? "Safari"
-          : "Browser";
-  const os = /Android/.test(ua)
-    ? "Android"
-    : /iPhone|iPad/.test(ua)
-      ? "iOS"
-      : /Windows/.test(ua)
-        ? "Windows"
-        : /Mac OS X/.test(ua)
-          ? "macOS"
-          : /Linux/.test(ua)
-            ? "Linux"
-            : "";
-  return `${browser}${os ? ` on ${os}` : ""}`;
-}
-
 const ACTION_LABELS: Record<string, string> = {
   "auth.sign_in": "Signed in",
   "auth.sign_out": "Signed out",
@@ -440,7 +415,7 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
             {sessions.map((s) => (
               <li key={s.id} className="flex items-center justify-between gap-3 py-2.5">
                 <span>
-                  {describeUA(s.userAgent)}{" "}
+                  {s.device ?? "Unknown device"}{" "}
                   {s.tokenHash === currentHash && <Badge className="ml-1">This device</Badge>}
                 </span>
                 <span className="text-muted-foreground text-xs">

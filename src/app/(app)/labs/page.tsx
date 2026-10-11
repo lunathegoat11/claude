@@ -148,7 +148,7 @@ export default async function LabsPage({
                             ? toNum(s.previous.valueNumeric)
                             : null;
                         return (
-                          <li key={s.key}>
+                          <li key={s.key} className="lazy-row">
                             <Link
                               href={`/labs/tests/${encodeURIComponent(s.key)}`}
                               className="hover:bg-muted/60 grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-3.5 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_96px_132px] sm:px-5"
@@ -193,7 +193,7 @@ export default async function LabsPage({
             <>
               <ul className="bg-card divide-y overflow-hidden rounded-[var(--radius)] border">
                 {panels.items.map((p) => (
-                  <li key={p.id}>
+                  <li key={p.id} className="lazy-row">
                     <Link
                       href={`/labs/reports/${p.id}`}
                       className="hover:bg-muted/60 flex items-center gap-4 px-4 py-4 sm:px-5"

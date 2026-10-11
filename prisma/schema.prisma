@@ -82,7 +82,8 @@ model Session {
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   lastUsedAt DateTime @default(now())
-  userAgent  String?
+  /// Coarse label such as "Chrome on Android" — never the full user-agent string.
+  device     String?
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -649,8 +650,6 @@ model AuditLog {
   action     String
   entityType String?
   entityId   String?
-  ipHash     String?
-  userAgent  String?
   metadata   Json?
   createdAt  DateTime @default(now())
   user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)

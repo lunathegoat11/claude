@@ -1,4 +1,6 @@
 import "server-only";
+import { deviceLabel } from "@/lib/device";
+import { purgeExpiredData } from "@/server/services/retention";
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -30,9 +32,11 @@ export async function createSession(userId: string, userAgent?: string | null) {
       userId,
       tokenHash: hashToken(token),
       expiresAt,
-      userAgent: userAgent?.slice(0, 300) ?? null,
+      device: deviceLabel(userAgent),
     },
   });
+  // Housekeeping piggybacks on sign-ins: at most every few hours, never blocks the request.
+  void purgeExpiredData();
   return { token, expiresAt };
 }
 

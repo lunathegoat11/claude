@@ -141,6 +141,11 @@
     @apply bg-background text-foreground antialiased;
     line-height: 1.55;
   }
+  /* Only 400/500/600 of Mukta are loaded (fewer bytes on slow phones); keep bold at 600. */
+  strong,
+  b {
+    font-weight: 600;
+  }
   h1,
   h2,
   h3,
@@ -185,6 +190,12 @@
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
   font-stretch: 92%;
+}
+
+/* Long lists: let the browser skip laying out and painting rows that are off screen. */
+@utility lazy-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 4.5rem;
 }
 
 @utility safe-bottom {

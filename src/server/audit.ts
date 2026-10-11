@@ -1,7 +1,6 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import { db } from "./db";
-import { hmac } from "./auth/tokens";
 import { logger } from "./logger";
 
 export type AuditAction =
@@ -49,26 +48,25 @@ export interface AuditContext {
 }
 
 /**
- * Append an audit entry. Stores identifiers and actions only — never clinical
- * content. Failures are logged but never break the user's request.
+ * Append an audit entry: who did what, and when. Never clinical content, and — to
+ * collect as little as possible — no IP address and no browser details either.
+ * (The context argument is accepted for call-site compatibility but not stored.)
+ * Failures are logged but never break the user's request.
  */
 export async function audit(
   userId: string | null,
   action: AuditAction,
   entity?: { type: string; id?: string },
-  ctx?: AuditContext,
+  _ctx?: AuditContext,
   metadata?: Prisma.InputJsonValue,
 ) {
   try {
-    const secret = process.env.APP_SECRET ?? "dev";
     await db.auditLog.create({
       data: {
         userId,
         action,
         entityType: entity?.type,
         entityId: entity?.id,
-        ipHash: ctx?.ip ? hmac(ctx.ip, secret) : null,
-        userAgent: ctx?.userAgent?.slice(0, 300) ?? null,
         metadata,
       },
     });

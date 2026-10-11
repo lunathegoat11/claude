@@ -7,6 +7,8 @@ import { notFound } from "@/server/errors";
 
 export const runtime = "nodejs";
 
+const THUMBABLE = ["image/jpeg", "image/png", "image/webp"];
+
 /**
  * Streams a document to its owner only. Files are never publicly addressable;
  * this handler checks the session and ownership on every request.
@@ -15,6 +17,29 @@ export const GET = withApi<{ id: string }>(async (req, { user, params }) => {
   if (!uuid.safeParse(params.id).success) throw notFound("Document");
   const download = req.nextUrl.searchParams.get("download") === "1";
   const { doc, body, size } = await openDocumentFile(user.id, params.id);
+
+  // Small previews for lists: a ~20 KB thumbnail instead of a multi-megabyte photo,
+  // which matters on low-end phones and slow or metered connections.
+  if (req.nextUrl.searchParams.get("size") === "thumb" && THUMBABLE.includes(doc.mimeType)) {
+    const chunks: Buffer[] = [];
+    for await (const c of body as Readable) chunks.push(Buffer.from(c));
+    const sharp = (await import("sharp")).default;
+    const thumb = await sharp(Buffer.concat(chunks), { failOn: "none" })
+      .rotate()
+      .resize({ width: 480, height: 320, fit: "cover", position: "top" })
+      .webp({ quality: 70 })
+      .toBuffer();
+    return new Response(new Uint8Array(thumb), {
+      headers: {
+        "Content-Type": "image/webp",
+        "Content-Length": String(thumb.length),
+        "Cache-Control": "private, max-age=600",
+        "X-Content-Type-Options": "nosniff",
+        "Cross-Origin-Resource-Policy": "same-origin",
+      },
+    });
+  }
+
   await audit(
     user.id,
     download ? "document.download" : "document.view",

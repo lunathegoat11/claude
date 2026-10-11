@@ -6,7 +6,9 @@ import { requireUser } from "@/server/auth/session";
 import { getTestHistory } from "@/server/services/labs";
 import { AppError } from "@/server/errors";
 import { deleteLabResultAction } from "@/actions/labs";
-import { LazyTrendChart as TrendChart } from "@/components/charts/lazy-trend-chart";
+import { GuidedTrendChart as TrendChart } from "@/components/charts/guided-trend-chart";
+import { resolveGuides } from "@/lib/catalog/reference-guides";
+import { db } from "@/server/db";
 import { ConfirmDelete } from "@/components/forms/confirm-delete";
 import { FlagBadge } from "@/components/labs/flag-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +20,10 @@ export const metadata: Metadata = { title: "Test history" };
 
 export default async function TestHistoryPage({ params }: { params: Promise<{ key: string }> }) {
   const user = await requireUser();
+  const profile = await db.profile.findUnique({
+    where: { userId: user.id },
+    select: { sex: true },
+  });
   const key = decodeURIComponent((await params).key).slice(0, 200);
   const history = await getTestHistory(user.id, key).catch((e) => {
     if (e instanceof AppError && e.code === "NOT_FOUND") notFound();
@@ -107,6 +113,11 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                 timezone={tz}
                 band={band}
                 showDots
+                guides={
+                  history.key.startsWith("name:")
+                    ? {}
+                    : resolveGuides(history.key, latestUnit, profile?.sex)
+                }
               />
             ) : (
               <p className="text-muted-foreground text-sm">
@@ -115,7 +126,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
             )}
             <p className="text-muted-foreground mt-3 text-xs">
               {band
-                ? "The shaded band is the reference range printed on these reports."
+                ? "The grey band is the reference range printed on these reports."
                 : "Reference ranges differ between these reports, so no single range is drawn. Hover a point to see the range printed on that report."}
               {otherUnits > 0 &&
                 ` ${otherUnits} result${otherUnits > 1 ? "s" : ""} in a different unit ${otherUnits > 1 ? "are" : "is"} listed below but not charted.`}{" "}
