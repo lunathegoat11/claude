@@ -164,6 +164,11 @@ export class AnthropicProvider implements AIProvider {
   async verifyKey(): Promise<KeyCheck> {
     try {
       await this.client.models.retrieve(this.model, {}, { maxRetries: 0, timeout: 15_000 });
+      // A valid key can still have no credit: a one-token request finds out.
+      await this.client.messages.create(
+        { model: this.model, max_tokens: 1, messages: [{ role: "user", content: "OK" }] },
+        { maxRetries: 0, timeout: 20_000 },
+      );
       return "ok";
     } catch (err) {
       if (
@@ -171,6 +176,9 @@ export class AnthropicProvider implements AIProvider {
         err instanceof Anthropic.PermissionDeniedError
       )
         return "invalid";
+      if (err instanceof Anthropic.NotFoundError) return "unknown_model";
+      if (err instanceof Anthropic.APIError && /credit|billing/i.test(err.message))
+        return "no_credit";
       return "unreachable";
     }
   }

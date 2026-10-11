@@ -73,8 +73,8 @@ export default function TermsPage() {
         <p>
           AI is optional and off unless you switch it on. If you use your own AI key, your use of
           that AI service is also governed by your agreement with its provider, and you must follow
-          its usage policies. Kosha is not affiliated with, or endorsed by, Anthropic, OpenAI or any
-          health agency whose guidance it cites.
+          its usage policies. Kosha is not affiliated with, or endorsed by, any AI company it lets
+          you connect to, or any health agency whose guidance it cites.
         </p>
       </section>
       <section>

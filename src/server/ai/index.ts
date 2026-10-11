@@ -6,20 +6,33 @@ import { DemoProvider } from "./providers/demo";
 import { AnthropicProvider } from "./providers/anthropic";
 import { OpenAICompatibleProvider } from "./providers/openai";
 
-export type AiProviderId = "anthropic" | "openai";
+import { AI_SERVICES, type AiServiceId } from "@/lib/ai-services";
+
+export type AiProviderId = AiServiceId;
 
 let serverProvider: AIProvider | undefined;
 let override: AIProvider | undefined;
 
-/** Build a provider for a specific key (a user's own key, or the server's). */
-export function createProvider(id: AiProviderId, apiKey: string): AIProvider {
+/**
+ * Build a provider for a user's own key. Keys always go to the service's official
+ * address from lib/ai-services.ts; only the server's own key may use a custom address.
+ */
+export function createProvider(
+  id: AiProviderId,
+  apiKey: string,
+  model?: string | null,
+): AIProvider {
   const e = env();
-  // AI_MODEL applies to the provider it was configured for.
-  const model = e.AI_PROVIDER === id ? e.AI_MODEL : undefined;
-  return id === "anthropic"
-    ? new AnthropicProvider(apiKey, model)
-    : // Users' keys always go to the official endpoint; only the server key may use a custom base URL.
-      new OpenAICompatibleProvider(apiKey, "https://api.openai.com/v1", model);
+  if (id === "anthropic")
+    return new AnthropicProvider(apiKey, model || (e.AI_PROVIDER === id ? e.AI_MODEL : undefined));
+  const svc = AI_SERVICES[id];
+  return new OpenAICompatibleProvider(apiKey, svc.baseUrl, model || svc.defaultModel, {
+    name: id,
+    verifyPath: svc.verifyPath,
+    listsModels: svc.listsModels,
+    label: svc.label,
+    keysSite: svc.keysSite,
+  });
 }
 
 /**

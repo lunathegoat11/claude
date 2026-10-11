@@ -16,10 +16,12 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { Input, NativeSelect } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { AI_SERVICES, AI_SERVICE_IDS, type AiServiceId } from "@/lib/ai-services";
 
 export interface AiSettingsView {
-  provider: "anthropic" | "openai";
+  provider: AiServiceId;
   providerLabel: string;
+  model: string | null;
   keyHint: string;
   readDocuments: boolean;
   savedOn: string;
@@ -62,7 +64,8 @@ export function AiHelperSettings({
           documents, and is never shown again or sent back to your browser. With your own key, what
           you send is handled by your account with that company, under its terms. Without a key or
           consent, the helper answers from your records with simple built-in summaries (no AI), and
-          documents are read on this server only. Kosha is not affiliated with Anthropic or OpenAI.
+          documents are read on this server only. Kosha is not affiliated with any of these AI
+          companies.
         </p>
       </div>
     </div>
@@ -118,6 +121,12 @@ function SavedKey({ saved, onReplace }: { saved: AiSettingsView; onReplace: () =
           <div className="text-muted-foreground text-sm">
             Key ending <span className="tabular font-mono">…{saved.keyHint}</span>, added{" "}
             {saved.savedOn}
+            {saved.model && (
+              <>
+                {" "}
+                · model <span className="font-mono break-all">{saved.model}</span>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -179,7 +188,8 @@ function SavedKey({ saved, onReplace }: { saved: AiSettingsView; onReplace: () =
 }
 
 function KeyForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean }) {
-  const [provider, setProvider] = useState<"anthropic" | "openai">("anthropic");
+  const [provider, setProvider] = useState<AiServiceId>("anthropic");
+  const svc = AI_SERVICES[provider];
   const { onSubmit, pending, err } = useActionForm(saveAiKeyAction, { onSuccess: onDone });
   return (
     <form onSubmit={onSubmit} className="space-y-5" autoComplete="off">
@@ -189,39 +199,19 @@ function KeyForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
           records, and much better reading of report photos.
         </p>
         <ol className="text-muted-foreground list-decimal space-y-1 pl-5">
-          {provider === "anthropic" ? (
-            <>
-              <li>
-                Go to{" "}
-                <a
-                  href="https://console.anthropic.com/settings/keys"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="text-primary underline underline-offset-2"
-                >
-                  console.anthropic.com
-                </a>{" "}
-                and sign in (add a payment method if asked).
-              </li>
-              <li>Open API Keys and click Create Key.</li>
-            </>
-          ) : (
-            <>
-              <li>
-                Go to{" "}
-                <a
-                  href="https://platform.openai.com/api-keys"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="text-primary underline underline-offset-2"
-                >
-                  platform.openai.com
-                </a>{" "}
-                and sign in.
-              </li>
-              <li>Click Create new secret key.</li>
-            </>
-          )}
+          <li>
+            Go to{" "}
+            <a
+              href={svc.keysUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-primary underline underline-offset-2"
+            >
+              {svc.keysSite}
+            </a>{" "}
+            and sign in (add a payment method or credits if the service asks).
+          </li>
+          <li>Create a new API key.</li>
           <li>Copy the key and paste it below.</li>
         </ol>
       </div>
@@ -231,10 +221,13 @@ function KeyForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
             id="ai-provider"
             name="provider"
             value={provider}
-            onChange={(e) => setProvider(e.target.value as "anthropic" | "openai")}
+            onChange={(e) => setProvider(e.target.value as AiServiceId)}
           >
-            <option value="anthropic">Claude (Anthropic)</option>
-            <option value="openai">OpenAI</option>
+            {AI_SERVICE_IDS.map((id) => (
+              <option key={id} value={id}>
+                {AI_SERVICES[id].label}
+              </option>
+            ))}
           </NativeSelect>
         </Field>
         <Field label="API key" htmlFor="ai-key" error={err("apiKey")}>
@@ -244,17 +237,36 @@ function KeyForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
             type="password"
             autoComplete="off"
             spellCheck={false}
-            placeholder={provider === "anthropic" ? "sk-ant-…" : "sk-…"}
+            placeholder={svc.keyPrefix ? `${svc.keyPrefix}…` : "Paste your key"}
             required
           />
         </Field>
       </div>
+      <Field
+        label="Model (optional)"
+        htmlFor="ai-model"
+        error={err("model")}
+        hint={
+          svc.defaultModel
+            ? `Leave empty to use ${svc.defaultModel}. To read report photos, choose a model that can see images.`
+            : "Leave empty to use Kosha's usual Claude model."
+        }
+      >
+        <Input
+          key={provider}
+          id="ai-model"
+          name="model"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder={svc.defaultModel ?? "Default"}
+        />
+      </Field>
       <label className="flex items-start gap-3 text-sm">
         <input type="checkbox" name="readDocuments" className="accent-primary mt-0.5 size-4" />
         <span>
           Also let the AI read reports I upload (optional).{" "}
           <span className="text-muted-foreground">
-            Photos and PDFs are sent to the AI service to read the results.
+            Photos and PDFs are sent to {svc.label} to read the results.
           </span>
         </span>
       </label>

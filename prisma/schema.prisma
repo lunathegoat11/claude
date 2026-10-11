@@ -130,6 +130,8 @@ model AiCredential {
   keyHint       String
   /// Whether uploaded documents may be sent to the provider to be read.
   readDocuments Boolean  @default(false)
+  /// The model chosen for this service; null means the service's default.
+  model         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)

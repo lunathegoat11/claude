@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalDoc, legalParties } from "@/components/legal/legal-doc";
 import { env } from "@/server/env";
+import { AI_SERVICES, AI_SERVICE_IDS } from "@/lib/ai-services";
 import { serverAiLabel } from "@/server/services/ai-settings";
 
 export const metadata: Metadata = { title: "Privacy Policy" };
@@ -142,17 +143,20 @@ export default function PrivacyPage() {
             </li>
           )}
           <li>
-            <strong>Your own AI key.</strong> If you add your own Claude (Anthropic) or OpenAI key,
-            your questions and related records are sent to your account with that company, and your
-            uploaded reports are sent too only if you tick that option. That company handles them
-            under its own terms with you. Your key is encrypted before it is stored and is never
-            shown again.
+            <strong>Your own AI key.</strong> You can add a key from one AI service of your choice:{" "}
+            {AI_SERVICE_IDS.map((id) => AI_SERVICES[id].label).join(", ")}. Your questions and
+            related records are then sent to your account with that company, and your uploaded
+            reports are sent too only if you tick that option. That company handles them under its
+            own terms with you, and may process them outside India. Some services, such as
+            OpenRouter, pass requests on to other AI companies. Your key is encrypted before it is
+            stored, is only ever sent to that service&apos;s official address, and is never shown
+            again.
           </li>
         </ul>
         <p>
           Every answer is labelled with what wrote it: an AI service, or Kosha&apos;s automatic
           summary. The assistant cannot change your records, does not give medical advice, and can
-          be wrong. Kosha is not affiliated with Anthropic or OpenAI.
+          be wrong. Kosha is not affiliated with any of these AI companies.
         </p>
       </section>
 

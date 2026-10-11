@@ -196,4 +196,4 @@ export type ReportInput =
   | { kind: "image"; data: Buffer; mimeType: string }
   | { kind: "text"; text: string };
 
-export type KeyCheck = "ok" | "invalid" | "unreachable";
+export type KeyCheck = "ok" | "invalid" | "unreachable" | "unknown_model" | "no_credit";

@@ -12,11 +12,11 @@ import {
   type AiProviderId,
 } from "@/server/ai";
 import type { AIProvider } from "@/server/ai/types";
+import { AI_SERVICES, AI_SERVICE_IDS, MODEL_NAME, isAiServiceId } from "@/lib/ai-services";
 
-export const AI_PROVIDER_LABELS: Record<AiProviderId, string> = {
-  anthropic: "Claude (Anthropic)",
-  openai: "OpenAI",
-};
+export const AI_PROVIDER_LABELS = Object.fromEntries(
+  AI_SERVICE_IDS.map((id) => [id, AI_SERVICES[id].label]),
+) as Record<AiProviderId, string>;
 
 /**
  * Who receives data when the AI service set up for this server is used, in words a
@@ -36,9 +36,7 @@ export async function setAiConsent(userId: string, on: boolean) {
 }
 
 const saveSchema = z.object({
-  provider: z.enum(["anthropic", "openai"], {
-    errorMap: () => ({ message: "Choose which AI service the key is for" }),
-  }),
+  provider: z.string().refine(isAiServiceId, "Choose which AI service the key is for"),
   apiKey: z.preprocess(
     (v) => (typeof v === "string" ? v.trim() : v),
     z
@@ -46,6 +44,10 @@ const saveSchema = z.object({
       .min(20, "That doesn't look like a full API key")
       .max(300, "That doesn't look like an API key")
       .regex(/^[A-Za-z0-9_\-.]+$/, "API keys don't contain spaces or symbols like that"),
+  ),
+  model: z.preprocess(
+    (v) => (typeof v === "string" ? v.trim() || undefined : v),
+    z.string().regex(MODEL_NAME, "That doesn't look like a model name").optional(),
   ),
   readDocuments: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()),
 });
@@ -59,6 +61,7 @@ export async function getAiSettings(userId: string) {
   if (!c) return null;
   return {
     provider: c.provider as AiProviderId,
+    model: c.model ?? AI_SERVICES[c.provider as AiProviderId]?.defaultModel ?? null,
     keyHint: c.keyHint,
     readDocuments: c.readDocuments,
     updatedAt: c.updatedAt,
@@ -69,31 +72,49 @@ export async function getAiSettings(userId: string) {
 
 export async function saveAiKey(userId: string, raw: unknown) {
   const input = saveSchema.parse(raw);
-  if (input.provider === "anthropic" && !input.apiKey.startsWith("sk-ant-"))
-    throw new AppError("VALIDATION", "Claude API keys start with “sk-ant-”.", {
-      apiKey: ["Claude API keys start with “sk-ant-”"],
+  const provider = input.provider as AiProviderId;
+  const svc = AI_SERVICES[provider];
+  if (svc.keyPrefix && !input.apiKey.startsWith(svc.keyPrefix))
+    throw new AppError("VALIDATION", `${svc.label} API keys start with “${svc.keyPrefix}”.`, {
+      apiKey: [`${svc.label} API keys start with “${svc.keyPrefix}”`],
     });
-  if (input.provider === "openai" && !input.apiKey.startsWith("sk-"))
-    throw new AppError("VALIDATION", "OpenAI API keys start with “sk-”.", {
-      apiKey: ["OpenAI API keys start with “sk-”"],
+  // OpenAI keys must not be mistaken for the other "sk-" services.
+  if (provider === "openai" && /^sk-(ant|or)-/.test(input.apiKey))
+    throw new AppError("VALIDATION", "That looks like a key for a different AI service.", {
+      apiKey: ["That looks like a key for a different AI service"],
     });
 
-  const check = (await createProvider(input.provider, input.apiKey).verifyKey?.()) ?? "unreachable";
+  const model = input.model && input.model !== svc.defaultModel ? input.model : null;
+  const check =
+    (await createProvider(provider, input.apiKey, model).verifyKey?.()) ?? "unreachable";
   if (check === "invalid")
     throw new AppError(
       "VALIDATION",
-      `${AI_PROVIDER_LABELS[input.provider]} didn't accept this key. Check you copied all of it.`,
+      `${svc.label} didn't accept this key. Check you copied all of it.`,
       { apiKey: ["This key was not accepted"] },
+    );
+  if (check === "no_credit")
+    throw new AppError(
+      "VALIDATION",
+      `This key works, but your ${svc.label} account has no credit, so it can't answer yet. Add credit on ${svc.keysSite}, then save the key again.`,
+      { apiKey: ["The account for this key has no credit"] },
+    );
+  if (check === "unknown_model")
+    throw new AppError(
+      "VALIDATION",
+      `${svc.label} doesn't offer a model called “${input.model ?? svc.defaultModel}”. Check the name on ${svc.keysSite}, or leave it empty for the usual one.`,
+      { model: ["This model isn't available"] },
     );
 
   const data = {
-    provider: input.provider,
+    provider,
+    model,
     encryptedKey: sealSecret(input.apiKey, context(userId)),
     keyHint: input.apiKey.slice(-4),
     readDocuments: input.readDocuments,
   };
   await db.aiCredential.upsert({ where: { userId }, create: { userId, ...data }, update: data });
-  return { verified: check === "ok", provider: input.provider };
+  return { verified: check === "ok", provider };
 }
 
 export async function setDocumentReading(userId: string, on: boolean) {
@@ -125,7 +146,7 @@ export async function aiForUser(userId: string): Promise<ResolvedAI> {
     const key = openSecret(c.encryptedKey, context(userId));
     if (key)
       return {
-        provider: createProvider(c.provider as AiProviderId, key),
+        provider: createProvider(c.provider as AiProviderId, key, c.model),
         readDocuments: c.readDocuments,
         source: "user",
       };
@@ -143,6 +164,6 @@ export async function documentReaderLabel(userId: string): Promise<string> {
   const ai = await aiForUser(userId);
   if (!ai.readDocuments || ai.source === "demo") return "on this server (no AI)";
   if (ai.source === "server") return `by ${serverAiLabel() ?? "an AI service"} (AI)`;
-  const name = ai.provider.name as AiProviderId;
-  return `by ${AI_PROVIDER_LABELS[name] ?? "your AI service"} (AI), using your key`;
+  const label = AI_PROVIDER_LABELS[ai.provider.name as AiProviderId] ?? "your AI service";
+  return `by ${label} (AI), using your key`;
 }

@@ -1,4 +1,5 @@
 import "server-only";
+import { AppError } from "@/server/errors";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { notFound } from "@/server/errors";
@@ -25,6 +26,8 @@ export interface AssistantSafety {
   removedAdvice?: boolean;
   unverifiedNumbers?: string[];
   fallback?: boolean;
+  /** Why the AI service couldn't answer, in plain words (never contains the key). */
+  fallbackReason?: string;
   noData?: boolean;
 }
 
@@ -115,6 +118,11 @@ export async function ask(userId: string, raw: unknown, timezone: string): Promi
       providerName = demoProvider.name;
       model = demoProvider.model;
       safety.fallback = provider.name !== demoProvider.name;
+      if (err instanceof AppError && err.code === "AI_UNAVAILABLE")
+        safety.fallbackReason = err.message;
+      else if (err instanceof Error && /credit|billing/i.test(err.message))
+        safety.fallbackReason =
+          "Your AI account has no credit left. Add credit on the AI service's website, then try again.";
     }
 
     const clean = sanitizeAnswer(answer, context, bundle.citations);

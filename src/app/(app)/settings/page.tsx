@@ -302,7 +302,8 @@ async function AiTab({ userId, isDemo, tz }: { userId: string; isDemo: boolean; 
           saved={
             saved && {
               provider: saved.provider,
-              providerLabel: AI_PROVIDER_LABELS[saved.provider],
+              providerLabel: AI_PROVIDER_LABELS[saved.provider] ?? saved.provider,
+              model: saved.model,
               keyHint: saved.keyHint,
               readDocuments: saved.readDocuments,
               savedOn: formatDate(saved.updatedAt, tz),
