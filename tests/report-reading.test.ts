@@ -30,8 +30,8 @@ describe("reading real-world report layouts", () => {
     expect(by("PLT")).toMatchObject({ value: "2.1", unit: "lakh/µL" });
   });
 
-  it("reads tests that aren't in the built-in list", () => {
-    expect(by("ESR (Westergren)")).toMatchObject({
+  it("reads tests it knows by other names, and ones that aren't in the built-in list", () => {
+    expect(by("ESR")).toMatchObject({
       value: "22",
       labFlag: "HIGH",
       refText: "0 - 15",

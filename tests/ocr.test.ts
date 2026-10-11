@@ -13,8 +13,8 @@ describe("photo reading (on-server OCR)", () => {
     expect(res.extractor).toBe("ocr");
     const codes = res.report!.candidates.map((c) => c.biomarkerCode);
     expect(codes).toEqual(expect.arrayContaining(["TSH", "HGB"]));
-    // Photo-read values are always marked for double-checking.
-    expect(res.report!.candidates.every((c) => c.confidence <= 0.6)).toBe(true);
+    // Photo-read values are never fully trusted; only values both reads agree on get 0.8.
+    expect(res.report!.candidates.every((c) => c.confidence <= 0.8)).toBe(true);
     expect(res.report!.collectedAt).toBe("2026-08-14");
   }, 60_000);
 

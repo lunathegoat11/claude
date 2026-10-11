@@ -15,7 +15,7 @@ import {
   labResultInputSchema,
   type LabResultInput,
 } from "@/lib/validation/health";
-import type { ParsedReport } from "@/server/extraction/lab-parser";
+import { OUTSIDE_RANGE_CHECK, type ParsedReport } from "@/server/extraction/lab-parser";
 import { aiForUser } from "./ai-settings";
 import { writePanel } from "./labs";
 import { ensureProvider } from "./providers";
@@ -44,7 +44,8 @@ function resultsFrom(report: ParsedReport) {
     if (c.confidence < 0.5) checks.push("Read with low confidence — check it against the report.");
     // If a decimal point may have been lost, don't judge high/low from the misread numbers:
     // keep the range as printed in the note instead of a possibly false alarm.
-    const doubtful = (c.warnings ?? []).length > 0;
+    // (An "outside the range, please check" note keeps the range: the flag may well be right.)
+    const doubtful = (c.warnings ?? []).some((w) => w !== OUTSIDE_RANGE_CHECK);
     if (doubtful && c.refText) checks.push(`Range as read: ${c.refText}.`);
     const parsed = labResultInputSchema.safeParse({
       testName: c.testName,

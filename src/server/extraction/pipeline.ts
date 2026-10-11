@@ -2,11 +2,13 @@ import "server-only";
 import { logger } from "@/server/logger";
 import type { ResolvedAI } from "@/server/services/ai-settings";
 import { extractPdfText } from "./pdf";
-import { ocrAvailable, ocrImage } from "./ocr";
+import { ocrAvailable, ocrImagePasses } from "./ocr";
 import { env } from "@/server/env";
 import { assessImage, QUALITY_MESSAGES, type ImageQuality } from "./image-quality";
 import {
   candidatesFromResults,
+  findLabName,
+  mergeReports,
   parseLabText,
   reportNameFor,
   type ParsedReport,
@@ -134,9 +136,13 @@ export async function extractDocument(
         }
       }
       if (!env().OCR_ENABLED || !ocrAvailable()) return result("UNSUPPORTED", "none");
-      const text = (await ocrImage(buf)).trim();
+      const passes = await ocrImagePasses(buf);
+      const texts = passes.texts.map((t) => t.trim());
+      const text = texts[0];
       if (text.replace(/\s/g, "").length < 20) return result("FAILED", "ocr");
-      return result("COMPLETED", "ocr", text, parseLabText(text, { source: "ocr" }));
+      const report = mergeReports(texts.map((t) => parseLabText(t, { source: "ocr" })));
+      report.labName = (passes.header && findLabName(passes.header)) || report.labName;
+      return result("COMPLETED", "ocr", text, report);
     }
 
     // HEIC can't be decoded without extra system libraries.

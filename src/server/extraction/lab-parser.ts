@@ -38,7 +38,7 @@ export interface ParsedReport {
 }
 
 const UNIT_PATTERN =
-  "(mg\\/dl|mg\\/dL|g\\/dl|g\\/dL|g\\/l|mmol\\/l|mmol\\/L|mmol\\/mol|meq\\/l|mEq\\/L|u\\/l|U\\/L|iu\\/l|IU\\/L|µiu\\/ml|uiu\\/ml|µIU\\/mL|uIU\\/mL|miu\\/l|mIU\\/L|ng\\/dl|ng\\/dL|ng\\/ml|ng\\/mL|pg\\/ml|pg\\/mL|µg\\/dl|ug\\/dl|µg\\/dL|ug\\/dL|nmol\\/l|nmol\\/L|pmol\\/l|pmol\\/L|µmol\\/l|umol\\/l|µmol\\/L|umol\\/L|million\\/µl|million\\/ul|million\\/cumm|mill\\/cumm|lakh\\/µl|lakh\\/ul|lakhs\\/cumm|lakh\\/cumm|10\\^3\\/µl|10\\^3\\/ul|10\\^6\\/µl|10\\^6\\/ul|thou\\/ul|\\/cumm|cells\\/cumm|\\/µl|\\/ul|%|fl|pg)";
+  "(mm\\/hr|mm\\/1st hr|ml\\/min\\/1\\.73\\s?m2|ml\\/min\\/1\\.73\\s?m²|gm\\/dl|gms\\/dl|mg\\/l(?!og)|ratio|mg\\/dl|mg\\/dL|g\\/dl|g\\/dL|g\\/l|mmol\\/l|mmol\\/L|mmol\\/mol|meq\\/l|mEq\\/L|u\\/l|U\\/L|iu\\/l|IU\\/L|µiu\\/ml|uiu\\/ml|µIU\\/mL|uIU\\/mL|miu\\/l|mIU\\/L|ng\\/dl|ng\\/dL|ng\\/ml|ng\\/mL|pg\\/ml|pg\\/mL|µg\\/dl|ug\\/dl|µg\\/dL|ug\\/dL|nmol\\/l|nmol\\/L|pmol\\/l|pmol\\/L|µmol\\/l|umol\\/l|µmol\\/L|umol\\/L|million\\/µl|million\\/ul|million\\/cumm|mill\\/cumm|lakh\\/µl|lakh\\/ul|lakhs\\/cumm|lakh\\/cumm|10\\^3\\/µl|10\\^3\\/ul|10\\^6\\/µl|10\\^6\\/ul|thou\\/ul|\\/cumm|cells\\/cumm|\\/µl|\\/ul|%|fl|pg)";
 
 function escapeRe(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -60,6 +60,12 @@ function normaliseUnit(u: string | undefined | null): string | null {
   const map: Record<string, string> = {
     "mg/dl": "mg/dL",
     "g/dl": "g/dL",
+    "gm/dl": "g/dL",
+    "gms/dl": "g/dL",
+    "mg/l": "mg/L",
+    "mm/1st hr": "mm/hr",
+    "ml/min/1.73m2": "mL/min/1.73m²",
+    "ml/min/1.73 m2": "mL/min/1.73m²",
     "mmol/l": "mmol/L",
     "u/l": "U/L",
     "iu/l": "IU/L",
@@ -129,18 +135,25 @@ export function findReportDate(text: string): string | null {
   return null;
 }
 
-function findLabName(text: string): string | null {
+export function findLabName(text: string): string | null {
   const first = text
     .split(/\r?\n/)
-    .map((l) => l.trim())
+    .map((l) => l.replace(/\s+/g, " ").trim())
     .filter(Boolean)
-    .slice(0, 6);
+    .slice(0, 12);
   const hit = first.find(
     (l) =>
-      /(lab|labs|laborator|diagnostic|pathology|hospital|clinic|healthcare)/i.test(l) &&
-      l.length < 80,
+      /(lab|labs|laborator|diagnostic|pathology|hospital|clinic|healthcare|medical (centre|center))/i.test(
+        l,
+      ) &&
+      l.length < 90 &&
+      !/(report|test description|reference)/i.test(l),
   );
-  return hit ?? null;
+  // Trim OCR debris (stray symbols, single letters) from the ends.
+  return (
+    hit?.replace(/^[^A-Za-z]*(?:[A-Za-z][^A-Za-z]+)?(?=[A-Z])/, "").replace(/[^A-Za-z.)]+$/, "") ||
+    null
+  );
 }
 
 /**
@@ -155,6 +168,9 @@ export function looksLikeMissingDecimal(value: string, low: number | null, high:
   return [10, 100].some((d) => v / d >= lo * 0.5 && v / d <= high * 2);
 }
 
+export const OUTSIDE_RANGE_CHECK =
+  "Outside the printed range — check this value against the photo.";
+
 /** Reasons a parsed value deserves a closer look. Never changes the value itself. */
 export function candidateWarnings(
   value: string,
@@ -165,9 +181,12 @@ export function candidateWarnings(
   fromPhoto: boolean,
 ): { warnings?: string[] } {
   const w: string[] = [];
+  // On photos, a whole number for a test usually printed with decimals is suspicious,
+  // unless it sits comfortably inside the printed range.
+  const fitsRange = low !== null && high !== null && Number(value) >= low && Number(value) <= high;
   if (
     looksLikeMissingDecimal(value, low, high) ||
-    (fromPhoto && usualDecimals > 0 && !value.includes(".") && Number(value) >= 10)
+    (fromPhoto && usualDecimals > 0 && !value.includes(".") && Number(value) >= 10 && !fitsRange)
   ) {
     w.push("This value may be missing a decimal point — check the report.");
   }
@@ -185,8 +204,33 @@ export function candidateWarnings(
   ) {
     w.push("The reference range may be missing a decimal point.");
   }
+  // Read from a photo and outside the printed range: worth a second look either way,
+  // because a misread digit (7.7 read as 1.7) looks exactly like an abnormal result.
+  if (fromPhoto && !w.length && low !== null && high !== null && (v < low || v > high)) {
+    w.push(OUTSIDE_RANGE_CHECK);
+  }
   return w.length ? { warnings: w } : {};
 }
+
+/**
+ * Undo the most common OCR misreads on lab reports before parsing: smudged units
+ * ("ma/d|" → mg/dl, "am/dl" → gm/dl, "1U/L" → IU/L) and commas read for decimal points
+ * inside ranges ("3,2-5.0" → 3.2-5.0).
+ */
+export function fixOcrLine(line: string): string {
+  return line
+    .replace(/\b[mn][ao]?[agq]\s?\/\s?d[l1|i!I](?=\W|$)/gi, "mg/dl")
+    .replace(/(^|\s)[ag]ms?\s?\/\s?d[l1|i!I]l?(?=\s|$)/gi, "$1gm/dl")
+    .replace(/(^|\s)[1lTt|]U\s?\/\s?L(?=\W|$)/g, "$1IU/L")
+    .replace(/(\d),(\d)(?=\s*[-–])/g, "$1.$2")
+    .replace(/([-–]\s*\d+),(\d)\b/g, "$1.$2");
+}
+
+/** Lines that are clearly page furniture: contact details, addresses, sign-offs. */
+const FURNITURE =
+  /\b(tel|telephone|fax|e-?mail|website|www|marg|road|lane|nagar\s*-|pin\s*code|page\s*\d|end of report|signature|pathologist|consultant)\b|@|https?:/i;
+/** A value that is really the start of a date or time, e.g. "31-05-2025" or "10:36". */
+const DATE_AFTER_VALUE = /^\d{1,2}\s*[-/.]\s*\d{1,2}\s*[-/.]\s*\d{2,4}|^\d{1,2}\s*:\s*\d{2}/;
 
 /** Words that start lines which carry numbers but are not test results. */
 const NOT_A_TEST =
@@ -241,6 +285,17 @@ function parseRow(rest: string, unitRe: RegExp): RowParts | null {
   return { value, labFlag, unit, refText };
 }
 
+/** A range and value that look like a lab result rather than a phone number or PIN code. */
+function plausibleRow(row: RowParts) {
+  const { low, high } = parseReferenceRange(row.refText);
+  const v = Number(row.value);
+  if (high !== null && high > 100_000 && row.unit !== "/µL") return false;
+  if (low !== null && high !== null && high > 0 && low > 0 && high / low > 1000) return false;
+  if (high !== null && high > 0 && Number.isFinite(v) && (v > high * 1000 || v * 1000 < (low ?? 0)))
+    return false;
+  return true;
+}
+
 /** Title for a report from the kinds of tests found on it. */
 export function reportNameFor(candidates: { biomarkerCode: string | null }[]): string {
   const counts = new Map<BiomarkerCategory, number>();
@@ -261,15 +316,18 @@ export function parseLabText(text: string, opts: { source?: "text" | "ocr" } = {
   const seen = new Set<string>();
   const unitRe = new RegExp(`^${UNIT_PATTERN}(?![a-z])`, "i");
   const fromPhoto = opts.source === "ocr";
-  const lines = text.split(/\r?\n/).map((l) => stripMarker(l.replace(/\s+/g, " ").trim()));
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => stripMarker((fromPhoto ? fixOcrLine(l) : l).replace(/\s+/g, " ").trim()));
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (line.length < 3 || line.length > 200) continue;
+    if (line.length < 3 || line.length > 200 || FURNITURE.test(line)) continue;
     const hit = ALIASES.find((a) => a.re.test(line));
 
     if (hit) {
       const afterName = line.replace(hit.re, "");
+      if (DATE_AFTER_VALUE.test(afterName.replace(/^[\s:.-]+/, ""))) continue;
       // Tables sometimes put the value on the next line.
       let row = parseRow(afterName, unitRe);
       let sourceLine = line;
@@ -308,9 +366,11 @@ export function parseLabText(text: string, opts: { source?: "text" | "ocr" } = {
     if (!generic) continue;
     const name = generic[1].replace(/[\s:.-]+$/, "").trim();
     if (name.replace(/[^A-Za-z]/g, "").length < 2 || NOT_A_TEST.test(name)) continue;
+    if (DATE_AFTER_VALUE.test(generic[2])) continue;
     const row = parseRow(generic[2], unitRe);
     // Without a unit or a range, a number next to a word is too often not a result.
     if (!row || (!row.unit && !row.refText)) continue;
+    if (!plausibleRow(row)) continue;
     const key = name.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
@@ -381,4 +441,73 @@ export function candidatesFromResults(
     });
   }
   return out;
+}
+
+/**
+ * Combine two independent reads of the same photo. A value both reads agree on is
+ * trusted more; where they disagree the row is kept but marked to check, and details
+ * one read missed (unit, range) are filled in from the other.
+ */
+export function mergeReports(reads: ParsedReport[]): ParsedReport {
+  if (reads.length < 2) return reads[0];
+  const [a, b] = reads;
+  const key = (c: LabCandidate) => c.biomarkerCode ?? c.testName.toLowerCase();
+  const inB = new Map(b.candidates.map((c) => [key(c), c]));
+  const used = new Set<string>();
+  const merged: LabCandidate[] = [];
+  const score = (c: LabCandidate) => (c.unit ? 1 : 0) + (c.refText ? 1 : 0);
+
+  for (const ca of a.candidates) {
+    const k = key(ca);
+    const cb = inB.get(k);
+    if (!cb) {
+      merged.push(ca);
+      continue;
+    }
+    used.add(k);
+    const best = score(cb) > score(ca) ? cb : ca;
+    const other = best === ca ? cb : ca;
+    const def = ca.biomarkerCode ? BIOMARKERS.find((d) => d.code === ca.biomarkerCode) : undefined;
+    const unit = best.unit ?? other.unit;
+    const refText = best.refText ?? other.refText;
+    const { low, high } = parseReferenceRange(refText);
+    if (Number(ca.value) === Number(cb.value)) {
+      merged.push({
+        ...best,
+        unit,
+        refText,
+        refLow: low,
+        refHigh: high,
+        labFlag: best.labFlag ?? other.labFlag,
+        confidence: 0.8,
+        warnings: undefined,
+        ...candidateWarnings(best.value, low, high, refText, def?.decimals ?? 0, true),
+      });
+    } else {
+      // Prefer the value that sits sensibly against the printed range.
+      const fits = (v: string) =>
+        high === null || (Number(v) <= high * 4 && Number(v) >= (low ?? 0) / 4);
+      const pick = fits(best.value) || !fits(other.value) ? best : other;
+      merged.push({
+        ...pick,
+        unit,
+        refText,
+        refLow: low,
+        refHigh: high,
+        confidence: 0.4,
+        warnings: [
+          `The photo read as ${ca.value} once and ${cb.value} once — check the report.`,
+          ...(pick.warnings ?? []),
+        ],
+      });
+    }
+  }
+  for (const cb of b.candidates) if (!used.has(key(cb))) merged.push(cb);
+
+  return {
+    candidates: merged,
+    collectedAt: a.collectedAt ?? b.collectedAt,
+    labName: a.labName ?? b.labName,
+    reportName: reportNameFor(merged),
+  };
 }
