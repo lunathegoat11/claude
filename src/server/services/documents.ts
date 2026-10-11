@@ -63,6 +63,19 @@ function resultsFrom(report: ParsedReport) {
   return out.slice(0, 100);
 }
 
+/** File names that phones and apps give photos automatically. */
+export function isCameraFileName(name: string) {
+  const n = name.trim().toLowerCase();
+  return (
+    !/[a-z]{3}/.test(
+      n.replace(/^(img|dsc|pxl|wa|vid|photo|image|scan|screenshot|document|file|untitled|cam)/, ""),
+    ) ||
+    /^(whatsapp image|screenshot|camscanner|scanned|scan|photo|image|document|untitled|img|pxl|dsc)\b/.test(
+      n,
+    )
+  );
+}
+
 export async function uploadDocument(
   userId: string,
   file: UploadInput,
@@ -110,6 +123,12 @@ export async function uploadDocument(
   const type = autoType ? (results.length ? "LAB_REPORT" : "OTHER") : meta.type;
   const reportDate = report?.collectedAt ?? null;
   if (!documentDate && reportDate) documentDate = parseZonedInput(reportDate, tz);
+  // A camera's file name ("2", "IMG_2041", "WhatsApp Image …") says nothing; name the
+  // document after the report that was read instead.
+  const name =
+    results.length && report?.reportName && isCameraFileName(meta.name)
+      ? report.reportName.slice(0, 200)
+      : meta.name;
   const providerName = meta.providerName ?? report?.labName ?? null;
 
   const key = newStorageKey(userId, ALLOWED_MIME[sniffed].ext);
@@ -126,7 +145,7 @@ export async function uploadDocument(
       const doc = await tx.medicalDocument.create({
         data: {
           userId,
-          name: meta.name,
+          name,
           type,
           documentDate,
           providerId,

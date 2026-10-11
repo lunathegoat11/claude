@@ -26,8 +26,8 @@ export function AppShell({
         Skip to content
       </a>
       <div>
-        {/* A glass bar: the page scrolls softly beneath it. */}
-        <header className="glass-bar sticky top-0 z-20">
+        {/* A glass bar the page scrolls beneath; on computers it floats as a glass panel. */}
+        <header className="glass-bar lg:glass sticky top-0 z-20 lg:top-3 lg:mx-4 lg:mt-3 lg:overflow-hidden lg:rounded-[1.75rem] xl:mx-6 2xl:mx-auto 2xl:max-w-[78rem]">
           <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6 lg:gap-5 lg:px-8">
             <Link
               href="/dashboard"

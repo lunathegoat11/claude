@@ -156,6 +156,98 @@ export function findLabName(text: string): string | null {
   );
 }
 
+/** Words that often appear in lab and hospital names, used to repair OCR damage. */
+const NAME_WORDS = [
+  "Hospital",
+  "Hospitals",
+  "Centre",
+  "Center",
+  "Research",
+  "Medical",
+  "Laboratory",
+  "Laboratories",
+  "Diagnostics",
+  "Diagnostic",
+  "Pathology",
+  "Clinic",
+  "Institute",
+  "Sciences",
+  "Healthcare",
+  "Imaging",
+  "Multispeciality",
+  "Superspeciality",
+  "Memorial",
+  "Foundation",
+];
+
+function editDistance(a: string, b: string) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + (a[i - 1].toLowerCase() === b[j - 1].toLowerCase() ? 0 : 1),
+      );
+  return d[a.length][b.length];
+}
+
+function dictionaryWord(w: string) {
+  if (w.length < 4) return null;
+  const exact = NAME_WORDS.find((n) => n.toLowerCase() === w.toLowerCase());
+  if (exact) return w;
+  return NAME_WORDS.find((n) => editDistance(w, n) <= (n.length >= 8 ? 2 : 1)) ?? null;
+}
+
+/**
+ * Repair a lab name read by OCR from a photo:
+ * - stray marks stuck to the first word are dropped ("'h,andrishiji" → "andrishiji");
+ * - words broken by a crease or shadow are rejoined and spelled right ("Cent e" → "Centre");
+ * - a first word cut short by a logo is completed from the lab's own website or email
+ *   printed on the report ("andrishiji" + anandrishijihospital.com → "Anandrishiji").
+ */
+export function tidyLabName(raw: string, fullText = ""): string {
+  const words = raw.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  if (!words.length) return raw;
+  // Stray marks glued to the front of the first word.
+  if (/[^A-Za-z]/.test(words[0]) && /[A-Za-z]{3,}$/.test(words[0]))
+    words[0] = words[0].match(/[A-Za-z]{3,}$/)![0];
+  const out: string[] = [];
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
+    const next = words[i + 1];
+    // A fragment of one or two letters split off the end of the previous word.
+    if (next && /^[a-z]{1,2}$/.test(next)) {
+      const joined = dictionaryWord(w + next);
+      if (joined) {
+        out.push(joined);
+        i++;
+        continue;
+      }
+    }
+    out.push(/^[A-Za-z]+$/.test(w) ? (dictionaryWord(w) ?? w) : w);
+  }
+  // Complete a first word cut short at the left edge, using a domain on the report.
+  const domains = [...fullText.matchAll(/(?:www\.|@|website\s*:?\s*)([a-z0-9-]{6,})\./gi)].map(
+    (m) => m[1].toLowerCase(),
+  );
+  const first = out[0].toLowerCase();
+  if (/^[a-z]{5,}$/.test(first)) {
+    for (const d of domains) {
+      const k = d.indexOf(first);
+      if (k >= 1 && k <= 3 && /^[a-z]+$/.test(d.slice(0, k))) {
+        out[0] = d.slice(0, k) + first;
+        break;
+      }
+    }
+  }
+  return out
+    .map((w) => (/^[a-z]/.test(w) ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ")
+    .replace(/[^A-Za-z.)]+$/, "");
+}
+
 /**
  * Detect a value that is ~10× or ~100× outside the printed range when a decimal point
  * could have been lost (common with OCR: "5.2" read as "52").

@@ -9,6 +9,7 @@ import { assessImage, QUALITY_MESSAGES, type ImageQuality } from "./image-qualit
 import {
   candidatesFromResults,
   findLabName,
+  tidyLabName,
   mergeReports,
   parseLabText,
   reportNameFor,
@@ -142,7 +143,8 @@ export async function extractDocument(
       const text = texts[0];
       if (text.replace(/\s/g, "").length < 20) return result("FAILED", "ocr");
       const report = mergeReports(texts.map((t) => parseLabText(t, { source: "ocr" })));
-      report.labName = (passes.header && findLabName(passes.header)) || report.labName;
+      const labName = (passes.header && findLabName(passes.header)) || report.labName;
+      report.labName = labName ? tidyLabName(labName, texts.join("\n")) : null;
       return result("COMPLETED", "ocr", text, report);
     }
 

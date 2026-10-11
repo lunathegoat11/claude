@@ -21,7 +21,7 @@ export function MobileNav() {
         aria-label="Main"
         className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] lg:hidden"
       >
-        <ul className="glass pointer-events-auto mx-auto grid h-[3.875rem] max-w-md grid-cols-5 gap-0.5 rounded-full p-1">
+        <ul className="glass pointer-events-auto relative mx-auto grid h-[3.875rem] max-w-md grid-cols-5 gap-0.5 rounded-full p-1">
           {primary.map((item) => {
             const active = isActive(pathname, item.href);
             return (
