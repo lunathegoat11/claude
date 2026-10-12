@@ -15,6 +15,15 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate && npx next build
 
+# The Prisma CLI, installed on its own with all of its dependencies, to apply database
+# migrations when the server starts. (Copying only its own folders misses packages it
+# needs, such as "effect", and the server then crashes on start.)
+FROM base AS prisma-cli
+WORKDIR /prisma-cli
+COPY --from=deps /app/node_modules/prisma/package.json ./prisma-version.json
+RUN npm init -y >/dev/null \
+  && npm install --omit=dev --no-audit --no-fund "prisma@$(node -p "require('./prisma-version.json').version")"
+
 FROM base AS runner
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
 RUN groupadd --system --gid 1001 kosha && useradd --system --uid 1001 --gid kosha kosha
@@ -23,10 +32,10 @@ COPY --from=build --chown=kosha:kosha /app/.next/static ./.next/static
 COPY --from=build --chown=kosha:kosha /app/public ./public
 COPY --from=build --chown=kosha:kosha /app/prisma ./prisma
 COPY --from=build --chown=kosha:kosha /app/scripts ./scripts
-# Prisma CLI + engines for `migrate deploy` at start-up.
-COPY --from=build --chown=kosha:kosha /app/node_modules/prisma ./node_modules/prisma
-COPY --from=build --chown=kosha:kosha /app/node_modules/@prisma ./node_modules/@prisma
+# Prisma client for the app and the launch check; Prisma CLI for `migrate deploy`.
+COPY --from=build --chown=kosha:kosha /app/node_modules/@prisma/client ./node_modules/@prisma/client
 COPY --from=build --chown=kosha:kosha /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=prisma-cli --chown=kosha:kosha /prisma-cli/node_modules ./prisma-cli/node_modules
 COPY --chown=kosha:kosha docker-entrypoint.sh ./
 RUN mkdir -p /app/storage && chown kosha:kosha /app/storage && chmod +x docker-entrypoint.sh
 USER kosha
