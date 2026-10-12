@@ -5,7 +5,7 @@ export function SiteFooter() {
     <footer className="border-t">
       <div className="text-muted-foreground mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-[13px] sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <p className="max-w-xl leading-relaxed">
-          Kosha helps you organise health information. It does not provide medical diagnosis,
+          Kosha Health helps you organise health information. It does not provide medical diagnosis,
           treatment or emergency services. In an emergency, call 112.
         </p>
         <nav className="flex flex-wrap gap-x-4" aria-label="Legal">

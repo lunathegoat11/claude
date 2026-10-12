@@ -9,7 +9,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Link
           href="/"
           className="inline-flex min-h-11 items-center rounded-full"
-          aria-label="Kosha home"
+          aria-label="Kosha Health home"
         >
           <Logo />
         </Link>

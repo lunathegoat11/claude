@@ -32,7 +32,7 @@ export function AppShell({
             <Link
               href="/dashboard"
               className="inline-flex min-h-11 shrink-0 items-center rounded-full"
-              aria-label="Kosha home"
+              aria-label="Kosha Health home"
             >
               <Logo compact />
             </Link>
@@ -63,7 +63,7 @@ export function AppShell({
           {children}
           <footer className="text-muted-foreground mt-16 border-t pt-5 text-[12px] leading-relaxed">
             <p>
-              Kosha organises your health information. It doesn&apos;t give medical advice,
+              Kosha Health organises your health information. It doesn&apos;t give medical advice,
               diagnosis or treatment, and values read automatically or written by AI can be wrong.
               In an emergency, call 112.
             </p>

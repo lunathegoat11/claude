@@ -18,10 +18,10 @@ export default function PrivacyPage() {
       title="Privacy Policy"
       intro={
         <p>
-          Kosha is operated by {p.org} (&quot;we&quot;). Your health information is personal and
-          sensitive. This policy explains, in plain language, what we collect, why, who else handles
-          it and the choices you have. It is written for India&apos;s Digital Personal Data
-          Protection Act, 2023 (DPDP Act) and its Rules.
+          Kosha Health (&quot;Kosha&quot;) is operated by {p.org} (&quot;we&quot;). Your health
+          information is personal and sensitive. This policy explains, in plain language, what we
+          collect, why, who else handles it and the choices you have. It is written for India&apos;s
+          Digital Personal Data Protection Act, 2023 (DPDP Act) and its Rules.
         </p>
       }
     >

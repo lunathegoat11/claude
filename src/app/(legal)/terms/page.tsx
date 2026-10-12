@@ -11,8 +11,8 @@ export default function TermsPage() {
       title="Terms of Use"
       intro={
         <p>
-          These terms are an agreement between you and {p.org} for using Kosha. Please read them,
-          together with our{" "}
+          These terms are an agreement between you and {p.org} for using Kosha Health
+          (&quot;Kosha&quot;). Please read them, together with our{" "}
           <Link href="/privacy" className="text-primary underline underline-offset-2">
             Privacy Policy
           </Link>

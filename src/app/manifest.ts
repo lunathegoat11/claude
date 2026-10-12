@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 /** Lets phones install Kosha to the home screen and open it full-screen like an app. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Kosha — Health Records",
-    short_name: "Kosha",
+    name: "Kosha Health",
+    short_name: "Kosha Health",
     description: "Your health records, readings and lab results in one place.",
     start_url: "/dashboard",
     scope: "/",

@@ -20,6 +20,11 @@ export function Logo({ className, compact }: { className?: string; compact?: boo
       <LogoMark className={compact ? "size-7" : undefined} />
       <span className={cn("font-display font-semibold", compact ? "text-[17px]" : "text-[19px]")}>
         Kosha
+        {/* The full name, Kosha Health; on small phones the compact bar shows just "Kosha". */}
+        <span className={cn("text-muted-foreground font-medium", compact && "max-sm:hidden")}>
+          {" "}
+          Health
+        </span>
       </span>
     </span>
   );

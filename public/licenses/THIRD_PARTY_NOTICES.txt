@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-Kosha includes or depends on the third-party software listed below. This file was generated on 2026-10-11 from the production dependency tree (`npm ls --omit=dev --all`, 221 packages) by reading each package's `package.json`. Each package's full license text is in its `LICENSE` file in `node_modules/<name>/` or at the repository URL shown.
+Kosha Health includes or depends on the third-party software listed below. This file was generated on 2026-10-11 from the production dependency tree (`npm ls --omit=dev --all`, 221 packages) by reading each package's `package.json`. Each package's full license text is in its `LICENSE` file in `node_modules/<name>/` or at the repository URL shown.
 
 The production Docker image also includes the Prisma CLI (`prisma@6.19.3`) and Prisma engines (`@prisma/engines@6.19.3`), both Apache-2.0, for running migrations at start-up.
 

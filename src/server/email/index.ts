@@ -76,7 +76,7 @@ function layout(
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px"><tr><td align="center">
 <table width="100%" style="max-width:480px;background:#fff;border:1px solid #e6e8ec;border-radius:16px;padding:32px">
 <tr><td>
-<div style="font-weight:600;font-size:18px;color:#2a3f9d;margin-bottom:24px">Kosha</div>
+<div style="font-weight:600;font-size:18px;color:#2a3f9d;margin-bottom:24px">Kosha Health</div>
 <h1 style="font-size:20px;margin:0 0 12px">${esc(title)}</h1>
 <p style="font-size:15px;line-height:1.6;color:#4a5160;margin:0 0 24px">${esc(body)}</p>
 <a href="${esc(button.url)}" style="display:inline-block;background:#2a3f9d;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-size:15px;font-weight:600">${esc(button.label)}</a>
@@ -88,11 +88,11 @@ function layout(
 export function passwordResetEmail(to: string, url: string): EmailMessage {
   return {
     to,
-    subject: "Reset your Kosha password",
-    text: `Someone (hopefully you) asked to reset the password for your Kosha account.\n\nReset it here (the link works for 1 hour, once):\n${url}\n\nIf you didn't ask for this, you can ignore this email — your password won't change.`,
+    subject: "Reset your Kosha Health password",
+    text: `Someone (hopefully you) asked to reset the password for your Kosha Health account.\n\nReset it here (the link works for 1 hour, once):\n${url}\n\nIf you didn't ask for this, you can ignore this email — your password won't change.`,
     html: layout(
       "Reset your password",
-      "Someone (hopefully you) asked to reset the password for your Kosha account. This link works once, for 1 hour.",
+      "Someone (hopefully you) asked to reset the password for your Kosha Health account. This link works once, for 1 hour.",
       { label: "Choose a new password", url },
       "If you didn't ask for this, you can ignore this email — your password won't change.",
     ),
@@ -102,13 +102,13 @@ export function passwordResetEmail(to: string, url: string): EmailMessage {
 export function verificationEmail(to: string, url: string): EmailMessage {
   return {
     to,
-    subject: "Confirm your email for Kosha",
-    text: `Welcome to Kosha. Please confirm your email address (the link works for 24 hours):\n${url}\n\nIf you didn't create a Kosha account, you can ignore this email.`,
+    subject: "Confirm your email for Kosha Health",
+    text: `Welcome to Kosha Health. Please confirm your email address (the link works for 24 hours):\n${url}\n\nIf you didn't create a Kosha Health account, you can ignore this email.`,
     html: layout(
       "Confirm your email",
-      "Welcome to Kosha. Please confirm this is your email address so you can recover your account if you ever forget your password.",
+      "Welcome to Kosha Health. Please confirm this is your email address so you can recover your account if you ever forget your password.",
       { label: "Confirm email", url },
-      "If you didn't create a Kosha account, you can ignore this email.",
+      "If you didn't create a Kosha Health account, you can ignore this email.",
     ),
   };
 }

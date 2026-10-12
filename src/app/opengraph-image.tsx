@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 /** The picture shown when someone shares a Kosha link (WhatsApp, X, LinkedIn, Slack…). */
-export const alt = "Kosha: every lab report, read and kept for you";
+export const alt = "Kosha Health: every lab report, read and kept for you";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -34,7 +34,7 @@ export default function OpengraphImage() {
         >
           <div style={{ width: 34, height: 6, borderRadius: 3, background: "#ffffff" }} />
         </div>
-        <div style={{ fontSize: 44, fontWeight: 700 }}>Kosha</div>
+        <div style={{ fontSize: 44, fontWeight: 700 }}>Kosha Health</div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <div style={{ fontSize: 76, fontWeight: 700, lineHeight: 1.05, letterSpacing: -2 }}>

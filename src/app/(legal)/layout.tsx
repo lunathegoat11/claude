@@ -8,7 +8,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
     <div className="min-h-dvh">
       <header className="border-b">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" aria-label="Kosha home">
+          <Link href="/" aria-label="Kosha Health home">
             <Logo />
           </Link>
           <ThemeToggle />

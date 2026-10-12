@@ -12,9 +12,9 @@ export function generateMetadata(): Metadata {
   const e = env();
   return {
     metadataBase: new URL(e.APP_URL),
-    title: { default: SITE_TITLE, template: "%s – Kosha" },
+    title: { default: SITE_TITLE, template: "%s – Kosha Health" },
     description: SITE_DESCRIPTION,
-    applicationName: "Kosha",
+    applicationName: "Kosha Health",
     keywords: [
       "lab report app",
       "blood test report",
@@ -27,13 +27,13 @@ export function generateMetadata(): Metadata {
     ],
     openGraph: {
       type: "website",
-      siteName: "Kosha",
+      siteName: "Kosha Health",
       locale: "en_IN",
       title: SITE_TITLE,
       description: SITE_DESCRIPTION,
     },
     twitter: { card: "summary_large_image", title: SITE_TITLE, description: SITE_DESCRIPTION },
-    appleWebApp: { capable: true, title: "Kosha", statusBarStyle: "default" },
+    appleWebApp: { capable: true, title: "Kosha Health", statusBarStyle: "default" },
     icons: { apple: "/icons/apple-touch-icon.png" },
     formatDetection: { telephone: false },
     robots: { index: true, follow: true },

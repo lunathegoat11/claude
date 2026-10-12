@@ -74,7 +74,8 @@ export default async function LandingPage() {
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      name: "Kosha",
+      name: "Kosha Health",
+      alternateName: "Kosha",
       url: env().APP_URL,
       description: SITE_DESCRIPTION,
       applicationCategory: "HealthApplication",
@@ -107,7 +108,7 @@ export default async function LandingPage() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8">
           <Link
             href="/"
-            aria-label="Kosha home"
+            aria-label="Kosha Health home"
             className="inline-flex min-h-11 items-center rounded-full"
           >
             <Logo compact />
