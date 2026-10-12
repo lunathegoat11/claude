@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7
 # Production image for Kosha Health (Next.js standalone output + Prisma).
 
 # The official Node.js image, pulled through Google's mirror of Docker Hub so builds
