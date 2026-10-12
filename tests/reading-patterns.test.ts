@@ -51,7 +51,10 @@ describe("learning from a correction", () => {
     await learnFromCorrection(people[0].id, read, corrected);
     await learnFromCorrection(people[1].id, read.slice(0, 2), corrected.slice(0, 1));
     let rows = await db.readingPattern.findMany();
-    const stored = JSON.stringify(rows);
+    // Only what a pattern holds (timestamps could contain digits like "17.7" by chance).
+    const stored = JSON.stringify(
+      rows.map(({ kind, key, target, count }) => ({ kind, key, target, count })),
+    );
     for (const secret of ["Usha", "Kale", "Recieved", "1.7", "7.7", people[0].id])
       expect(stored).not.toContain(secret);
     expect(rows.filter((r) => r.kind === "JUNK")).toHaveLength(0); // only two people so far

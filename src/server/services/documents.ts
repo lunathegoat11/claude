@@ -5,13 +5,7 @@ import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { AppError, notFound } from "@/server/errors";
 import { logger } from "@/server/logger";
-import {
-  ALLOWED_MIME,
-  newStorageKey,
-  sniffMime,
-  storage,
-  storageProblem,
-} from "@/server/storage";
+import { ALLOWED_MIME, newStorageKey, sniffMime, storage, storageProblem } from "@/server/storage";
 import { extractDocument } from "@/server/extraction/pipeline";
 import { cleanImage } from "@/server/extraction/image-clean";
 import { parseZonedInput, toDateInputValue } from "@/lib/format";

@@ -68,6 +68,8 @@ const schema = z.object({
     z.coerce.number().int().min(0).max(365).optional(),
   ),
   LEGAL_REVIEWED: bool,
+  /** The code Google Search Console gives for the "HTML tag" way of proving the site is yours. */
+  GOOGLE_SITE_VERIFICATION: z.string().optional(),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 

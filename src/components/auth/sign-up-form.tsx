@@ -7,7 +7,14 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { Input } from "@/components/ui/input";
 import { AGE_LABEL, ConsentBox } from "./consent-box";
 
-export function SignUpForm({ inviteOnly = false }: { inviteOnly?: boolean }) {
+export function SignUpForm({
+  inviteOnly = false,
+  invite,
+}: {
+  inviteOnly?: boolean;
+  /** From an invite link, so the person doesn't have to type it. */
+  invite?: string;
+}) {
   const { state, onSubmit, pending, err } = useActionForm(signUpAction);
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
@@ -17,6 +24,7 @@ export function SignUpForm({ inviteOnly = false }: { inviteOnly?: boolean }) {
           <Input
             id="inviteCode"
             name="inviteCode"
+            defaultValue={invite}
             autoComplete="off"
             spellCheck={false}
             required

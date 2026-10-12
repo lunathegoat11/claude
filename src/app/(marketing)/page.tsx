@@ -1,4 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
+import { env } from "@/server/env";
+import { SITE_DESCRIPTION } from "@/lib/site";
 import { redirect } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { getCurrentUser } from "@/server/auth/session";
@@ -40,10 +44,65 @@ const SAMPLE = [
   },
 ];
 
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+
+const FAQ = [
+  {
+    q: "Which reports can Kosha read?",
+    a: "Printed lab reports such as blood sugar and HbA1c, lipid profile, thyroid, liver and kidney function, complete blood count and vitamins. Take a clear photo or upload the PDF your lab sent. Kosha reads each test, its value, unit and printed range, and the report's date. Reading can make mistakes, so Kosha asks you to check the values against the report.",
+  },
+  {
+    q: "Is Kosha free?",
+    a: "Yes. There are no paid plans, ads or in-app purchases. If you choose to connect your own AI account for smarter answers, that AI company may charge you directly.",
+  },
+  {
+    q: "Who can see my records?",
+    a: "Your records are private to your account. Kosha doesn't sell them or share them with doctors, hospitals, insurers or employers, and has no ads or tracking. You can download your data or delete your account at any time.",
+  },
+  {
+    q: "Does Kosha give medical advice?",
+    a: "No. Kosha organises your information and shows how it changes over time. It doesn't diagnose or treat anything. Please discuss your results with your doctor, and in an emergency call 112.",
+  },
+];
+
 export default async function LandingPage() {
   if (await getCurrentUser()) redirect("/dashboard");
+  const inviteOnly = !!env().SIGNUP_INVITE_CODE?.trim();
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+  // Tells search engines what Kosha is (a free health web app), and answers common questions.
+  const structured = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: "Kosha",
+      url: env().APP_URL,
+      description: SITE_DESCRIPTION,
+      applicationCategory: "HealthApplication",
+      operatingSystem: "Any (web browser)",
+      inLanguage: "en-IN",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQ.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    },
+  ];
   return (
     <div className="min-h-dvh">
+      <script
+        type="application/ld+json"
+        nonce={nonce}
+        suppressHydrationWarning
+        // JSON from constants above (no user input); "<" is escaped so it can't end the tag.
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structured).replace(/</g, "\\u003c"),
+        }}
+      />
       <header className="glass-bar sticky top-0 z-30">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8">
           <Link
@@ -84,6 +143,12 @@ export default async function LandingPage() {
               Sign in <ChevronRight className="size-4" />
             </Link>
           </div>
+          {inviteOnly && (
+            <p className="text-muted-foreground mt-5 text-[15px]">
+              Kosha is open by invitation while we get ready. Got an invite link? Open it to create
+              your account.
+            </p>
+          )}
         </section>
 
         {/* The product itself: one report, as Kosha shows it. */}
@@ -200,6 +265,28 @@ export default async function LandingPage() {
                 </div>
               ))}
             </dl>
+          </Reveal>
+        </section>
+
+        <section className="mx-auto mt-24 max-w-3xl px-5 sm:mt-32 sm:px-8">
+          <Reveal>
+            <h2 className="text-center text-[2rem] font-semibold sm:text-[3rem]">Questions</h2>
+          </Reveal>
+          <Reveal className="surface mt-10">
+            <div className="divide-y">
+              {FAQ.map((f) => (
+                <details key={f.q} className="group px-6 py-5">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 font-semibold">
+                    <h3 className="text-[17px]">{f.q}</h3>
+                    <ChevronRight
+                      aria-hidden
+                      className="text-muted-foreground size-5 shrink-0 transition-transform group-open:rotate-90"
+                    />
+                  </summary>
+                  <p className="text-muted-foreground mt-2">{f.a}</p>
+                </details>
+              ))}
+            </div>
           </Reveal>
         </section>
 

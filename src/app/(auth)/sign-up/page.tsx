@@ -6,7 +6,13 @@ import { SignUpForm } from "@/components/auth/sign-up-form";
 
 export const metadata: Metadata = { title: "Create account" };
 
-export default async function SignUpPage() {
+export default async function SignUpPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ invite?: string }>;
+}) {
+  // An invite link (/sign-up?invite=CODE) fills in the code for the person.
+  const { invite } = await searchParams;
   if (await getCurrentUser()) redirect("/dashboard");
   if (!env().ALLOW_SIGNUP) redirect("/sign-in");
   return (
@@ -19,7 +25,10 @@ export default async function SignUpPage() {
             : "Start organising your health records. It takes under a minute."}
         </p>
       </div>
-      <SignUpForm inviteOnly={!!env().SIGNUP_INVITE_CODE?.trim()} />
+      <SignUpForm
+        inviteOnly={!!env().SIGNUP_INVITE_CODE?.trim()}
+        invite={typeof invite === "string" ? invite.slice(0, 200) : undefined}
+      />
     </div>
   );
 }

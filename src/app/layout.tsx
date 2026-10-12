@@ -1,20 +1,45 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
+import { env } from "@/server/env";
+import { SITE_DESCRIPTION, SITE_TITLE } from "@/lib/site";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: { default: "Kosha — your health records in one place", template: "%s – Kosha" },
-  description:
-    "Organise your medical records, track health measurements, understand your lab results, and see your health history over time.",
-  applicationName: "Kosha",
-  appleWebApp: { capable: true, title: "Kosha", statusBarStyle: "default" },
-  icons: { apple: "/icons/apple-touch-icon.png" },
-  formatDetection: { telephone: false },
-  robots: { index: true, follow: true },
-};
+/** What search engines and link previews (WhatsApp, X, LinkedIn) show for Kosha. */
+export function generateMetadata(): Metadata {
+  const e = env();
+  return {
+    metadataBase: new URL(e.APP_URL),
+    title: { default: SITE_TITLE, template: "%s – Kosha" },
+    description: SITE_DESCRIPTION,
+    applicationName: "Kosha",
+    keywords: [
+      "lab report app",
+      "blood test report",
+      "health records India",
+      "medical records app",
+      "read lab report from photo",
+      "HbA1c tracker",
+      "thyroid report",
+      "personal health record",
+    ],
+    openGraph: {
+      type: "website",
+      siteName: "Kosha",
+      locale: "en_IN",
+      title: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+    },
+    twitter: { card: "summary_large_image", title: SITE_TITLE, description: SITE_DESCRIPTION },
+    appleWebApp: { capable: true, title: "Kosha", statusBarStyle: "default" },
+    icons: { apple: "/icons/apple-touch-icon.png" },
+    formatDetection: { telephone: false },
+    robots: { index: true, follow: true },
+    ...(e.GOOGLE_SITE_VERIFICATION ? { verification: { google: e.GOOGLE_SITE_VERIFICATION } } : {}),
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
