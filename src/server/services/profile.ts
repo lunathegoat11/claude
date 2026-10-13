@@ -204,6 +204,7 @@ export async function exportUserData(userId: string) {
         lastAgeConfirmedAt: true,
         aiConsentAt: true,
         improveReadingAt: true,
+        accounts: { select: { provider: true, createdAt: true } },
       },
     }),
     db.profile.findUnique({ where: { userId } }),

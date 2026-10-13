@@ -122,7 +122,7 @@ export async function signOutAction() {
   const user = await requireUserOrThrow().catch(() => null);
   await invalidateCurrentSession();
   if (user) await audit(user.id, "auth.sign_out", undefined, await requestMeta());
-  redirect("/sign-in");
+  redirect("/sign-in?signedout=1");
 }
 
 export async function changePasswordAction(_: ActionState, fd: FormData): Promise<ActionState> {
@@ -196,6 +196,15 @@ export async function renewConsentAction(_: ActionState, fd: FormData): Promise<
   const result = await runAction("renewConsent", async () => {
     const user = await requireUserOrThrow();
     const input = renewConsentSchema.parse(formToObject(fd));
+    const row = await db.user.findUnique({
+      where: { id: user.id },
+      select: { ageConfirmedAt: true },
+    });
+    // Accounts made with Google or Apple confirm their age here, the first time.
+    if (!row?.ageConfirmedAt && input.ageConfirmed !== "on")
+      throw new AppError("VALIDATION", "Kosha is only for people aged 18 or older", {
+        ageConfirmed: ["Kosha is only for people aged 18 or older"],
+      });
     const now = new Date();
     await db.user.update({
       where: { id: user.id },
@@ -203,6 +212,7 @@ export async function renewConsentAction(_: ActionState, fd: FormData): Promise<
         termsAcceptedAt: now,
         healthDataConsentAt: now,
         consentVersion: CONSENT_VERSION,
+        ...(row?.ageConfirmedAt ? {} : { ageConfirmedAt: now }),
         // Ticking the optional box turns learning on; leaving it unticked changes nothing.
         ...(input.improveReading === "on" ? { improveReadingAt: now } : {}),
       },

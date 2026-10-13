@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalDoc, legalParties } from "@/components/legal/legal-doc";
 
-export const metadata: Metadata = { title: "Terms of Use" };
+export const metadata: Metadata = {
+  title: "Terms of Use",
+  description:
+    "The terms for using Kosha Health, a free app to keep and understand your lab reports and medical records. Not medical advice.",
+};
 
 export default function TermsPage() {
   const p = legalParties();

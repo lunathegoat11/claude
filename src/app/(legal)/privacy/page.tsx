@@ -5,7 +5,11 @@ import { env } from "@/server/env";
 import { AI_SERVICES, AI_SERVICE_IDS } from "@/lib/ai-services";
 import { serverAiLabel } from "@/server/services/ai-settings";
 
-export const metadata: Metadata = { title: "Privacy Policy" };
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "How Kosha Health handles your health information: what we collect, why, who else handles it, how long it is kept, and your rights under India's DPDP Act.",
+};
 
 export default function PrivacyPage() {
   const p = legalParties();
@@ -59,6 +63,11 @@ export default function PrivacyPage() {
             stored only as a one-way hash, so nobody can read it.
           </li>
           <li>
+            <strong>If you sign in with Google or Apple:</strong> the ID of your account with them,
+            your email address and, if you choose to share it, your name. We never see your Google
+            or Apple password. Apple may give us a private relay address instead of your real email.
+          </li>
+          <li>
             <strong>Health information you add:</strong> medical records, uploaded reports and
             photos, the text read from them, lab results, health readings, medicines, allergies,
             conditions, and questions you ask the assistant with its answers.
@@ -77,6 +86,11 @@ export default function PrivacyPage() {
             example &ldquo;Chrome on Android&rdquo;), and a log of account activity (for example
             &ldquo;signed in&rdquo; or &ldquo;uploaded a document&rdquo;) with dates. The log never
             contains your health information.
+          </li>
+          <li>
+            <strong>Your device&apos;s time zone</strong> (for example &ldquo;Asia/Kolkata&rdquo;),
+            read from your phone or computer&apos;s settings so dates and times show correctly. We
+            don&apos;t use your location or GPS.
           </li>
           <li>
             <strong>Your IP address</strong> is used for a short time, in memory only, to stop
@@ -202,6 +216,10 @@ export default function PrivacyPage() {
               <strong>{serverAi}</strong>, only if you switch AI on (section 4).
             </li>
           )}
+          <li>
+            <strong>Google or Apple</strong>, only if you choose to sign in with them: they confirm
+            who you are, and learn that you use Kosha Health.
+          </li>
           <li>
             <strong>Authorities</strong>, only where Indian law requires it.
           </li>

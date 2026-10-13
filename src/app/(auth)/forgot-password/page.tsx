@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
-export const metadata: Metadata = { title: "Forgot password" };
+export const metadata: Metadata = {
+  title: "Forgot password",
+  description:
+    "Reset your Kosha Health password. We'll email you a link that works once, for one hour.",
+  robots: { index: false },
+};
 
 export default function ForgotPasswordPage() {
   return (

@@ -89,8 +89,10 @@ export async function deleteAccountAction(_: ActionState, fd: FormData): Promise
       where: { id: user.id },
       select: { passwordHash: true },
     });
+    // Accounts that sign in only with Google or Apple have no password; being signed in
+    // and typing DELETE is the confirmation.
     if (
-      !row?.passwordHash ||
+      row?.passwordHash &&
       !(await verifyPassword(row.passwordHash, String(fd.get("password") ?? "")))
     ) {
       throw new AppError("VALIDATION", "Password is incorrect.", {
@@ -126,5 +128,26 @@ export async function setImproveReadingAction(on: boolean): Promise<ActionState>
         ? "Thanks! Your corrections will help Kosha read reports better."
         : "Turned off. Your corrections won't be used.",
     };
+  });
+}
+
+/**
+ * Keep dates and times right where the person is: the browser reports the device's time
+ * zone setting (e.g. "America/New_York"). No location or GPS is used.
+ */
+export async function syncTimezoneAction(timezone: string): Promise<ActionState> {
+  return runAction("syncTimezone", async () => {
+    const user = await requireUserOrThrow();
+    if (user.isDemo) return { ok: true }; // shared account: leave it as it is
+    const tz = String(timezone).slice(0, 64);
+    try {
+      new Intl.DateTimeFormat("en", { timeZone: tz });
+    } catch {
+      throw new AppError("VALIDATION", "Unknown time zone.");
+    }
+    if (tz === user.timezone) return { ok: true };
+    await db.profile.updateMany({ where: { userId: user.id }, data: { timezone: tz } });
+    revalidatePath("/", "layout");
+    return { ok: true };
   });
 }

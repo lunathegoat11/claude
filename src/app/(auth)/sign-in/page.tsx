@@ -4,16 +4,36 @@ import type { Metadata } from "next";
 import { getCurrentUser } from "@/server/auth/session";
 import { env } from "@/server/env";
 import { SignInForm } from "@/components/auth/sign-in-form";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
+import { oauthEnabled } from "@/server/auth/oauth";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = {
+  title: "Sign in",
+  description:
+    "Sign in to Kosha Health to see your lab results, medical records and health readings in one place.",
+};
+
+/** Why "Continue with Google/Apple" didn't finish, in plain words (codes only in the URL). */
+const OAUTH_MESSAGES: Record<string, string> = {
+  failed: "That sign-in didn't complete. Please try again.",
+  cancelled: "Sign-in was cancelled.",
+  invite:
+    "Kosha Health is invite-only for now. To create an account, open your invite link, or ask the person who invited you for the code.",
+  closed: "New sign-ups are closed at the moment.",
+  email:
+    "Your account didn't share a confirmed email address, which Kosha needs. Please sign up with email instead.",
+  off: "That sign-in option isn't available yet.",
+  busy: "Too many attempts. Please wait a few minutes and try again.",
+};
 
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; reset?: string }>;
+  searchParams: Promise<{ next?: string; reset?: string; oauth?: string }>;
 }) {
   if (await getCurrentUser()) redirect("/dashboard");
-  const { next, reset } = await searchParams;
+  const { next, reset, oauth } = await searchParams;
+  const oauthMessage = oauth ? (OAUTH_MESSAGES[oauth] ?? OAUTH_MESSAGES.failed) : null;
   return (
     <div className="space-y-8">
       <div className="space-y-2">
@@ -28,6 +48,15 @@ export default async function SignInPage({
           Your password has been changed. Please sign in with your new password.
         </p>
       )}
+      {oauthMessage && (
+        <p
+          role="alert"
+          className="border-destructive/30 bg-destructive/6 rounded-md border px-3.5 py-2.5 text-sm"
+        >
+          {oauthMessage}
+        </p>
+      )}
+      <OAuthButtons google={oauthEnabled("google")} apple={oauthEnabled("apple")} next={next} />
       <SignInForm next={next} demoEnabled={env().DEMO_LOGIN_ENABLED} />
       {env().ALLOW_SIGNUP && (
         <p className="text-muted-foreground text-center text-sm">

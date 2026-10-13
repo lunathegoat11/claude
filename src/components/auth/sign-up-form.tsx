@@ -6,11 +6,16 @@ import { Field, FormError } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Input } from "@/components/ui/input";
 import { AGE_LABEL, ConsentBox } from "./consent-box";
+import { OAuthButtons } from "./oauth-buttons";
 
 export function SignUpForm({
   inviteOnly = false,
   invite,
+  google = false,
+  apple = false,
 }: {
+  google?: boolean;
+  apple?: boolean;
   inviteOnly?: boolean;
   /** From an invite link, so the person doesn't have to type it. */
   invite?: string;
@@ -32,6 +37,11 @@ export function SignUpForm({
           />
         </Field>
       )}
+      <OAuthButtons
+        google={google}
+        apple={apple}
+        inviteFieldId={inviteOnly ? "inviteCode" : undefined}
+      />
       <Field label="Your name" htmlFor="name" error={err("name")}>
         <Input id="name" name="name" autoComplete="name" required aria-invalid={!!err("name")} />
       </Field>

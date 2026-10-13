@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { env } from "@/server/env";
 import { SITE_DESCRIPTION, SITE_TITLE } from "@/lib/site";
+import { Suspense } from "react";
 import { Toaster } from "sonner";
+import { AppMessages } from "@/components/shared/app-messages";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -76,11 +78,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ThemeProvider nonce={nonce}>
           <TooltipProvider delayDuration={300}>
             {children}
+            <Suspense>
+              <AppMessages />
+            </Suspense>
             <Toaster
               position="top-center"
-              richColors
               closeButton
-              toastOptions={{ className: "!rounded-md" }}
+              toastOptions={{ className: "kosha-toast" }}
             />
           </TooltipProvider>
         </ThemeProvider>

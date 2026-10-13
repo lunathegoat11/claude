@@ -160,6 +160,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body {
+    /* Nothing can push the page sideways on a phone ("clip" keeps sticky bars working). */
+    overflow-x: clip;
+  }
   html {
     -webkit-text-size-adjust: 100%;
     /* Feels like an app on phones: no grey flash on tap; pressable gives the feedback instead. */
@@ -444,4 +449,86 @@
 .dark .text-primary,
 .dark .hover\:text-primary:hover {
   color: #2997ff;
+}
+
+/* ── Liquid Glass motion ────────────────────────────────────────────────────────
+   Everything that moves uses the glass material and the same springy curve: quick,
+   with a small overshoot that settles, like a drop of liquid. */
+:root {
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* The tab bar's lens slides to the touched tab and squishes as it lands (as in Bevel). */
+.glass-lens {
+  transition: transform 420ms var(--spring);
+  will-change: transform;
+}
+.glass-lens > span {
+  background: color-mix(in oklab, var(--primary) 14%, transparent);
+  box-shadow:
+    inset 0 1px 0.5px var(--glass-edge),
+    inset 0 0 0 0.5px color-mix(in oklab, var(--primary) 28%, transparent),
+    0 2px 10px -2px color-mix(in oklab, var(--primary) 30%, transparent);
+}
+.glass-lens-squish {
+  animation: glass-squish 420ms var(--spring);
+}
+@keyframes glass-squish {
+  35% {
+    transform: scale(1.16, 0.9);
+  }
+}
+
+/* Glass bubbles (spinners, pull to refresh) pop in. */
+.glass-pop {
+  animation: glass-pop 380ms var(--spring) both;
+}
+@keyframes glass-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* Sheets, menus and tooltips spring open. */
+.glass-thick[data-state="open"],
+.glass-thick[data-state="delayed-open"] {
+  animation-duration: 380ms;
+  animation-timing-function: var(--spring);
+}
+
+/* Messages ("Saved", "Something went wrong") are glass too. */
+[data-sonner-toaster] [data-sonner-toast].kosha-toast {
+  background-color: var(--glass-tint-thick) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  color: var(--foreground) !important;
+  border: 0 !important;
+  border-radius: 1.25rem !important;
+  box-shadow:
+    inset 0 1px 0.5px var(--glass-edge),
+    inset 0 0 0 0.5px var(--glass-rim),
+    var(--glass-shadow) !important;
+}
+[data-glass="off"] [data-sonner-toaster] [data-sonner-toast].kosha-toast {
+  background-color: var(--card) !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  [data-sonner-toaster] [data-sonner-toast].kosha-toast {
+    background-color: var(--card) !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-lens {
+    transition: none;
+  }
+  .glass-lens-squish,
+  .glass-pop {
+    animation: none;
+  }
 }

@@ -6,7 +6,12 @@ import { findValidToken } from "@/server/auth/email-tokens";
 import { getCurrentUser } from "@/server/auth/session";
 import { Button } from "@/components/ui/button";
 
-export const metadata: Metadata = { title: "Confirm email", referrer: "no-referrer" };
+export const metadata: Metadata = {
+  title: "Confirm email",
+  description: "Confirm the email address for your Kosha Health account.",
+  referrer: "no-referrer",
+  robots: { index: false },
+};
 
 export default async function VerifyEmailPage({
   searchParams,

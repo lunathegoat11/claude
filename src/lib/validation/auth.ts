@@ -43,6 +43,7 @@ export const signUpSchema = z.object({
 
 export const renewConsentSchema = z.object({
   improveReading: z.literal("on").optional(),
+  ageConfirmed: z.literal("on").optional(),
   acceptTerms: z.literal("on", {
     errorMap: () => ({ message: "Please accept the Terms of Use and Privacy Policy" }),
   }),

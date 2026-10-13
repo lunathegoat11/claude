@@ -4,7 +4,12 @@ import { findValidToken } from "@/server/auth/email-tokens";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 import { Button } from "@/components/ui/button";
 
-export const metadata: Metadata = { title: "Choose a new password", referrer: "no-referrer" };
+export const metadata: Metadata = {
+  title: "Choose a new password",
+  description: "Choose a new password for your Kosha Health account.",
+  referrer: "no-referrer",
+  robots: { index: false },
+};
 
 export default async function ResetPasswordPage({
   searchParams,

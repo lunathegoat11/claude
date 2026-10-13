@@ -1,58 +1,93 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MoreHorizontal } from "lucide-react";
+import { LogOut, MoreHorizontal, Phone } from "lucide-react";
 import { MOBILE_PRIMARY, NAV_ITEMS, isActive } from "./nav-items";
+import { signOutAction } from "@/actions/auth";
+import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL } from "@/lib/contact";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
+const tap = () => navigator.vibrate?.(8); // a light tick on Android; iPhones ignore it
+
+/**
+ * The bottom bar, in the style of apps like Bevel: a floating glass capsule with a glass
+ * "lens" that springs to the tab you touch. The lens moves the instant your finger lands
+ * (before the next page has loaded), so the bar always feels immediate.
+ */
 export function MobileNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const primary = NAV_ITEMS.filter((i) => MOBILE_PRIMARY.includes(i.href));
   const more = NAV_ITEMS.filter((i) => !MOBILE_PRIMARY.includes(i.href));
-  const moreActive = more.some((i) => isActive(pathname, i.href));
+  const fromPath = () => {
+    const i = primary.findIndex((item) => isActive(pathname, item.href));
+    return i >= 0 ? i : more.some((m) => isActive(pathname, m.href)) ? primary.length : -1;
+  };
+  const [active, setActive] = useState(fromPath);
+  // Follow the address when it changes (back button, links elsewhere in the page).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => setActive(fromPath()), [pathname]);
+  const slots = primary.length + 1;
+
+  const item = (i: number, isOn: boolean) =>
+    cn(
+      "relative z-10 flex h-full w-full flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium",
+      "transition-[color,transform] duration-150 ease-out active:scale-90",
+      isOn ? "text-primary" : "text-foreground/70",
+    );
 
   return (
     <>
-      {/* A floating glass capsule, like the tab bar in iOS 26. Taps around it reach the page. */}
       <nav
         aria-label="Main"
         className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] lg:hidden"
       >
-        <ul className="glass pointer-events-auto relative mx-auto grid h-[3.875rem] max-w-md grid-cols-5 gap-0.5 rounded-full p-1">
-          {primary.map((item) => {
-            const active = isActive(pathname, item.href);
+        <ul
+          className="glass pointer-events-auto relative mx-auto grid h-[3.875rem] max-w-md rounded-full p-1"
+          style={{ gridTemplateColumns: `repeat(${slots}, minmax(0, 1fr))` }}
+        >
+          {/* The sliding lens. It overshoots a little and settles, like a drop of liquid. */}
+          {active >= 0 && (
+            <span
+              aria-hidden
+              className="glass-lens pointer-events-none absolute inset-y-1 left-1 rounded-full"
+              style={{
+                width: `calc((100% - 0.5rem) / ${slots})`,
+                transform: `translateX(${active * 100}%)`,
+              }}
+            >
+              <span key={active} className="glass-lens-squish block size-full rounded-full" />
+            </span>
+          )}
+          {primary.map((nav, i) => {
+            const on = active === i;
             return (
-              <li key={item.href}>
+              <li key={nav.href} className="min-w-0">
                 <Link
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "flex h-full flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium transition-colors duration-200",
-                    active
-                      ? "text-primary bg-[color-mix(in_oklab,var(--primary)_12%,transparent)]"
-                      : "text-foreground/70",
-                  )}
+                  href={nav.href}
+                  aria-current={isActive(pathname, nav.href) ? "page" : undefined}
+                  onPointerDown={() => {
+                    if (active !== i) tap();
+                    setActive(i);
+                  }}
+                  className={item(i, on)}
                 >
-                  <item.icon className="size-[1.375rem]" strokeWidth={active ? 2 : 1.6} />
-                  {item.short ?? item.label}
+                  <nav.icon className="size-[1.375rem]" strokeWidth={on ? 2.1 : 1.6} />
+                  <span className="truncate">{nav.short ?? nav.label}</span>
                 </Link>
               </li>
             );
           })}
-          <li>
+          <li className="min-w-0">
             <button
               type="button"
+              onPointerDown={tap}
               onClick={() => setOpen(true)}
               aria-haspopup="dialog"
-              className={cn(
-                "flex h-full w-full flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium transition-colors duration-200",
-                moreActive
-                  ? "text-primary bg-[color-mix(in_oklab,var(--primary)_12%,transparent)]"
-                  : "text-foreground/70",
-              )}
+              aria-expanded={open}
+              className={item(primary.length, active === primary.length)}
             >
               <MoreHorizontal className="size-[1.375rem]" strokeWidth={1.6} />
               More
@@ -63,24 +98,48 @@ export function MobileNav() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogTitle>More</DialogTitle>
-          <DialogDescription className="sr-only">Other sections</DialogDescription>
-          <ul className="grid gap-2">
-            {more.map((item) => (
-              <li key={item.href}>
+          <DialogDescription className="sr-only">
+            Other sections, contact and sign out
+          </DialogDescription>
+          <ul className="grid gap-1">
+            {more.map((m) => (
+              <li key={m.href}>
                 <Link
-                  href={item.href}
-                  onClick={() => setOpen(false)}
+                  href={m.href}
+                  onClick={() => {
+                    setActive(primary.length);
+                    setOpen(false);
+                  }}
+                  aria-current={isActive(pathname, m.href) ? "page" : undefined}
                   className={cn(
-                    "hover:bg-muted flex items-center gap-3 rounded-xl px-3 py-3 text-[17px] transition-colors",
-                    isActive(pathname, item.href) && "bg-accent text-accent-foreground",
+                    "pressable hover:bg-foreground/5 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-[17px] transition-colors",
+                    isActive(pathname, m.href) && "bg-accent text-accent-foreground",
                   )}
                 >
-                  <item.icon className="text-primary size-5" />
-                  {item.label}
+                  <m.icon className="text-primary size-5" />
+                  {m.label}
                 </Link>
               </li>
             ))}
           </ul>
+          <div className="grid gap-1 border-t pt-3">
+            <a
+              href={`tel:${CONTACT_PHONE_TEL}`}
+              className="pressable hover:bg-foreground/5 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-[17px]"
+            >
+              <Phone className="text-primary size-5" />
+              Call us: {CONTACT_PHONE_DISPLAY}
+            </a>
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="pressable text-destructive hover:bg-foreground/5 flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 text-[17px]"
+              >
+                <LogOut className="size-5" />
+                Sign out
+              </button>
+            </form>
+          </div>
         </DialogContent>
       </Dialog>
     </>

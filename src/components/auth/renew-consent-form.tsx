@@ -5,8 +5,9 @@ import { FormError } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Button } from "@/components/ui/button";
 import { ImproveReadingConsent, TermsConsents } from "./sign-up-form";
+import { AGE_LABEL, ConsentBox } from "./consent-box";
 
-export function RenewConsentForm() {
+export function RenewConsentForm({ askAge = false }: { askAge?: boolean }) {
   const { state, onSubmit, pending, err } = useActionForm(renewConsentAction);
   return (
     <div className="space-y-3">
@@ -14,6 +15,11 @@ export function RenewConsentForm() {
         {state.error && !state.fieldErrors && <FormError message={state.error} />}
         <fieldset className="bg-muted space-y-3 rounded-2xl p-4">
           <legend className="sr-only">Consent</legend>
+          {askAge && (
+            <ConsentBox name="ageConfirmed" error={err("ageConfirmed")}>
+              {AGE_LABEL}
+            </ConsentBox>
+          )}
           <TermsConsents err={err} />
           <ImproveReadingConsent />
         </fieldset>

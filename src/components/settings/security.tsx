@@ -116,7 +116,14 @@ export function ExportButton() {
   );
 }
 
-export function DeleteAccountForm({ disabled }: { disabled?: boolean }) {
+export function DeleteAccountForm({
+  disabled,
+  needsPassword = true,
+}: {
+  disabled?: boolean;
+  /** False for accounts that sign in only with Google or Apple. */
+  needsPassword?: boolean;
+}) {
   const { state, onSubmit, pending, err } = useActionForm(deleteAccountAction);
   return (
     <FormSection
@@ -133,15 +140,17 @@ export function DeleteAccountForm({ disabled }: { disabled?: boolean }) {
           <Field label="Type DELETE to confirm" htmlFor="confirm" error={err("confirm")}>
             <Input id="confirm" name="confirm" autoComplete="off" disabled={disabled} />
           </Field>
-          <Field label="Your password" htmlFor="del-password" error={err("password")}>
-            <Input
-              id="del-password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              disabled={disabled}
-            />
-          </Field>
+          {needsPassword && (
+            <Field label="Your password" htmlFor="del-password" error={err("password")}>
+              <Input
+                id="del-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                disabled={disabled}
+              />
+            </Field>
+          )}
         </div>
         <div className="flex justify-end">
           <SubmitButton

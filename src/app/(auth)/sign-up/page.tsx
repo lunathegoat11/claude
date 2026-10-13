@@ -3,8 +3,13 @@ import type { Metadata } from "next";
 import { getCurrentUser } from "@/server/auth/session";
 import { env } from "@/server/env";
 import { SignUpForm } from "@/components/auth/sign-up-form";
+import { oauthEnabled } from "@/server/auth/oauth";
 
-export const metadata: Metadata = { title: "Create account" };
+export const metadata: Metadata = {
+  title: "Create your account",
+  description:
+    "Create a free Kosha Health account. Photograph a lab report and Kosha saves every result with its date, so you can see how your numbers change.",
+};
 
 export default async function SignUpPage({
   searchParams,
@@ -28,6 +33,8 @@ export default async function SignUpPage({
       <SignUpForm
         inviteOnly={!!env().SIGNUP_INVITE_CODE?.trim()}
         invite={typeof invite === "string" ? invite.slice(0, 200) : undefined}
+        google={oauthEnabled("google")}
+        apple={oauthEnabled("apple")}
       />
     </div>
   );

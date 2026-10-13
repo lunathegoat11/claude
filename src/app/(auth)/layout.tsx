@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL } from "@/lib/contact";
 import { Logo } from "@/components/shared/logo";
 
 /** Centred and quiet, like Apple's sign-in pages: the form is the only thing on screen. */
@@ -18,7 +19,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="surface p-6 sm:p-9">{children}</div>
       </main>
       <footer className="mx-auto">
-        <nav aria-label="Legal" className="text-muted-foreground flex gap-5 text-[13px]">
+        <nav
+          aria-label="Contact and legal"
+          className="text-muted-foreground flex flex-wrap justify-center gap-x-5 text-[13px]"
+        >
+          <a
+            href={`tel:${CONTACT_PHONE_TEL}`}
+            className="hover:text-foreground py-3 hover:underline"
+          >
+            {CONTACT_PHONE_DISPLAY}
+          </a>
           <Link href="/privacy" className="hover:text-foreground py-3 hover:underline">
             Privacy Policy
           </Link>

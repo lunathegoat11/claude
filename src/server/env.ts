@@ -43,7 +43,8 @@ const schema = z.object({
   AI_VISION_EXTRACTION: bool,
   // Email (password reset, verification)
   EMAIL_PROVIDER: z.enum(["console", "resend"]).default("console"),
-  EMAIL_FROM: z.string().default("Kosha <no-reply@example.com>"),
+  // Resend's test sender works before you have your own domain (it only reaches your own inbox).
+  EMAIL_FROM: z.string().default("Kosha Health <onboarding@resend.dev>"),
   RESEND_API_KEY: z.string().optional(),
   // On-device OCR for photos of lab reports (no external service)
   OCR_ENABLED: z
@@ -68,6 +69,15 @@ const schema = z.object({
     z.coerce.number().int().min(0).max(365).optional(),
   ),
   LEGAL_REVIEWED: bool,
+  // "Continue with Google": an OAuth client from Google Cloud Console (Web application).
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  // "Continue with Apple": from an Apple Developer account (Services ID, Team ID, and a
+  // Sign in with Apple key: its Key ID and the contents of the .p8 file).
+  APPLE_CLIENT_ID: z.string().optional(),
+  APPLE_TEAM_ID: z.string().optional(),
+  APPLE_KEY_ID: z.string().optional(),
+  APPLE_PRIVATE_KEY: z.string().optional(),
   /** The code Google Search Console gives for the "HTML tag" way of proving the site is yours. */
   GOOGLE_SITE_VERIFICATION: z.string().optional(),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),

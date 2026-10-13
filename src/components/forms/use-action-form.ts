@@ -1,6 +1,7 @@
 "use client";
 import { startTransition, useActionState, useEffect, useRef, type FormEvent } from "react";
 import { toast } from "sonner";
+import { failureMessage } from "@/components/shared/app-messages";
 
 export interface ClientActionState<T = unknown> {
   ok?: boolean;
@@ -17,7 +18,18 @@ export function useActionForm<T = unknown>(
   action: (prev: ClientActionState<T>, fd: FormData) => Promise<ClientActionState<T>>,
   opts: { onSuccess?: (s: ClientActionState<T>) => void; successToast?: boolean } = {},
 ) {
-  const [state, formAction, pending] = useActionState(action, {} as ClientActionState<T>);
+  // A failure before the server answers (no internet, server restarting) becomes a
+  // message instead of a crash; page changes (redirects) pass through untouched.
+  const safeAction = async (prev: ClientActionState<T>, fd: FormData) => {
+    try {
+      return await action(prev, fd);
+    } catch (err) {
+      const digest = (err as { digest?: string } | undefined)?.digest;
+      if (typeof digest === "string" && digest.startsWith("NEXT_")) throw err;
+      return { ok: false, error: failureMessage() } as ClientActionState<T>;
+    }
+  };
+  const [state, formAction, pending] = useActionState(safeAction, {} as ClientActionState<T>);
   const last = useRef<ClientActionState<T> | null>(null);
   const { onSuccess, successToast = true } = opts;
   useEffect(() => {
@@ -28,6 +40,9 @@ export function useActionForm<T = unknown>(
       onSuccess?.(state);
     } else if (state.error && !state.fieldErrors) {
       toast.error(state.error);
+    } else if (state.fieldErrors) {
+      // On a phone the highlighted field may be off screen; say so up front too.
+      toast.error(state.error ?? "Please check the highlighted fields.");
     }
   }, [state, onSuccess, successToast]);
   const err = (name: string) => state.fieldErrors?.[name];

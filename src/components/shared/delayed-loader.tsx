@@ -89,7 +89,15 @@ export function DelayedLoader({
       aria-live="polite"
       className={cn("flex flex-col items-center justify-center gap-3 text-center", className)}
     >
-      <Spinner className={size === "sm" ? "size-5" : "size-8"} />
+      {/* The spinner sits in a small glass bubble that pops in, like iOS 26 controls. */}
+      <span
+        className={cn(
+          "glass glass-pop relative flex items-center justify-center rounded-full",
+          size === "sm" ? "size-10" : "size-14",
+        )}
+      >
+        <Spinner className={size === "sm" ? "size-5" : "size-7"} />
+      </span>
       {/* One line at a time; the key makes each new message fade in. */}
       <p
         key={message ?? "none"}

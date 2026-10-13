@@ -1,7 +1,10 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL } from "@/lib/contact";
 import { TopNav } from "./top-nav";
 import { MobileNav } from "./mobile-nav";
+import { TimezoneSync } from "./timezone-sync";
+import { PullToRefresh } from "./pull-to-refresh";
 import { SearchBox } from "./search-box";
 import { UserMenu } from "./user-menu";
 import { Logo } from "@/components/shared/logo";
@@ -14,7 +17,13 @@ export function AppShell({
   user,
   children,
 }: {
-  user: { name: string; email: string; isDemo: boolean; emailVerified: boolean };
+  user: {
+    name: string;
+    email: string;
+    isDemo: boolean;
+    emailVerified: boolean;
+    timezone: string;
+  };
   children: React.ReactNode;
 }) {
   return (
@@ -67,7 +76,13 @@ export function AppShell({
               diagnosis or treatment, and values read automatically or written by AI can be wrong.
               In an emergency, call 112.
             </p>
-            <nav aria-label="Legal" className="mt-1 flex flex-wrap gap-x-4">
+            <nav aria-label="Contact and legal" className="mt-1 flex flex-wrap gap-x-4">
+              <a
+                href={`tel:${CONTACT_PHONE_TEL}`}
+                className="hover:text-foreground py-2 underline-offset-2 hover:underline"
+              >
+                Call us: {CONTACT_PHONE_DISPLAY}
+              </a>
               <Link
                 href="/privacy"
                 className="hover:text-foreground py-2 underline-offset-2 hover:underline"
@@ -91,6 +106,8 @@ export function AppShell({
         </main>
       </div>
       <MobileNav />
+      <TimezoneSync saved={user.timezone} />
+      <PullToRefresh />
     </div>
   );
 }

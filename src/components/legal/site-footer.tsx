@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL } from "@/lib/contact";
 
 export function SiteFooter() {
   return (
@@ -8,7 +9,13 @@ export function SiteFooter() {
           Kosha Health helps you organise health information. It does not provide medical diagnosis,
           treatment or emergency services. In an emergency, call 112.
         </p>
-        <nav className="flex flex-wrap gap-x-4" aria-label="Legal">
+        <nav className="flex flex-wrap gap-x-4" aria-label="Contact and legal">
+          <a
+            href={`tel:${CONTACT_PHONE_TEL}`}
+            className="hover:text-foreground py-3 hover:underline"
+          >
+            Call us: {CONTACT_PHONE_DISPLAY}
+          </a>
           <Link href="/privacy" className="hover:text-foreground py-3 hover:underline">
             Privacy Policy
           </Link>

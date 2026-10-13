@@ -79,7 +79,7 @@ check(
   env.EMAIL_PROVIDER === "resend" &&
     set("RESEND_API_KEY") &&
     set("EMAIL_FROM") &&
-    !/example\.com/.test(env.EMAIL_FROM ?? ""),
+    !/example\.com|resend\.dev/.test(env.EMAIL_FROM ?? ""),
   "Email is set up (Resend)",
   'Set up email for password resets: EMAIL_PROVIDER="resend", RESEND_API_KEY and EMAIL_FROM (an address on your own domain, verified in Resend).',
 );

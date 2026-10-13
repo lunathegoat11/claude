@@ -335,9 +335,15 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
         healthDataConsentAt: true,
         consentVersion: true,
         improveReadingAt: true,
+        passwordHash: true,
+        accounts: { select: { provider: true } },
       },
     }),
   ]);
+  const hasPassword = !!account?.passwordHash;
+  const linked = (account?.accounts ?? []).map((a) =>
+    a.provider === "apple" ? "Apple" : "Google",
+  );
   const current = jar.get(SESSION_COOKIE)?.value;
   const currentHash = current ? hashToken(current) : null;
   return (
@@ -419,8 +425,13 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
             <p className="text-muted-foreground text-sm">
               The demo account&apos;s password can&apos;t be changed.
             </p>
-          ) : (
+          ) : hasPassword ? (
             <ChangePasswordForm />
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              You sign in with {linked.join(" or ") || "Google or Apple"}, so there&apos;s no Kosha
+              password to change.
+            </p>
           )}
         </CardContent>
       </Card>
@@ -480,7 +491,7 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
           The shared demo account can&apos;t be deleted.
         </p>
       ) : (
-        <DeleteAccountForm />
+        <DeleteAccountForm needsPassword={hasPassword} />
       )}
     </div>
   );
