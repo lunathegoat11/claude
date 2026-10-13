@@ -54,7 +54,7 @@ export default async function LabsPage({
     <div>
       <PageHeader
         title="Lab results"
-        description="Every test result you've saved, with the range printed on its own report."
+        description="Every test result you've saved, checked against standard ranges from public-health sources."
         actions={
           <>
             <Button asChild variant="outline">

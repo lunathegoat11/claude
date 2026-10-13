@@ -1,10 +1,17 @@
 import "server-only";
 import { db } from "@/server/db";
 import { getBiomarker, matchBiomarker } from "@/lib/catalog/biomarkers";
+import { formatTestName } from "@/lib/test-name";
 import { CONTEXT_LABELS } from "@/lib/catalog/metrics";
 import { DOCUMENT_TYPE_LABELS, RECORD_TYPE_LABELS } from "@/lib/catalog/labels";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { formatRange } from "@/lib/lab-range";
+import { formatRange, rangeOf } from "@/lib/lab-range";
+
+/** The range a result is judged against, labelled with where it comes from. */
+function aiRange(r: Parameters<typeof rangeOf>[0]) {
+  const g = rangeOf(r);
+  return { refLow: g.low, refHigh: g.high, refText: g.text ? `${g.text} (${g.label})` : null };
+}
 import { toNum } from "@/lib/utils";
 import { isEmptyBundle } from "./bundle-utils";
 import type {
@@ -163,7 +170,7 @@ async function loadLabSeries(
       const def = getBiomarker(key);
       s = {
         key,
-        testName: def?.name ?? r.testName,
+        testName: def?.name ?? formatTestName(r.testName),
         biomarkerCode: key,
         unit: r.unit,
         description: def?.description ?? null,
@@ -185,9 +192,7 @@ async function loadLabSeries(
       value: toNum(r.valueNumeric),
       valueText: r.valueText,
       at: r.observedAt.toISOString(),
-      refLow: toNum(r.refLow),
-      refHigh: toNum(r.refHigh),
-      refText: r.refText,
+      ...aiRange(r),
       flag: r.flag,
       labName: r.labName,
     });
@@ -233,9 +238,7 @@ async function loadPanels(
       valueText: r.valueText,
       unit: r.unit,
       flag: r.flag,
-      refLow: toNum(r.refLow),
-      refHigh: toNum(r.refHigh),
-      refText: r.refText,
+      ...aiRange(r),
     })),
   }));
 }
@@ -451,9 +454,9 @@ export function renderContext(b: ContextBundle): string {
   for (const s of b.labs) {
     L.push(`\n## Lab test history: ${s.testName}`);
     for (const p of s.points) {
-      const range = formatRange(p.refLow, p.refHigh, p.refText);
+      const range = p.refText || formatRange(p.refLow, p.refHigh, null);
       L.push(
-        `[${p.ref}] ${formatDate(p.at, tz)} — ${fmtVal(p.value, p.valueText)} ${s.unit ?? ""}${range ? ` (report reference range: ${range})` : " (no reference range on report)"}${p.flag !== "UNKNOWN" ? ` [report-range flag: ${p.flag}]` : ""}${p.labName ? ` — ${p.labName}` : ""}`,
+        `[${p.ref}] ${formatDate(p.at, tz)} — ${fmtVal(p.value, p.valueText)} ${s.unit ?? ""}${range ? ` (reference range: ${range})` : " (no reference range)"}${p.flag !== "UNKNOWN" ? ` [flag: ${p.flag}]` : ""}${p.labName ? ` — ${p.labName}` : ""}`,
       );
     }
   }
@@ -463,9 +466,9 @@ export function renderContext(b: ContextBundle): string {
       `\n## Lab report [${p.ref}] ${p.name} — ${formatDate(p.at, tz)}${p.labName ? ` — ${p.labName}` : ""}`,
     );
     for (const r of p.results) {
-      const range = formatRange(r.refLow, r.refHigh, r.refText);
+      const range = r.refText || formatRange(r.refLow, r.refHigh, null);
       L.push(
-        `- ${r.testName}: ${fmtVal(r.value, r.valueText)} ${r.unit ?? ""}${range ? ` (range on report: ${range})` : ""}${r.flag !== "UNKNOWN" && r.flag !== "NORMAL" ? ` [${r.flag}]` : ""}`,
+        `- ${r.testName}: ${fmtVal(r.value, r.valueText)} ${r.unit ?? ""}${range ? ` (range: ${range})` : ""}${r.flag !== "UNKNOWN" && r.flag !== "NORMAL" ? ` [${r.flag}]` : ""}`,
       );
     }
   }

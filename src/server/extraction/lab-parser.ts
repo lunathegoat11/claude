@@ -6,6 +6,7 @@ import {
   type BiomarkerCategory,
   type BiomarkerDef,
 } from "@/lib/catalog/biomarkers";
+import { formatTestName } from "@/lib/test-name";
 import { parseReferenceRange } from "@/lib/lab-range";
 
 /**
@@ -481,7 +482,7 @@ export function parseLabText(
     if (learned && seen.has(learned.code)) continue;
     if (learned) seen.add(learned.code);
     candidates.push({
-      testName: learned?.name ?? name.slice(0, 120),
+      testName: learned?.name ?? formatTestName(name.slice(0, 120)),
       biomarkerCode: learned?.code ?? null,
       value: row.value,
       unit: row.unit ?? learned?.units[0] ?? null,
@@ -530,7 +531,7 @@ export function candidatesFromResults(
     const { low, high } = parseReferenceRange(refText);
     const numeric = /^[<>]?\s*\d+(?:[.,]\d+)?$/.test(value) ? value.replace(",", ".") : null;
     out.push({
-      testName: def?.name ?? testName,
+      testName: def?.name ?? formatTestName(testName),
       biomarkerCode: def?.code ?? null,
       value,
       unit: normaliseUnit(r.unit?.trim().slice(0, 30) || null) ?? def?.units[0] ?? null,

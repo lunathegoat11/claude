@@ -3,6 +3,7 @@ import { FlagBadge } from "./flag-badge";
 import { RangeStrip } from "./range-strip";
 import { formatNumber } from "@/lib/format";
 import { formatRange } from "@/lib/lab-range";
+import { formatTestName } from "@/lib/test-name";
 
 export interface LedgerResult {
   id: string;
@@ -14,6 +15,8 @@ export interface LedgerResult {
   refLow: number | null;
   refHigh: number | null;
   refText: string | null;
+  /** Which range this is, e.g. "NIH range" or "Report range". */
+  rangeLabel?: string;
   flag: string;
   notes?: string | null;
   /** e.g. "5.5 on 5 Mar 2026" */
@@ -28,7 +31,7 @@ export function ResultLedger({ results, label }: { results: LedgerResult[]; labe
   return (
     <ul aria-label={label} className="divide-y">
       {results.map((r) => {
-        const range = formatRange(r.refLow, r.refHigh, r.refText);
+        const range = r.rangeLabel ? r.refText : formatRange(r.refLow, r.refHigh, r.refText);
         return (
           <li
             key={r.id}
@@ -39,7 +42,7 @@ export function ResultLedger({ results, label }: { results: LedgerResult[]; labe
                 href={r.href}
                 className="hover:text-primary font-medium underline-offset-2 hover:underline"
               >
-                {r.testName}
+                {formatTestName(r.testName)}
               </Link>
               {r.previous && (
                 <div className="text-muted-foreground text-[13px]">Before: {r.previous}</div>
@@ -61,7 +64,7 @@ export function ResultLedger({ results, label }: { results: LedgerResult[]; labe
               <RangeStrip value={r.value} low={r.refLow} high={r.refHigh} />
               <div className="text-muted-foreground mt-1 flex items-center justify-between gap-2 text-[13px]">
                 <span className="tabular">
-                  {range ? `Report range ${range}` : "No range printed"}
+                  {range ? `${r.rangeLabel ?? "Report range"} ${range}` : "No range available"}
                 </span>
                 <span className="sm:hidden">
                   <FlagBadge flag={r.flag} compact />

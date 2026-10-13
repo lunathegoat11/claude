@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Where a result sits against the reference range printed on its own report.
+ * Where a result sits against its reference range (standard, or as printed on the report).
  *
  * A soft capsule track with the printed range as a green segment; the result is a dot,
  * green inside the range and red outside. Purely visual; the text

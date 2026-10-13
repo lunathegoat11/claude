@@ -393,11 +393,20 @@ model LabResult {
   valueNumeric  Decimal?   @db.Decimal(14, 4)
   valueText     String?
   unit          String?
-  /// Reference range exactly as reported by the lab for this result.
+  /// Reference range exactly as printed on the report.
   refLow        Decimal?   @db.Decimal(14, 4)
   refHigh       Decimal?   @db.Decimal(14, 4)
   refText       String?
-  /// Flag derived only from the stored, report-specific range (or the lab's own flag).
+  /// Standard adult range from a government source (see src/lib/catalog/standard-ranges.ts),
+  /// in this result's unit and for the person's sex. Null when there is none.
+  stdLow        Decimal?   @db.Decimal(14, 4)
+  stdHigh       Decimal?   @db.Decimal(14, 4)
+  /// The standard range in words, e.g. "Under 200".
+  stdText       String?
+  stdSource     String?
+  /// Which version of the standard ranges was applied (re-applied when it changes).
+  rangeVersion  Int        @default(0)
+  /// From the standard range when there is one; otherwise from the report's range.
   flag          LabFlag    @default(UNKNOWN)
   observedAt    DateTime
   labName       String?

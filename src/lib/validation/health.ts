@@ -77,6 +77,8 @@ export const labResultInputSchema = z
     refText: optionalString(120),
     labFlag: z.enum(LAB_FLAGS).optional(),
     notes: optionalString(1000),
+    /** Read from a photo with a possibly misread value: don't mark it high or low yet. */
+    unchecked: z.boolean().optional(),
   })
   .refine((v) => v.refLow === undefined || v.refHigh === undefined || v.refLow <= v.refHigh, {
     message: "Range low must not be greater than range high",

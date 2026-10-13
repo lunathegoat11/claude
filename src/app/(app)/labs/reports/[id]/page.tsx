@@ -1,3 +1,4 @@
+import { ledgerRange } from "@/lib/lab-range";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowLeft, FileText, Pencil } from "lucide-react";
@@ -52,8 +53,8 @@ export default async function LabReportPage({
           <p className="mt-2 text-[15px]">
             {panel.results.length} results.{" "}
             {flagged
-              ? `${flagged} outside the range printed on this report.`
-              : "All within the ranges printed on this report, or no range given."}
+              ? `${flagged} outside the normal range.`
+              : "All within the normal range, or no range available."}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -120,9 +121,7 @@ export default async function LabReportPage({
               value: toNum(r.valueNumeric),
               valueText: r.valueText,
               unit: r.unit,
-              refLow: toNum(r.refLow),
-              refHigh: toNum(r.refHigh),
-              refText: r.refText,
+              ...ledgerRange(r),
               flag: r.flag,
               notes: r.notes,
               previous: p
@@ -134,8 +133,11 @@ export default async function LabReportPage({
       </div>
       <div className="text-muted-foreground mt-4 space-y-1 text-[13px]">
         <p>
-          Status compares each value only with the reference range printed on this report. It is not
-          a diagnosis. Please discuss results with your doctor.
+          Status compares each value with a standard adult range from a US government health source
+          (named next to each result; mostly MedlinePlus, part of the NIH). Where there is none, the
+          range printed on this report is used. Labs&rsquo; methods differ, so the range on your
+          report can be slightly different. Status is not a diagnosis. Please discuss results with
+          your doctor.
         </p>
         <p>
           {SOURCE_LABELS[panel.source]}.{panel.notes && ` ${panel.notes}`}

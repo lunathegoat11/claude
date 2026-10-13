@@ -30,11 +30,11 @@ describe("reference ranges", () => {
     expect(parseReferenceRange("see note")).toEqual({ low: null, high: null });
   });
 
-  it("flags only against the stored range, never a universal one", () => {
+  it("flags against the printed range when there is no standard one", () => {
     expect(computeLabFlag(5.7, 4, 5.6)).toBe("HIGH");
     expect(computeLabFlag(3.9, 4, 5.6)).toBe("LOW");
     expect(computeLabFlag(5, 4, 5.6)).toBe("NORMAL");
-    // No range on the report → no judgement at all.
+    // No range at all → no judgement.
     expect(computeLabFlag(500, null, null)).toBe("UNKNOWN");
     // The lab's own flag wins.
     expect(computeLabFlag(5, 4, 5.6, "ABNORMAL")).toBe("ABNORMAL");

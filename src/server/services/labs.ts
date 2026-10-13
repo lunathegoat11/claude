@@ -6,12 +6,50 @@ import { AppError, notFound } from "@/server/errors";
 import { parseZonedInput } from "@/lib/format";
 import { computeLabFlag, parseReferenceRange } from "@/lib/lab-range";
 import { getBiomarker, matchBiomarker } from "@/lib/catalog/biomarkers";
+import { formatTestName } from "@/lib/test-name";
+import { RANGE_VERSION, flagAgainst, standardRangeFor } from "@/lib/catalog/standard-ranges";
 import { labPanelSchema, type LabPanelInput } from "@/lib/validation/health";
 import { toNum } from "@/lib/utils";
 import { ensureProvider } from "./providers";
 import { removeTimelineEvent, syncLabPanelEvent } from "./timeline";
 
-export function normaliseResult(r: LabPanelInput["results"][number]) {
+/** Who the results belong to, for ranges that differ by sex or age. */
+export type RangeFor = { sex?: string | null; dateOfBirth?: Date | null; on?: Date };
+
+export function rangeForUser(tx: Tx, userId: string) {
+  return tx.profile.findUnique({ where: { userId }, select: { sex: true, dateOfBirth: true } });
+}
+
+/** The standard range for a result, and the flag it gives (or the report's, if there is none). */
+export function applyStandardRange(
+  code: string | null,
+  unit: string | null,
+  value: number | null,
+  reportFlag: LabFlag,
+  who: RangeFor,
+) {
+  const std = standardRangeFor(code, unit, who);
+  return {
+    stdLow: std?.low != null ? new Prisma.Decimal(std.low) : null,
+    stdHigh: std?.high != null ? new Prisma.Decimal(std.high) : null,
+    stdText: std?.text ?? null,
+    stdSource: std?.source ?? null,
+    rangeVersion: RANGE_VERSION,
+    flag: std ? flagAgainst(value, std) : reportFlag,
+  };
+}
+
+/** rangeVersion of a result that isn't judged until the person checks its value. */
+const UNCHECKED = -1;
+const UNJUDGED = {
+  stdLow: null,
+  stdHigh: null,
+  stdText: null,
+  stdSource: null,
+  flag: "UNKNOWN" as LabFlag,
+};
+
+export function normaliseResult(r: LabPanelInput["results"][number], who: RangeFor = {}) {
   const numeric = Number(r.value.replace(",", "."));
   const isNumeric =
     Number.isFinite(numeric) && /^\s*[<>]?\s*\d/.test(r.value) && !/[a-z]/i.test(r.value);
@@ -24,17 +62,22 @@ export function normaliseResult(r: LabPanelInput["results"][number]) {
     refHigh = parsed.high;
   }
   const def = r.biomarkerCode ? getBiomarker(r.biomarkerCode) : matchBiomarker(r.testName);
-  const flag: LabFlag = computeLabFlag(valueNumeric, refLow, refHigh, r.labFlag ?? null);
+  const unit = r.unit ?? def?.units[0] ?? null;
+  const reportFlag: LabFlag = computeLabFlag(valueNumeric, refLow, refHigh, r.labFlag ?? null);
   return {
-    testName: r.testName,
+    testName: def?.name ?? formatTestName(r.testName),
     biomarkerCode: def?.code ?? null,
     valueNumeric: valueNumeric !== null ? new Prisma.Decimal(valueNumeric) : null,
     valueText: valueNumeric === null ? r.value : null,
-    unit: r.unit ?? def?.units[0] ?? null,
+    unit,
     refLow: refLow !== null ? new Prisma.Decimal(refLow) : null,
     refHigh: refHigh !== null ? new Prisma.Decimal(refHigh) : null,
     refText: r.refText ?? null,
-    flag,
+    // A value that may have been misread isn't judged until the person checks it (by
+    // editing and saving the report).
+    ...(r.unchecked
+      ? { ...UNJUDGED, rangeVersion: UNCHECKED }
+      : applyStandardRange(def?.code ?? null, unit, valueNumeric, reportFlag, who)),
     notes: r.notes ?? null,
   };
 }
@@ -72,8 +115,9 @@ export async function writePanel(
     // The old values are replaced, not kept: nothing needs them once the edit is saved.
     await tx.labResult.deleteMany({ where: { panelId, userId, deletedAt: null } });
   }
+  const who = { ...(await rangeForUser(tx, userId)), on: collectedAt };
   const results = input.results.map((r) => ({
-    ...normaliseResult(r),
+    ...normaliseResult(r, who),
     userId,
     panelId: panel.id,
     observedAt: collectedAt,
@@ -231,6 +275,10 @@ export async function listTestSeries(userId: string) {
       refLow: true,
       refHigh: true,
       refText: true,
+      stdLow: true,
+      stdHigh: true,
+      stdText: true,
+      stdSource: true,
     },
     take: 2000,
   });
@@ -253,7 +301,7 @@ export async function listTestSeries(userId: string) {
     if (!e) {
       map.set(key, {
         key,
-        testName: getBiomarker(r.biomarkerCode)?.name ?? r.testName,
+        testName: getBiomarker(r.biomarkerCode)?.name ?? formatTestName(r.testName),
         biomarkerCode: r.biomarkerCode,
         unit: r.unit,
         count: 1,
@@ -301,7 +349,7 @@ export async function getTestHistory(userId: string, key: string) {
   const def = key.startsWith("name:") ? undefined : getBiomarker(key);
   return {
     key,
-    testName: def?.name ?? results[results.length - 1].testName,
+    testName: def?.name ?? formatTestName(results[results.length - 1].testName),
     description: def?.description ?? null,
     results,
   };
@@ -353,4 +401,61 @@ export async function getPreviousResults(
     if (!map.has(k)) map.set(k, r);
   }
   return map;
+}
+
+/**
+ * Re-check saved results against the standard ranges: those saved before the current
+ * ranges (at server start), or all of one person's results after they change their sex or
+ * date of birth. Also links results to newly known tests and tidies their names.
+ */
+export async function reapplyRanges(opts: { userId?: string } = {}) {
+  let cursor: string | undefined;
+  let updated = 0;
+  for (;;) {
+    const rows = await db.labResult.findMany({
+      where: {
+        ...(opts.userId ? { userId: opts.userId } : {}),
+        rangeVersion: opts.userId ? { not: UNCHECKED } : { gte: 0, lt: RANGE_VERSION },
+      },
+      orderBy: { id: "asc" },
+      take: 200,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      select: {
+        id: true,
+        biomarkerCode: true,
+        testName: true,
+        unit: true,
+        valueNumeric: true,
+        refLow: true,
+        refHigh: true,
+        flag: true,
+        stdText: true,
+        observedAt: true,
+        user: { select: { profile: { select: { sex: true, dateOfBirth: true } } } },
+      },
+    });
+    if (!rows.length) break;
+    cursor = rows[rows.length - 1].id;
+    for (const r of rows) {
+      const def = getBiomarker(r.biomarkerCode) ?? matchBiomarker(r.testName);
+      const value = toNum(r.valueNumeric);
+      // Without a standard range, the report's range decides (as when it was saved).
+      const reportFlag: LabFlag = r.stdText
+        ? computeLabFlag(value, toNum(r.refLow), toNum(r.refHigh), null)
+        : r.flag;
+      await db.labResult.update({
+        where: { id: r.id },
+        data: {
+          biomarkerCode: def?.code ?? null,
+          testName: def?.name ?? formatTestName(r.testName),
+          ...applyStandardRange(def?.code ?? null, r.unit, value, reportFlag, {
+            ...r.user.profile,
+            on: r.observedAt,
+          }),
+        },
+      });
+      updated++;
+    }
+  }
+  return updated;
 }

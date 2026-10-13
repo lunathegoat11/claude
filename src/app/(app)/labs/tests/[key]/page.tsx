@@ -13,7 +13,8 @@ import { ConfirmDelete } from "@/components/forms/confirm-delete";
 import { FlagBadge } from "@/components/labs/flag-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatNumber, formatSigned } from "@/lib/format";
-import { formatRange } from "@/lib/lab-range";
+import { rangeOf } from "@/lib/lab-range";
+import { STANDARD_RANGES } from "@/lib/catalog/standard-ranges";
 import { toNum } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Test history" };
@@ -35,14 +36,12 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
   // Only chart results that share the latest unit, so different units are never mixed on one axis.
   const numeric = rows.filter((r) => r.valueNumeric !== null && r.unit === latestUnit);
   const otherUnits = rows.filter((r) => r.valueNumeric !== null && r.unit !== latestUnit).length;
-  const ranges = new Set(numeric.map((r) => `${toNum(r.refLow)}|${toNum(r.refHigh)}`));
+  const shown = numeric.map(rangeOf);
+  const ranges = new Set(shown.map((g) => `${g.low}|${g.high}|${g.label}`));
   const sameRange =
-    ranges.size === 1 &&
-    numeric.length > 0 &&
-    (numeric[0].refLow !== null || numeric[0].refHigh !== null);
-  const band = sameRange
-    ? { low: toNum(numeric[0].refLow), high: toNum(numeric[0].refHigh), label: "Range on reports" }
-    : null;
+    ranges.size === 1 && shown.length > 0 && (shown[0].low !== null || shown[0].high !== null);
+  const stdUrl = STANDARD_RANGES[history.results[0].biomarkerCode ?? ""]?.url;
+  const band = sameRange ? { low: shown[0].low, high: shown[0].high, label: shown[0].label } : null;
   const decimals = Math.max(
     ...numeric.map((r) => String(toNum(r.valueNumeric)).split(".")[1]?.length ?? 0),
     0,
@@ -104,8 +103,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                   at: r.observedAt.toISOString(),
                   value: toNum(r.valueNumeric)!,
                   label: [r.labName, r.panel?.name].filter(Boolean).join(", "),
-                  rangeText:
-                    formatRange(toNum(r.refLow), toNum(r.refHigh), r.refText) || "not given",
+                  rangeText: rangeOf(r).text || "not given",
                   notes: r.notes,
                 }))}
                 unit={latestUnit ?? ""}
@@ -125,9 +123,28 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
               </p>
             )}
             <p className="text-muted-foreground mt-3 text-xs">
-              {band
-                ? "The grey band is the reference range printed on these reports."
-                : "Reference ranges differ between these reports, so no single range is drawn. Hover a point to see the range printed on that report."}
+              {band && shown[0].source ? (
+                <>
+                  The grey band is the standard adult range from{" "}
+                  {stdUrl ? (
+                    <a
+                      href={stdUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline underline-offset-2"
+                    >
+                      {shown[0].source}
+                    </a>
+                  ) : (
+                    shown[0].source
+                  )}
+                  .
+                </>
+              ) : band ? (
+                "The grey band is the reference range printed on these reports."
+              ) : (
+                "Reference ranges differ between these results, so no single range is drawn. Hover a point to see each one."
+              )}
               {otherUnits > 0 &&
                 ` ${otherUnits} result${otherUnits > 1 ? "s" : ""} in a different unit ${otherUnits > 1 ? "are" : "is"} listed below but not charted.`}{" "}
               A visual trend is not a diagnosis.
@@ -155,7 +172,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
             <tr>
               <th className="px-4 py-3 font-medium sm:px-5">Date and report</th>
               <th className="px-3 py-3 text-right font-medium">Result</th>
-              <th className="hidden px-3 py-3 font-medium sm:table-cell">Range on report</th>
+              <th className="hidden px-3 py-3 font-medium sm:table-cell">Range</th>
               <th className="hidden px-3 py-3 font-medium md:table-cell">Lab</th>
               <th className="px-3 py-3 font-medium">
                 <span className="sr-only">Status</span>
@@ -196,7 +213,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                   <span className="text-muted-foreground">{r.unit}</span>
                 </td>
                 <td className="text-muted-foreground tabular hidden px-3 py-3 sm:table-cell">
-                  {formatRange(toNum(r.refLow), toNum(r.refHigh), r.refText) || "—"}
+                  {rangeOf(r).text || "—"}
                 </td>
                 <td className="text-muted-foreground hidden px-3 py-3 md:table-cell">
                   {r.labName ?? "—"}

@@ -264,8 +264,12 @@ describe("reading reports with the user's AI", () => {
     expect(toDateInputValue(panel.collectedAt, TZ)).toBe("2026-07-03");
     expect(panel.results.map((r) => r.testName)).toEqual(["TSH", "Anti-TPO antibodies", "Free T4"]);
     expect(panel.results[0].biomarkerCode).toBe("TSH");
-    expect(panel.results[2].flag).toBe("HIGH");
-    expect(panel.results[1].flag).toBe("NORMAL"); // 12 is under the printed "< 34"
+    // Free T4 is judged against the standard range (MedlinePlus: 0.8 to 1.9), not the
+    // report's 0.8 - 1.8, so 1.9 is normal.
+    expect(panel.results[2]).toMatchObject({ flag: "NORMAL", stdText: "0.8 – 1.9" });
+    expect(panel.results[2].stdSource).toMatch(/MedlinePlus/);
+    // Anti-TPO has no standard range, so the report's range decides.
+    expect(panel.results[1]).toMatchObject({ flag: "NORMAL", stdText: null }); // 12 < 34
     await deleteDocument(alice.id, res.document.id);
   });
 

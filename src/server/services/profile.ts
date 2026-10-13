@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { notFound } from "@/server/errors";
 import { logger } from "@/server/logger";
 import { storage } from "@/server/storage";
+import { reapplyRanges } from "./labs";
 import { parseZonedInput } from "@/lib/format";
 import { normaliseIndianPhone } from "@/lib/india";
 import {
@@ -46,7 +47,20 @@ export async function updateProfile(userId: string, raw: unknown, tz: string) {
       : null,
     emergencyContactRelation: p.emergencyContactRelation ?? null,
   };
-  return db.profile.upsert({ where: { userId }, create: { userId, ...data }, update: data });
+  const before = await db.profile.findUnique({
+    where: { userId },
+    select: { sex: true, dateOfBirth: true },
+  });
+  const saved = await db.profile.upsert({
+    where: { userId },
+    create: { userId, ...data },
+    update: data,
+  });
+  // Some standard ranges depend on sex and age, so re-check results when these change.
+  if (before?.sex !== data.sex || before?.dateOfBirth?.getTime() !== data.dateOfBirth?.getTime()) {
+    await reapplyRanges({ userId });
+  }
+  return saved;
 }
 
 export async function updatePreferences(userId: string, raw: unknown) {

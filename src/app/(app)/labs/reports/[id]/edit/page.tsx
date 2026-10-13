@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { LabPanelForm } from "@/components/labs/lab-panel-form";
 import { toDateInputValue } from "@/lib/format";
 import { toNum } from "@/lib/utils";
+import { formatTestName } from "@/lib/test-name";
 
 export const metadata: Metadata = { title: "Edit lab report" };
 
@@ -37,7 +38,7 @@ export default async function EditLabPage({ params }: { params: Promise<{ id: st
           notes: panel.notes ?? "",
           documentId: panel.documentId ?? "",
           results: panel.results.map((r) => ({
-            testName: r.testName,
+            testName: formatTestName(r.testName),
             biomarkerCode: r.biomarkerCode ?? "",
             value: r.valueText ?? s(r.valueNumeric),
             unit: r.unit ?? "",

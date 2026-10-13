@@ -1,3 +1,4 @@
+import { ledgerRange } from "@/lib/lab-range";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Bot, Plus, Upload } from "lucide-react";
@@ -172,9 +173,7 @@ export default async function DashboardPage({
                     value: toNum(r.valueNumeric),
                     valueText: r.valueText,
                     unit: r.unit,
-                    refLow: toNum(r.refLow),
-                    refHigh: toNum(r.refHigh),
-                    refText: r.refText,
+                    ...ledgerRange(r),
                     flag: r.flag,
                     notes: r.notes,
                   }))}

@@ -57,6 +57,7 @@ function resultsFrom(report: ParsedReport) {
       refHigh: doubtful ? undefined : (c.refHigh ?? undefined),
       labFlag: doubtful ? undefined : (c.labFlag ?? undefined),
       notes: checks.length ? checks.join(" ") : undefined,
+      unchecked: doubtful || undefined,
     });
     if (parsed.success) out.push(parsed.data);
   }

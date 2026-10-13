@@ -14,14 +14,22 @@ import { Reveal } from "@/components/shared/reveal";
 
 /** A made-up report, shown exactly the way Kosha shows a real one. */
 const SAMPLE = [
-  { test: "HbA1c", value: "5.7", unit: "%", low: 4, high: 5.6, range: "4.0 – 5.6", status: "High" },
+  {
+    test: "HbA1c",
+    value: "5.7",
+    unit: "%",
+    low: null,
+    high: 5.7,
+    range: "Under 5.7",
+    status: "High",
+  },
   {
     test: "Glucose, fasting",
     value: "96",
     unit: "mg/dL",
     low: 70,
-    high: 100,
-    range: "70 – 100",
+    high: 99,
+    range: "70 – 99",
     status: "In range",
   },
   {
@@ -29,17 +37,17 @@ const SAMPLE = [
     value: "3.1",
     unit: "µIU/mL",
     low: 0.4,
-    high: 4.5,
-    range: "0.4 – 4.5",
+    high: 4.8,
+    range: "0.4 – 4.8",
     status: "In range",
   },
   {
     test: "Vitamin D",
     value: "18",
     unit: "ng/mL",
-    low: 30,
-    high: 100,
-    range: "30 – 100",
+    low: 20,
+    high: null,
+    range: "20 or more",
     status: "Low",
   },
 ];
@@ -49,7 +57,7 @@ export const metadata: Metadata = { alternates: { canonical: "/" } };
 const FAQ = [
   {
     q: "Which reports can Kosha read?",
-    a: "Printed lab reports such as blood sugar and HbA1c, lipid profile, thyroid, liver and kidney function, complete blood count and vitamins. Take a clear photo or upload the PDF your lab sent. Kosha reads each test, its value, unit and printed range, and the report's date. Reading can make mistakes, so Kosha asks you to check the values against the report.",
+    a: "Printed lab reports such as blood sugar and HbA1c, lipid profile, thyroid, liver and kidney function, complete blood count and vitamins. Take a clear photo or upload the PDF your lab sent. Kosha reads each test, its value, unit and printed range, and the report's date, then checks each value against a standard range from US government health sources (NIH). Reading can make mistakes, so Kosha asks you to check the values against the report.",
   },
   {
     q: "Is Kosha free?",
@@ -181,7 +189,7 @@ export default async function LandingPage() {
                     <div className="col-span-2">
                       <RangeStrip value={Number(r.value)} low={r.low} high={r.high} />
                       <div className="text-muted-foreground mt-1.5 flex justify-between text-[13px]">
-                        <span>Report range {r.range}</span>
+                        <span>NIH range {r.range}</span>
                         <span
                           className={
                             out ? "text-destructive font-medium" : "text-success font-medium"
@@ -197,7 +205,8 @@ export default async function LandingPage() {
             </ul>
           </div>
           <figcaption className="text-muted-foreground mt-4 text-center text-[13px]">
-            A made-up example. High and low are judged only against the range printed on the report.
+            A made-up example. High and low are judged against standard ranges from US government
+            health sources (NIH).
           </figcaption>
         </Reveal>
 

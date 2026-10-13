@@ -43,6 +43,14 @@ export default function TermsPage() {
             say otherwise in the app.
           </li>
           <li>
+            High and Low are judged against standard adult ranges published by US government health
+            sources (mostly MedlinePlus, part of the US National Institutes of Health), or against
+            the range printed on your report when there is no standard range (and for anyone under
+            18). Labs use different methods, so your lab&rsquo;s range can differ a little. These
+            ranges don&rsquo;t account for pregnancy, medicines or your own history, and they are
+            not a diagnosis.
+          </li>
+          <li>
             The general ranges shown on charts (from Indian and US health agencies) are for
             information only. They are not a diagnosis, and your doctor may use different targets
             for you.

@@ -36,10 +36,10 @@ function rangeWord(p: {
   refHigh: number | null;
   flag: string;
 }) {
-  if (p.flag === "HIGH") return "above the range printed on that report";
-  if (p.flag === "LOW") return "below the range printed on that report";
+  if (p.flag === "HIGH") return "above the normal range";
+  if (p.flag === "LOW") return "below the normal range";
   if (p.flag === "ABNORMAL") return "flagged by the lab on that report";
-  if (p.flag === "NORMAL") return "within the range printed on that report";
+  if (p.flag === "NORMAL") return "within the normal range";
   return null;
 }
 
@@ -209,9 +209,9 @@ export function composeGroundedAnswer(b: ContextBundle): string {
         const range = formatRange(r.refLow, r.refHigh, r.refText);
         const flag =
           r.flag === "HIGH"
-            ? ", above the report's range"
+            ? ", above the normal range"
             : r.flag === "LOW"
-              ? ", below the report's range"
+              ? ", below the normal range"
               : r.flag === "ABNORMAL"
                 ? ", flagged by the lab"
                 : "";
@@ -289,7 +289,7 @@ export function composeGroundedAnswer(b: ContextBundle): string {
       for (const r of p.results) {
         if (["HIGH", "LOW", "ABNORMAL"].includes(r.flag)) {
           qs.push(
-            `My ${r.testName} was ${v(r.value, r.valueText)}${r.unit ? ` ${r.unit}` : ""} on ${formatDate(p.at, tz)}, outside the range on the report. What could explain this, and does it need follow-up?`,
+            `My ${r.testName} was ${v(r.value, r.valueText)}${r.unit ? ` ${r.unit}` : ""} on ${formatDate(p.at, tz)}, outside the normal range. What could explain this, and does it need follow-up?`,
           );
         }
       }
@@ -306,7 +306,7 @@ export function composeGroundedAnswer(b: ContextBundle): string {
 
   if (outOfRange)
     out.push(
-      "Some values are outside the ranges printed on your reports. Only a doctor can say what this means for you, so it's worth sharing these results with them.",
+      "Some values are outside the normal ranges. Only a doctor can say what this means for you, so it's worth sharing these results with them.",
     );
 
   return out

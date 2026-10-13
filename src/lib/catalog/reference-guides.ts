@@ -1,9 +1,8 @@
 /**
  * General reference ranges published by public-health bodies in India and the US.
  *
- * These are shown ONLY as optional, labelled guides on trend charts. They are never
- * used to flag a result: High/Low always comes from the range printed on the user's
- * own report, because ranges vary by laboratory, method, age, sex and pregnancy.
+ * These are shown as optional, labelled guides on trend charts. High/Low itself comes
+ * from the standard ranges in standard-ranges.ts (or the report's range when there is none).
  * Every entry names its source and links to it.
  */
 import { GUIDE_DATA } from "./reference-guides-data";
@@ -55,6 +54,11 @@ export function normUnit(u: string | null | undefined) {
     .replace(/\s+/g, "")
     .replace(/^meq\/l$/, "mmol/l")
     .replace(/^miu\/l$/, "uiu/ml")
+    .replace(/^uu\/ml$/, "uiu/ml")
+    .replace(/^iu\/l$/, "u/l")
+    .replace(/^(secs?|seconds?|s)$/, "sec")
+    .replace(/^(million|mill)\/(cumm|cmm)$/, "million/ul")
+    .replace(/^lakhs?\/(cumm|cmm)$/, "lakh/ul")
     .replace(/^°?f$/, "f")
     .replace(/^°?c$/, "c")
     .replace(/^cells\/cumm$|^\/cumm$/, "/ul")
