@@ -1,3 +1,5 @@
+import { RangeStrip } from "@/components/labs/range-strip";
+import { rangeOf } from "@/lib/lab-range";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { FlaskConical, Plus, Upload } from "lucide-react";
@@ -143,6 +145,7 @@ export default async function LabsPage({
                     <ul className="surface divide-y overflow-hidden">
                       {grouped.get(cat)!.map((s) => {
                         const latest = toNum(s.latest.valueNumeric);
+                        const range = rangeOf(s.latest);
                         const prev =
                           s.previous && s.previous.unit === s.latest.unit
                             ? toNum(s.previous.valueNumeric)
@@ -178,8 +181,21 @@ export default async function LabsPage({
                                 className="hidden h-8 w-24 sm:block"
                                 label={`${s.testName} history`}
                               />
-                              <div className="col-span-2 sm:col-span-1 sm:justify-self-end">
+                              <div className="hidden sm:block sm:justify-self-end">
                                 <FlagBadge flag={s.latest.flag} compact />
+                              </div>
+                              <div className="col-span-2 mt-1 sm:col-span-4">
+                                <RangeStrip value={latest} low={range.low} high={range.high} />
+                                <div className="text-muted-foreground mt-1 flex items-center justify-between gap-2 text-[13px]">
+                                  <span className="tabular">
+                                    {range.text
+                                      ? `${range.label} ${range.text}`
+                                      : "No range available"}
+                                  </span>
+                                  <span className="sm:hidden">
+                                    <FlagBadge flag={s.latest.flag} compact />
+                                  </span>
+                                </div>
                               </div>
                             </Link>
                           </li>

@@ -14,6 +14,7 @@ import { FlagBadge } from "@/components/labs/flag-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatNumber, formatSigned } from "@/lib/format";
 import { rangeOf } from "@/lib/lab-range";
+import { RangeStrip } from "@/components/labs/range-strip";
 import { STANDARD_RANGES } from "@/lib/catalog/standard-ranges";
 import { toNum } from "@/lib/utils";
 
@@ -40,6 +41,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
   const ranges = new Set(shown.map((g) => `${g.low}|${g.high}|${g.label}`));
   const sameRange =
     ranges.size === 1 && shown.length > 0 && (shown[0].low !== null || shown[0].high !== null);
+  const latestRange = shown.length && shown[shown.length - 1].text ? shown[shown.length - 1] : null;
   const stdUrl = STANDARD_RANGES[history.results[0].biomarkerCode ?? ""]?.url;
   const band = sameRange ? { low: shown[0].low, high: shown[0].high, label: shown[0].label } : null;
   const decimals = Math.max(
@@ -94,6 +96,17 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                   {formatSigned(last - first, Math.min(decimals, 2))} {latestUnit}
                 </span>
               </p>
+            )}
+            {latestRange && (
+              <div className="mt-2 max-w-md">
+                <RangeStrip value={last} low={latestRange.low} high={latestRange.high} />
+                <div className="text-muted-foreground mt-1 flex items-center justify-between gap-2 text-[13px]">
+                  <span className="tabular">
+                    Latest: {latestRange.label} {latestRange.text}
+                  </span>
+                  <FlagBadge flag={numeric[numeric.length - 1].flag} compact />
+                </div>
+              </div>
             )}
           </CardHeader>
           <CardContent>
@@ -211,6 +224,11 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                       : r.valueText}
                   </span>{" "}
                   <span className="text-muted-foreground">{r.unit}</span>
+                  {rangeOf(r).text && (
+                    <div className="text-muted-foreground tabular text-xs sm:hidden">
+                      {rangeOf(r).text}
+                    </div>
+                  )}
                 </td>
                 <td className="text-muted-foreground tabular hidden px-3 py-3 sm:table-cell">
                   {rangeOf(r).text || "—"}
