@@ -133,11 +133,11 @@ export default async function LabReportPage({
       </div>
       <div className="text-muted-foreground mt-4 space-y-1 text-[13px]">
         <p>
-          Status compares each value with a standard adult range from a US government health source
-          (named next to each result; mostly MedlinePlus, part of the NIH). Where there is none, the
-          range printed on this report is used. Labs&rsquo; methods differ, so the range on your
-          report can be slightly different. Status is not a diagnosis. Please discuss results with
-          your doctor.
+          Status compares each value with the range named next to it. In India that is the range
+          printed on this report, or India&rsquo;s national range (ICMR, Health Ministry) when the
+          report has none; elsewhere it is a standard adult range from the US National Institutes of
+          Health (NIH). You can change this in Settings, Preferences. Status is not a diagnosis.
+          Please discuss results with your doctor.
         </p>
         <p>
           {SOURCE_LABELS[panel.source]}.{panel.notes && ` ${panel.notes}`}

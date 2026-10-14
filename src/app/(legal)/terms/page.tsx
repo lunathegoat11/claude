@@ -43,12 +43,13 @@ export default function TermsPage() {
             say otherwise in the app.
           </li>
           <li>
-            High and Low are judged against standard adult ranges published by US government health
-            sources (mostly MedlinePlus, part of the US National Institutes of Health), or against
-            the range printed on your report when there is no standard range (and for anyone under
-            18). Labs use different methods, so your lab&rsquo;s range can differ a little. These
-            ranges don&rsquo;t account for pregnancy, medicines or your own history, and they are
-            not a diagnosis.
+            High and Low are judged against the range named next to each result. In India (going by
+            your phone&rsquo;s time zone) that is the range printed on your report, or India&rsquo;s
+            national range (ICMR, Ministry of Health) when there is none. Elsewhere, or if you
+            choose international ranges in Settings, it is a standard adult range from US government
+            health sources (mostly MedlinePlus, part of the US National Institutes of Health).
+            Anyone under 18 is judged by the report&rsquo;s range. These ranges don&rsquo;t account
+            for pregnancy, medicines or your own history, and they are not a diagnosis.
           </li>
           <li>
             The general ranges shown on charts (from Indian and US health agencies) are for

@@ -19,6 +19,7 @@ import { db } from "@/server/db";
 import { AppError } from "@/server/errors";
 import { uuid } from "@/lib/validation/common";
 import { setImproveReading } from "@/server/services/reading-patterns";
+import { reapplyRanges } from "@/server/services/labs";
 
 export async function updateProfileAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction("updateProfile", async () => {
@@ -147,6 +148,8 @@ export async function syncTimezoneAction(timezone: string): Promise<ActionState>
     }
     if (tz === user.timezone) return { ok: true };
     await db.profile.updateMany({ where: { userId: user.id }, data: { timezone: tz } });
+    // Which ranges apply can depend on the country (Indian ranges in India).
+    await reapplyRanges({ userId: user.id });
     revalidatePath("/", "layout");
     return { ok: true };
   });

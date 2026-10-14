@@ -64,10 +64,16 @@ export async function updateProfile(userId: string, raw: unknown, tz: string) {
 }
 
 export async function updatePreferences(userId: string, raw: unknown) {
-  const p = preferencesSchema.parse(raw);
-  const existing = await db.profile.findUnique({ where: { userId }, select: { id: true } });
+  const { rangeRegion, ...p } = preferencesSchema.parse(raw);
+  const existing = await db.profile.findUnique({
+    where: { userId },
+    select: { id: true, rangeRegion: true },
+  });
   if (!existing) throw notFound("Profile");
-  return db.profile.update({ where: { userId }, data: p });
+  const region = rangeRegion === "AUTO" ? null : rangeRegion;
+  const saved = await db.profile.update({ where: { userId }, data: { ...p, rangeRegion: region } });
+  if (existing.rangeRegion !== region) await reapplyRanges({ userId });
+  return saved;
 }
 
 // ── Medications / allergies / conditions ───────────────────

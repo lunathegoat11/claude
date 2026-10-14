@@ -9,7 +9,14 @@ import { ThemeSegmented, TransparencySwitch } from "@/components/shared/theme-to
 export function PreferencesForm({
   values,
 }: {
-  values: { glucoseUnit: string; weightUnit: string; temperatureUnit: string };
+  values: {
+    glucoseUnit: string;
+    weightUnit: string;
+    temperatureUnit: string;
+    rangeRegion: string;
+    /** Where the phone's time zone puts the person: "INDIA" or "INTERNATIONAL". */
+    autoRegion: string;
+  };
 }) {
   const { onSubmit, pending } = useActionForm(updatePreferencesAction);
   return (
@@ -50,8 +57,26 @@ export function PreferencesForm({
             </Field>
           </div>
         </FormSection>
+        <FormSection
+          title="Reference ranges"
+          description="The ranges your lab results are marked High or Low against."
+        >
+          <Field
+            label="Ranges to use"
+            htmlFor="rangeRegion"
+            hint="Automatic uses Indian ranges when your phone is set to India's time zone. Indian: the range printed on your report, or India's national range (ICMR, Health Ministry) when there isn't one. International: standard ranges from the US National Institutes of Health (NIH)."
+          >
+            <NativeSelect id="rangeRegion" name="rangeRegion" defaultValue={values.rangeRegion}>
+              <option value="AUTO">
+                Automatic: {values.autoRegion === "INDIA" ? "Indian" : "international"}
+              </option>
+              <option value="INDIA">Indian</option>
+              <option value="INTERNATIONAL">International (US NIH)</option>
+            </NativeSelect>
+          </Field>
+        </FormSection>
         <p className="text-muted-foreground text-sm">
-          Dates are shown as day-month-year in Indian Standard Time (IST).
+          Dates are shown as day-month-year, in your phone&rsquo;s time zone.
         </p>
         <div className="flex justify-end border-t pt-5">
           <SubmitButton pending={pending} pendingLabel="Saving…">

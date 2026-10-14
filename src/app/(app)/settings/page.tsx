@@ -10,6 +10,7 @@ import { deleteHealthItemAction } from "@/actions/settings";
 import { PageHeader } from "@/components/shared/page-header";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { PreferencesForm } from "@/components/settings/preferences-form";
+import { regionFor } from "@/lib/catalog/standard-ranges";
 import { ImproveReadingSwitch } from "@/components/settings/improve-reading";
 import { AiHelperSettings } from "@/components/settings/ai-helper";
 import { AI_PROVIDER_LABELS, getAiSettings, serverAiLabel } from "@/server/services/ai-settings";
@@ -271,6 +272,8 @@ export default async function SettingsPage({
                 glucoseUnit: profile?.glucoseUnit ?? "MG_DL",
                 weightUnit: profile?.weightUnit ?? "KG",
                 temperatureUnit: profile?.temperatureUnit ?? "F",
+                rangeRegion: profile?.rangeRegion ?? "AUTO",
+                autoRegion: regionFor(null, profile?.timezone),
               }}
             />
           </CardContent>

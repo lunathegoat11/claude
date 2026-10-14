@@ -11,6 +11,7 @@
  * that normal ranges "may vary slightly among different laboratories".
  */
 import { normUnit } from "./reference-guides";
+import { GUIDE_DATA } from "./reference-guides-data";
 
 interface Span {
   low: number | null;
@@ -34,7 +35,7 @@ export interface StandardRange {
 }
 
 /** Raise this when the ranges change, so saved results are re-checked. */
-export const RANGE_VERSION = 1;
+export const RANGE_VERSION = 2;
 
 const MEDLINE = "MedlinePlus (US National Library of Medicine, NIH)";
 const ency = (n: string) => `https://medlineplus.gov/ency/article/${n}.htm`;
@@ -447,6 +448,65 @@ export const STANDARD_RANGES: Record<string, StandardRange> = {
   },
 };
 
+/**
+ * India's national ranges, where an Indian public-health body has published one (ICMR
+ * Standard Treatment Workflows, and Ministry of Health programmes and surveys). Used in
+ * India when the report doesn't print a range. Sources and links are shared with the
+ * chart guides in reference-guides-data.ts.
+ */
+const india = (
+  code: string,
+  r: Pick<StandardRange, "all" | "male" | "female" | "under" | "note">,
+): [string, StandardRange] => {
+  const g = GUIDE_DATA[code].india!;
+  return [
+    code,
+    { unit: g.unit, source: g.source, url: g.url, convert: STANDARD_RANGES[code]?.convert, ...r },
+  ];
+};
+export const INDIA_RANGES: Record<string, StandardRange> = Object.fromEntries([
+  india("HGB", { ...sexes([13, null], [12, null]), note: "Below this is anaemia (WHO cut-off)" }),
+  india("GLU_FASTING", { all: span(null, 99), note: "100 to 125 is the prediabetes range" }),
+  india("GLU_PP", { all: span(null, 139), note: "140 to 199 is the prediabetes range" }),
+  india("GLU_RANDOM", { under: true, all: span(null, 200) }),
+  india("HBA1C", { all: span(null, 5.6), note: "5.7 to 6.4 is the prediabetes range" }),
+  india("CHOL", { all: span(null, 199) }),
+  india("LDL", { all: span(null, 99), note: "The target for people with diabetes" }),
+  india("HDL", sexes([40, null], [50, null])),
+  india("TRIG", { all: span(null, 149) }),
+  india("VITD", { all: span(20, null), note: "12 to 19.9 is insufficient; under 12, deficient" }),
+  india("B12", { all: span(203, null), note: "Below this is deficiency (WHO cut-off)" }),
+]);
+
+/** Which ranges to prefer: "INDIA" or "INTERNATIONAL" (US NIH and other US sources). */
+export type RangeRegion = "INDIA" | "INTERNATIONAL";
+
+/** India when the phone's time zone is India's; elsewhere, international. */
+export function regionFor(choice: string | null | undefined, timezone?: string | null) {
+  if (choice === "INDIA" || choice === "INTERNATIONAL") return choice;
+  return timezone === "Asia/Kolkata" || timezone === "Asia/Calcutta" ? "INDIA" : "INTERNATIONAL";
+}
+
+/**
+ * The range to judge a result by, or null to use the range printed on the report.
+ *
+ * In India: the report's own range first; if it has none, India's national range; if there
+ * isn't one either, the US standard range. Elsewhere (or when the person chooses
+ * international ranges): the US standard range, else the report's.
+ */
+export function chooseRange(
+  code: string | null | undefined,
+  unit: string | null | undefined,
+  who: { sex?: string | null; dateOfBirth?: Date | null; on?: Date; region: RangeRegion },
+  reportHasRange: boolean,
+): AppliedRange | null {
+  if (who.region === "INDIA") {
+    if (reportHasRange) return null;
+    return standardRangeFor(code, unit, who, INDIA_RANGES) ?? standardRangeFor(code, unit, who);
+  }
+  return standardRangeFor(code, unit, who);
+}
+
 export interface AppliedRange {
   low: number | null;
   high: number | null;
@@ -479,8 +539,9 @@ export function standardRangeFor(
   code: string | null | undefined,
   unit: string | null | undefined,
   who: { sex?: string | null; dateOfBirth?: Date | null; on?: Date } = {},
+  table: Record<string, StandardRange> = STANDARD_RANGES,
 ): AppliedRange | null {
-  const def = code ? STANDARD_RANGES[code] : undefined;
+  const def = code ? table[code] : undefined;
   if (!def) return null;
   const on = who.on ?? new Date();
   const age = who.dateOfBirth ? ageOn(who.dateOfBirth, on) : null;
@@ -538,6 +599,8 @@ export function flagAgainst(value: number | null, r: AppliedRange) {
 
 /** Short name of a range's source, for small labels ("NIH range"). */
 export function shortSource(source: string) {
+  if (/ICMR/.test(source)) return "ICMR";
+  if (/Ministry of Health|National Nutrition Survey/.test(source)) return "Health Ministry";
   if (/ATSDR/.test(source)) return "CDC";
   if (/NIH|National Library of Medicine/.test(source)) return "NIH";
   return source;

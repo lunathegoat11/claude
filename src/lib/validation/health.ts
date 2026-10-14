@@ -183,6 +183,8 @@ export const preferencesSchema = z.object({
   glucoseUnit: z.enum(["MG_DL", "MMOL_L"]),
   weightUnit: z.enum(["KG", "LB"]),
   temperatureUnit: z.enum(["C", "F"]),
+  /** AUTO follows the phone's time zone (Indian ranges in India). */
+  rangeRegion: z.enum(["AUTO", "INDIA", "INTERNATIONAL"]).default("AUTO"),
 });
 
 export const medicationSchema = z.object({

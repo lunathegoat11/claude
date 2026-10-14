@@ -156,6 +156,12 @@ enum BloodGroup {
   UNKNOWN
 }
 
+/// Reference ranges to prefer for lab results (see src/lib/catalog/standard-ranges.ts).
+enum RangeRegion {
+  INDIA
+  INTERNATIONAL
+}
+
 enum GlucoseUnit {
   MG_DL
   MMOL_L
@@ -189,6 +195,8 @@ model Profile {
   weightUnit               WeightUnit      @default(KG)
   temperatureUnit          TemperatureUnit @default(F)
   timezone                 String          @default("Asia/Kolkata")
+  /// Which reference ranges to prefer; null = automatic (India's in India, else international).
+  rangeRegion              RangeRegion?
   createdAt                DateTime        @default(now())
   updatedAt                DateTime        @updatedAt
   user                     User            @relation(fields: [userId], references: [id], onDelete: Cascade)

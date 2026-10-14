@@ -1,8 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "@/server/db";
 import { createLabPanel, reapplyRanges } from "@/server/services/labs";
-import { updateProfile } from "@/server/services/profile";
-import { STANDARD_RANGES, flagAgainst, standardRangeFor } from "@/lib/catalog/standard-ranges";
+import { updatePreferences, updateProfile } from "@/server/services/profile";
+import {
+  INDIA_RANGES,
+  STANDARD_RANGES,
+  flagAgainst,
+  regionFor,
+  standardRangeFor,
+} from "@/lib/catalog/standard-ranges";
 import { BIOMARKERS, matchBiomarker } from "@/lib/catalog/biomarkers";
 import { formatTestName } from "@/lib/test-name";
 import { TZ, cleanup, makeUser } from "./helpers/factory";
@@ -86,10 +92,11 @@ describe("standard ranges", () => {
   });
 });
 
-describe("applying them", () => {
+describe("applying them outside India", () => {
   let user: { id: string };
   beforeAll(async () => {
     user = await makeUser();
+    await db.profile.update({ where: { userId: user.id }, data: { timezone: "America/New_York" } });
   });
   afterAll(() => cleanup(user.id));
 
@@ -145,5 +152,65 @@ describe("applying them", () => {
     });
     await reapplyRanges();
     expect(await hb()).toMatchObject({ flag: "LOW", testName: "Hemoglobin" });
+  });
+});
+
+describe("applying them in India", () => {
+  let user: { id: string };
+  beforeAll(async () => {
+    user = await makeUser(); // time zone Asia/Kolkata
+  });
+  afterAll(() => cleanup(user.id));
+
+  it("prefers the printed range, then India's national range, then the US one", async () => {
+    const panel = await createLabPanel(
+      user.id,
+      {
+        name: "Mixed",
+        collectedAt: "2026-06-01",
+        results: [
+          // Printed range 0 - 2: used as printed, so 1.5 is normal.
+          { testName: "BASOPHILS", value: "1.5", unit: "%", refText: "0 - 2" },
+          // No printed range: ICMR's (normal up to 5.6).
+          { testName: "HbA1c", value: "5.8", unit: "%" },
+          // No printed range and no Indian one: the US range (4 to 36).
+          { testName: "SGPT", value: "40", unit: "U/L" },
+        ],
+      },
+      TZ,
+    );
+    const get = (code: string) =>
+      db.labResult.findFirstOrThrow({ where: { panelId: panel.id, biomarkerCode: code } });
+    expect(await get("BASO")).toMatchObject({ flag: "NORMAL", stdText: null });
+    const a1c = await get("HBA1C");
+    expect(a1c).toMatchObject({ flag: "HIGH", stdText: "Up to 5.6" });
+    expect(a1c.stdSource).toMatch(/ICMR/);
+    const alt = await get("ALT");
+    expect(alt).toMatchObject({ flag: "HIGH", stdText: "4 – 36" });
+    expect(alt.stdSource).toMatch(/MedlinePlus/);
+
+    // Switching to international ranges re-checks everything against the US ranges.
+    const prefs = { glucoseUnit: "MG_DL", weightUnit: "KG", temperatureUnit: "F" };
+    await updatePreferences(user.id, { ...prefs, rangeRegion: "INTERNATIONAL" });
+    expect(await get("BASO")).toMatchObject({ flag: "HIGH", stdText: "0.5 – 1" });
+    expect((await get("HBA1C")).stdSource).toMatch(/MedlinePlus/);
+    // And back to automatic (India, from the time zone).
+    await updatePreferences(user.id, { ...prefs, rangeRegion: "AUTO" });
+    expect(await get("BASO")).toMatchObject({ flag: "NORMAL", stdText: null });
+  });
+
+  it("follows the time zone when set to automatic", () => {
+    expect(regionFor(null, "Asia/Kolkata")).toBe("INDIA");
+    expect(regionFor(null, "Asia/Calcutta")).toBe("INDIA");
+    expect(regionFor(null, "America/Chicago")).toBe("INTERNATIONAL");
+    expect(regionFor("INTERNATIONAL", "Asia/Kolkata")).toBe("INTERNATIONAL");
+    expect(regionFor("INDIA", "Europe/London")).toBe("INDIA");
+  });
+
+  it("names a source for every Indian range", () => {
+    for (const r of Object.values(INDIA_RANGES)) {
+      expect(r.source).toMatch(/ICMR|Ministry of Health|National Nutrition Survey/);
+      expect(r.url).toMatch(/^https:\/\//);
+    }
   });
 });

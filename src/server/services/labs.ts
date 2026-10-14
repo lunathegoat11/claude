@@ -7,28 +7,38 @@ import { parseZonedInput } from "@/lib/format";
 import { computeLabFlag, parseReferenceRange } from "@/lib/lab-range";
 import { getBiomarker, matchBiomarker } from "@/lib/catalog/biomarkers";
 import { formatTestName } from "@/lib/test-name";
-import { RANGE_VERSION, flagAgainst, standardRangeFor } from "@/lib/catalog/standard-ranges";
+import { RANGE_VERSION, chooseRange, flagAgainst, regionFor } from "@/lib/catalog/standard-ranges";
 import { labPanelSchema, type LabPanelInput } from "@/lib/validation/health";
 import { toNum } from "@/lib/utils";
 import { ensureProvider } from "./providers";
 import { removeTimelineEvent, syncLabPanelEvent } from "./timeline";
 
-/** Who the results belong to, for ranges that differ by sex or age. */
-export type RangeFor = { sex?: string | null; dateOfBirth?: Date | null; on?: Date };
+/** Who the results belong to: ranges differ by sex, age and country (see standard-ranges.ts). */
+export type RangeFor = {
+  sex?: string | null;
+  dateOfBirth?: Date | null;
+  on?: Date;
+  timezone?: string | null;
+  rangeRegion?: string | null;
+};
+
+const RANGE_PROFILE = { sex: true, dateOfBirth: true, timezone: true, rangeRegion: true } as const;
 
 export function rangeForUser(tx: Tx, userId: string) {
-  return tx.profile.findUnique({ where: { userId }, select: { sex: true, dateOfBirth: true } });
+  return tx.profile.findUnique({ where: { userId }, select: RANGE_PROFILE });
 }
 
-/** The standard range for a result, and the flag it gives (or the report's, if there is none). */
+/** The range a result is judged by (null = the report's own), and the flag it gives. */
 export function applyStandardRange(
   code: string | null,
   unit: string | null,
   value: number | null,
   reportFlag: LabFlag,
   who: RangeFor,
+  reportHasRange: boolean,
 ) {
-  const std = standardRangeFor(code, unit, who);
+  const region = regionFor(who.rangeRegion, who.timezone);
+  const std = chooseRange(code, unit, { ...who, region }, reportHasRange);
   return {
     stdLow: std?.low != null ? new Prisma.Decimal(std.low) : null,
     stdHigh: std?.high != null ? new Prisma.Decimal(std.high) : null,
@@ -77,7 +87,14 @@ export function normaliseResult(r: LabPanelInput["results"][number], who: RangeF
     // editing and saving the report).
     ...(r.unchecked
       ? { ...UNJUDGED, rangeVersion: UNCHECKED }
-      : applyStandardRange(def?.code ?? null, unit, valueNumeric, reportFlag, who)),
+      : applyStandardRange(
+          def?.code ?? null,
+          unit,
+          valueNumeric,
+          reportFlag,
+          who,
+          refLow !== null || refHigh !== null,
+        )),
     notes: r.notes ?? null,
   };
 }
@@ -405,8 +422,9 @@ export async function getPreviousResults(
 
 /**
  * Re-check saved results against the standard ranges: those saved before the current
- * ranges (at server start), or all of one person's results after they change their sex or
- * date of birth. Also links results to newly known tests and tidies their names.
+ * ranges (at server start), or all of one person's results after they change their sex,
+ * date of birth, time zone or range preference. Also links results to newly known tests
+ * and tidies their names.
  */
 export async function reapplyRanges(opts: { userId?: string } = {}) {
   let cursor: string | undefined;
@@ -431,7 +449,7 @@ export async function reapplyRanges(opts: { userId?: string } = {}) {
         flag: true,
         stdText: true,
         observedAt: true,
-        user: { select: { profile: { select: { sex: true, dateOfBirth: true } } } },
+        user: { select: { profile: { select: RANGE_PROFILE } } },
       },
     });
     if (!rows.length) break;
@@ -448,10 +466,14 @@ export async function reapplyRanges(opts: { userId?: string } = {}) {
         data: {
           biomarkerCode: def?.code ?? null,
           testName: def?.name ?? formatTestName(r.testName),
-          ...applyStandardRange(def?.code ?? null, r.unit, value, reportFlag, {
-            ...r.user.profile,
-            on: r.observedAt,
-          }),
+          ...applyStandardRange(
+            def?.code ?? null,
+            r.unit,
+            value,
+            reportFlag,
+            { ...r.user.profile, on: r.observedAt },
+            r.refLow !== null || r.refHigh !== null,
+          ),
         },
       });
       updated++;
