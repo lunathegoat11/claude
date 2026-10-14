@@ -17,7 +17,8 @@ const AREAS = [common, labs, files, account, app, marketing] as const;
 
 type Area = (typeof AREAS)[number];
 /** Every message key, taken from the English text of every area. */
-export type MessageKey = Area extends { en: infer E } ? keyof E & string : never;
+type KeysOf<A> = A extends { en: infer E } ? keyof E & string : never;
+export type MessageKey = KeysOf<Area>;
 
 export const DICTIONARIES = Object.fromEntries(
   (["en", "hi", "mr", "te"] as const).map((l) => [
