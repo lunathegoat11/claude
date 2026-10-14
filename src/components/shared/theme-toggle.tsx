@@ -11,28 +11,30 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useT } from "@/i18n/client";
 
 export function ThemeToggle() {
+  const t = useT();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Change theme">
+        <Button variant="ghost" size="icon" aria-label={t("app.theme.change")}>
           {mounted && resolvedTheme === "dark" ? <Moon /> : <Sun />}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
           <DropdownMenuRadioItem value="light">
-            <Sun className="size-4" /> Light
+            <Sun className="size-4" /> {t("app.theme.light")}
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value="dark">
-            <Moon className="size-4" /> Dark
+            <Moon className="size-4" /> {t("app.theme.dark")}
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value="system">
-            <Laptop className="size-4" /> System
+            <Laptop className="size-4" /> {t("app.theme.system")}
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>
@@ -41,16 +43,21 @@ export function ThemeToggle() {
 }
 
 export function ThemeSegmented() {
+  const t = useT();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const options = [
-    { v: "light", label: "Light", icon: Sun },
-    { v: "dark", label: "Dark", icon: Moon },
-    { v: "system", label: "System", icon: Laptop },
+    { v: "light", label: t("app.theme.light"), icon: Sun },
+    { v: "dark", label: t("app.theme.dark"), icon: Moon },
+    { v: "system", label: t("app.theme.system"), icon: Laptop },
   ];
   return (
-    <div role="radiogroup" aria-label="Theme" className="bg-muted inline-flex rounded-md p-1">
+    <div
+      role="radiogroup"
+      aria-label={t("app.theme.label")}
+      className="bg-muted inline-flex rounded-md p-1"
+    >
       {options.map((o) => (
         <button
           key={o.v}
@@ -69,20 +76,19 @@ export function ThemeSegmented() {
 
 /** Kosha's own "Reduce transparency" switch, saved on this device only. */
 export function TransparencySwitch() {
+  const t = useT();
   const [reduced, setReduced] = useState<boolean | null>(null);
   useEffect(() => setReduced(document.documentElement.dataset.glass === "off"), []);
   return (
     <label className="flex items-start justify-between gap-4">
       <span className="text-sm">
-        <span className="block font-medium">Reduce transparency</span>
-        <span className="text-muted-foreground">
-          Makes the glass bars and sheets solid. Easier to read, and smoother on older phones.
-        </span>
+        <span className="block font-medium">{t("app.theme.reduce")}</span>
+        <span className="text-muted-foreground">{t("app.theme.reduceBody")}</span>
       </span>
       <Switch
         checked={!!reduced}
         disabled={reduced === null}
-        aria-label="Reduce transparency"
+        aria-label={t("app.theme.reduce")}
         onCheckedChange={(on) => {
           setReduced(on);
           try {

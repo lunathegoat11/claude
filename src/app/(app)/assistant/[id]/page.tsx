@@ -13,13 +13,18 @@ import { AssistantLayout } from "@/components/assistant/assistant-layout";
 import { Chat } from "@/components/assistant/chat";
 import { ConfirmDelete } from "@/components/forms/confirm-delete";
 import type { Citation } from "@/server/ai/types";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Ask Kosha" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("nav.assistant") };
+}
 
 export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
   if (!(await isPlus(user.id))) return <PlusOnly />;
   const { id } = await params;
+  const t = await getT();
   const [conversation, conversations] = await Promise.all([
     or404(id, (i) => getConversation(user.id, i)),
     listConversations(user.id),
@@ -32,13 +37,13 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
       actions={
         <ConfirmDelete
           action={deleteConversationAction.bind(null, conversation.id)}
-          title="Delete this conversation?"
-          description="The questions and answers will be permanently deleted. Your records are not affected."
+          title={t("app.chat.deleteTitle")}
+          description={t("app.chat.deleteBody")}
           redirectTo="/assistant"
           iconOnly
           triggerVariant="ghost"
           triggerSize="sm"
-          triggerLabel="Delete conversation"
+          triggerLabel={t("app.chat.deleteLabel")}
         />
       }
     >

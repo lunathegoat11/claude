@@ -10,13 +10,15 @@ import { FormError } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CONTEXT_LABELS } from "@/lib/catalog/metrics";
 import { CSV_TEMPLATE } from "@/lib/csv-template";
 import { formatDateTime } from "@/lib/format";
 import type { CsvRowResult } from "@/server/services/measurements";
+import { useT } from "@/i18n/client";
+import { contextLabel, metricName } from "./metric-labels";
 
 export function CsvImport({ timezone }: { timezone: string }) {
   const router = useRouter();
+  const t = useT();
   const {
     state,
     onSubmit,
@@ -43,10 +45,12 @@ export function CsvImport({ timezone }: { timezone: string }) {
     start(async () => {
       const res = await importCsvAction(preview.csv);
       if (res.ok) {
-        toast.success(`${res.message}${res.data?.skipped ? `, ${res.data.skipped} skipped` : ""}`);
+        toast.success(
+          `${res.message}${res.data?.skipped ? `, ${t.n("app.csv.skipped", res.data.skipped)}` : ""}`,
+        );
         router.push("/tracking");
         router.refresh();
-      } else toast.error(res.error ?? "Import failed");
+      } else toast.error(res.error ?? t("app.csv.failed"));
     });
   }
 
@@ -56,21 +60,22 @@ export function CsvImport({ timezone }: { timezone: string }) {
         <CardContent className="space-y-4 pt-5 sm:pt-6">
           <div className="text-muted-foreground text-sm">
             <p>
-              Columns: <code className="bg-muted rounded px-1">metric</code>,{" "}
+              {t("app.csv.columns")} <code className="bg-muted rounded px-1">metric</code>,{" "}
               <code className="bg-muted rounded px-1">value</code>,{" "}
-              <code className="bg-muted rounded px-1">value2</code> (for blood pressure),{" "}
+              <code className="bg-muted rounded px-1">value2</code> {t("app.csv.forBp")},{" "}
               <code className="bg-muted rounded px-1">unit</code>,{" "}
-              <code className="bg-muted rounded px-1">measured_at</code> (YYYY-MM-DD HH:mm, Indian
-              Standard Time), <code className="bg-muted rounded px-1">context</code>,{" "}
+              <code className="bg-muted rounded px-1">measured_at</code> {t("app.csv.dateFormat")},{" "}
+              <code className="bg-muted rounded px-1">context</code>,{" "}
               <code className="bg-muted rounded px-1">notes</code>.
             </p>
             <p className="mt-1">
-              Metric names: blood_glucose, blood_pressure, heart_rate, spo2, temperature, weight,
-              height, sleep, exercise, or the name of a custom measurement.
+              {t("app.csv.metricNames", {
+                list: "blood_glucose, blood_pressure, heart_rate, spo2, temperature, weight, height, sleep, exercise",
+              })}
             </p>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={downloadTemplate}>
-            <Download /> Download template
+            <Download /> {t("app.csv.template")}
           </Button>
           <form onSubmit={onSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input
@@ -78,11 +83,15 @@ export function CsvImport({ timezone }: { timezone: string }) {
               name="file"
               accept=".csv,text/csv"
               required
-              aria-label="CSV file"
+              aria-label={t("app.csv.file")}
               className="file:bg-secondary block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:px-3 file:py-2 file:text-sm file:font-medium pointer-coarse:file:py-3"
             />
-            <SubmitButton pending={checking} variant="secondary" pendingLabel="Checking…">
-              <FileSpreadsheet /> Check file
+            <SubmitButton
+              pending={checking}
+              variant="secondary"
+              pendingLabel={t("app.csv.checking")}
+            >
+              <FileSpreadsheet /> {t("app.csv.check")}
             </SubmitButton>
           </form>
           {state.error && <FormError message={state.error} />}
@@ -93,16 +102,17 @@ export function CsvImport({ timezone }: { timezone: string }) {
         <div className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm">
-              <strong>{valid}</strong> of {preview.rows.length} rows are ready to import. Rows with
-              problems will be skipped.
+              {t("app.csv.readyBefore", { total: preview.rows.length })}
+              <strong>{valid}</strong>
+              {t("app.csv.readyAfter", { total: preview.rows.length })}
             </p>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => setDismissed(preview)}>
-                Cancel
+                {t("app.cancel")}
               </Button>
               <Button onClick={confirm} disabled={pending || valid === 0}>
                 <BusyContent active={pending} kind="import">
-                  Import {valid} readings
+                  {t.n("app.csv.import", valid)}
                 </BusyContent>
               </Button>
             </div>
@@ -111,11 +121,11 @@ export function CsvImport({ timezone }: { timezone: string }) {
             <table className="w-full text-sm">
               <thead className="bg-muted text-muted-foreground sticky top-0 border-b text-left text-xs">
                 <tr>
-                  <th className="px-3 py-2">Row</th>
-                  <th className="px-3 py-2">Measurement</th>
-                  <th className="px-3 py-2">Value</th>
-                  <th className="px-3 py-2">When</th>
-                  <th className="px-3 py-2">Status</th>
+                  <th className="px-3 py-2">{t("app.csv.row")}</th>
+                  <th className="px-3 py-2">{t("app.reading.measurement")}</th>
+                  <th className="px-3 py-2">{t("app.csv.value")}</th>
+                  <th className="px-3 py-2">{t("app.csv.when")}</th>
+                  <th className="px-3 py-2">{t("app.csv.status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -123,11 +133,13 @@ export function CsvImport({ timezone }: { timezone: string }) {
                   <tr key={r.line}>
                     <td className="text-muted-foreground tabular px-3 py-2">{r.line}</td>
                     <td className="px-3 py-2">
-                      {r.metricName ?? "—"}
+                      {r.metricName
+                        ? metricName(t, { key: r.metricKey ?? "", name: r.metricName })
+                        : "—"}
                       {r.context && (
                         <span className="text-muted-foreground">
                           {" "}
-                          , {CONTEXT_LABELS[r.context] ?? r.context}
+                          , {contextLabel(t, r.context)}
                         </span>
                       )}
                     </td>
@@ -140,7 +152,7 @@ export function CsvImport({ timezone }: { timezone: string }) {
                     <td className="px-3 py-2">
                       {r.ok ? (
                         <span className="text-success inline-flex items-center gap-1">
-                          <CheckCircle2 className="size-4" /> Ready
+                          <CheckCircle2 className="size-4" /> {t("app.csv.ready")}
                         </span>
                       ) : (
                         <span className="text-destructive inline-flex items-center gap-1">

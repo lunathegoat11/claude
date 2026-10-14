@@ -14,6 +14,7 @@ import {
 import { audit } from "@/server/audit";
 import { uuid } from "@/lib/validation/common";
 import { AppError } from "@/server/errors";
+import { getT } from "@/i18n/server";
 
 export async function saveMeasurementAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction("saveMeasurement", async () => {
@@ -31,7 +32,11 @@ export async function saveMeasurementAction(_: ActionState, fd: FormData): Promi
     );
     revalidatePath("/tracking", "layout");
     revalidatePath("/dashboard");
-    return { ok: true, message: id ? "Reading updated" : "Reading saved" };
+    const t = await getT();
+    return {
+      ok: true,
+      message: id ? t("app.action.readingUpdated") : t("app.action.readingSaved"),
+    };
   });
 }
 
@@ -46,7 +51,8 @@ export async function deleteMeasurementAction(id: string): Promise<ActionState> 
       await requestMeta(),
     );
     revalidatePath("/tracking", "layout");
-    return { ok: true, message: "Reading deleted" };
+    const t = await getT();
+    return { ok: true, message: t("app.action.readingDeleted") };
   });
 }
 
@@ -64,16 +70,21 @@ export async function createMetricAction(
       await requestMeta(),
     );
     revalidatePath("/tracking");
-    return { ok: true, message: `“${metric.name}” added`, data: { key: metric.key } };
+    const t = await getT();
+    return {
+      ok: true,
+      message: t("app.action.metricAdded", { name: metric.name }),
+      data: { key: metric.key },
+    };
   });
 }
 
 async function readCsv(fd: FormData) {
   const file = fd.get("file");
+  const t = await getT();
   if (!(file instanceof File) || file.size === 0)
-    throw new AppError("VALIDATION", "Choose a CSV file.");
-  if (file.size > 1_000_000)
-    throw new AppError("PAYLOAD_TOO_LARGE", "CSV file is too large (max 1 MB).");
+    throw new AppError("VALIDATION", t("app.action.chooseCsv"));
+  if (file.size > 1_000_000) throw new AppError("PAYLOAD_TOO_LARGE", t("app.action.csvTooLarge"));
   return file.text();
 }
 
@@ -94,14 +105,15 @@ export async function importCsvAction(
 ): Promise<ActionState<{ imported: number; skipped: number }>> {
   return runAction("importCsv", async () => {
     const user = await requireUserOrThrow();
+    const t = await getT();
     if (typeof csv !== "string" || csv.length > 1_000_000)
-      throw new AppError("VALIDATION", "Invalid CSV.");
+      throw new AppError("VALIDATION", t("app.action.invalidCsv"));
     const res = await importCsv(user.id, csv, user.timezone);
     await audit(user.id, "measurement.import", undefined, await requestMeta(), {
       imported: res.imported,
       skipped: res.skipped,
     });
     revalidatePath("/tracking", "layout");
-    return { ok: true, message: `Imported ${res.imported} readings`, data: res };
+    return { ok: true, message: t.n("app.action.imported", res.imported), data: res };
   });
 }

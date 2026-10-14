@@ -14,7 +14,7 @@ import { AppError } from "@/server/errors";
 import { GuidedTrendChart as TrendChart } from "@/components/charts/guided-trend-chart";
 import { resolveGuides } from "@/lib/catalog/reference-guides";
 import { ChartLegend } from "@/components/charts/chart-legend";
-import { RangeSelector, RANGE_OPTIONS } from "@/components/charts/range-selector";
+import { RangeSelector } from "@/components/charts/range-selector";
 import { MeasurementDialog } from "@/components/tracking/measurement-dialog";
 import { ReadingActions } from "@/components/tracking/reading-actions";
 import { Pagination } from "@/components/shared/pagination";
@@ -22,13 +22,27 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { metricIcon } from "@/components/shared/icons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CONTEXT_LABELS } from "@/lib/catalog/metrics";
 import { formatDate, formatNumber, formatTime, toDateTimeInputValue } from "@/lib/format";
 import { presentMeasurement } from "@/lib/display";
 import { preferredInputUnits, toMetricOption } from "@/lib/tracking-helpers";
 import { cn, toNum } from "@/lib/utils";
+import { getT } from "@/i18n/server";
+import type { MessageKey } from "@/i18n/messages";
+import { contextLabel, dualLabels, metricName } from "@/components/tracking/metric-labels";
 
-export const metadata: Metadata = { title: "Measurement" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("app.meta.measurement") };
+}
+
+const RANGE_LABELS: Record<string, MessageKey> = {
+  "7d": "app.range.7d",
+  "30d": "app.range.30d",
+  "3m": "app.range.3m",
+  "6m": "app.range.6m",
+  "1y": "app.range.1y",
+  all: "app.range.all",
+};
 
 type SP = { range?: string; page?: string; context?: string };
 
@@ -40,6 +54,7 @@ export default async function MetricPage({
   searchParams: Promise<SP>;
 }) {
   const user = await requireUser();
+  const t = await getT();
   const [{ key }, sp] = await Promise.all([params, searchParams]);
   const metric = await getMetricByKey(user.id, key.slice(0, 80)).catch((e) => {
     if (e instanceof AppError && e.code === "NOT_FOUND") notFound();
@@ -52,7 +67,9 @@ export default async function MetricPage({
     listMeasurements(user.id, metric.id, { page: Number(sp.page) || 1 }),
   ]);
   const tz = user.timezone;
-  const option = toMetricOption(metric);
+  const name = metricName(t, metric);
+  const option = { ...toMetricOption(metric), name };
+  const [label1, label2] = dualLabels(t, metric);
   const sample = presentMeasurement(metric, 0, null, user.prefs);
   const conv = sample.convert;
   const shown = (context ? series.filter((p) => p.context === context) : series).map((p) => ({
@@ -74,7 +91,7 @@ export default async function MetricPage({
   const now = toDateTimeInputValue(new Date(), tz);
   const qs = (over: Partial<SP>) =>
     `/tracking/${metric.key}?${new URLSearchParams(Object.entries({ ...sp, ...over }).filter(([, v]) => v) as [string, string][])}`;
-  const rangeLabel = RANGE_OPTIONS.find((r) => r.key === range)!.full.toLowerCase();
+  const rangeLabel = t(RANGE_LABELS[range] ?? "app.range.all");
   const fmt = (v: number) => formatNumber(v, sample.decimals || 1);
 
   return (
@@ -83,7 +100,7 @@ export default async function MetricPage({
         href="/tracking"
         className="text-muted-foreground hover:text-foreground -my-2 mb-3 inline-flex min-h-11 items-center gap-1.5 py-2 text-sm"
       >
-        <ArrowLeft className="size-4" /> Readings
+        <ArrowLeft className="size-4" /> {t("nav.tracking")}
       </Link>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-center gap-3">
@@ -91,10 +108,10 @@ export default async function MetricPage({
             <Icon className="size-5" />
           </span>
           <div>
-            <h1 className="text-[2rem] font-semibold sm:text-[2.5rem]">{metric.name}</h1>
+            <h1 className="text-[2rem] font-semibold sm:text-[2.5rem]">{name}</h1>
             {latest && (
               <p className="text-muted-foreground text-sm">
-                Latest:{" "}
+                {t("app.reading.latest")}{" "}
                 <span className="text-foreground tabular font-medium">
                   {
                     presentMeasurement(
@@ -124,17 +141,19 @@ export default async function MetricPage({
       {list.total === 0 ? (
         <EmptyState
           icon={Icon}
-          title={`No ${metric.name.toLowerCase()} readings yet`}
-          description="Add a reading to start building your history."
+          title={t("app.reading.emptyTitle", {
+            name: t.locale === "en" ? name.toLowerCase() : name,
+          })}
+          description={t("app.reading.emptyBody")}
         />
       ) : (
         <>
           <Card>
             <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle>Trend</CardTitle>
+              <CardTitle>{t("app.reading.trendTitle")}</CardTitle>
               <div className="flex flex-wrap items-center gap-2">
                 {metric.contexts.length > 0 && (
-                  <nav aria-label="Filter by context" className="flex flex-wrap gap-1.5">
+                  <nav aria-label={t("app.reading.filter")} className="flex flex-wrap gap-1.5">
                     <Link
                       href={qs({ context: undefined })}
                       scroll={false}
@@ -145,7 +164,7 @@ export default async function MetricPage({
                           : "text-muted-foreground hover:bg-muted",
                       )}
                     >
-                      All
+                      {t("app.reading.all")}
                     </Link>
                     {metric.contexts
                       .filter((c) => series.some((p) => p.context === c))
@@ -161,7 +180,7 @@ export default async function MetricPage({
                               : "text-muted-foreground hover:bg-muted",
                           )}
                         >
-                          {CONTEXT_LABELS[c] ?? c}
+                          {contextLabel(t, c)}
                         </Link>
                       ))}
                   </nav>
@@ -176,15 +195,19 @@ export default async function MetricPage({
                     <div className="mb-3">
                       <ChartLegend
                         items={[
-                          { label: metric.primaryLabel ?? "Value 1", color: "var(--chart-1)" },
-                          { label: metric.secondaryLabel ?? "Value 2", color: "var(--chart-2)" },
+                          { label: label1, color: "var(--chart-1)" },
+                          { label: label2, color: "var(--chart-2)" },
                         ]}
                       />
                     </div>
                   )}
                   {metric.key === "blood_glucose" && !context && (
                     <p className="text-muted-foreground mb-2 text-[13px]">
-                      Choose Fasting, Before meal or After meal above to see general ranges.
+                      {t("app.reading.glucoseHint", {
+                        a: contextLabel(t, "FASTING"),
+                        b: contextLabel(t, "BEFORE_MEAL"),
+                        c: contextLabel(t, "AFTER_MEAL"),
+                      })}
                     </p>
                   )}
                   <TrendChart
@@ -192,10 +215,7 @@ export default async function MetricPage({
                     unit={sample.unit}
                     decimals={sample.decimals}
                     dual={dual}
-                    seriesLabels={[
-                      metric.primaryLabel ?? "Value 1",
-                      metric.secondaryLabel ?? "Value 2",
-                    ]}
+                    seriesLabels={[label1, label2]}
                     timezone={tz}
                     guides={resolveGuides(
                       metric.key === "blood_glucose"
@@ -207,22 +227,19 @@ export default async function MetricPage({
                 </>
               ) : (
                 <p className="text-muted-foreground py-12 text-center text-sm">
-                  {shown.length === 1
-                    ? "Only one reading in this period."
-                    : "No readings in this period."}{" "}
-                  Try a longer time range.
+                  {shown.length === 1 ? t("app.reading.onlyOne") : t("app.reading.none")}{" "}
+                  {t("app.reading.tryLonger")}
                 </p>
               )}
               {stats && (
                 <div className="mt-5 border-t pt-4">
                   <p className="text-muted-foreground mb-3 text-xs">
-                    Calculated from {shown.length} reading{shown.length === 1 ? "" : "s"} in the
-                    last {rangeLabel}
-                    {context ? ` (${CONTEXT_LABELS[context]})` : ""}
+                    {t.n("app.reading.basedOn", shown.length, { period: rangeLabel })}
+                    {context ? `, ${contextLabel(t, context)}` : ""}
                   </p>
                   <dl className="grid grid-cols-3 gap-4">
                     <div>
-                      <dt className="text-muted-foreground text-xs">Average</dt>
+                      <dt className="text-muted-foreground text-xs">{t("app.reading.average")}</dt>
                       <dd className="tabular mt-0.5 text-lg font-semibold">
                         {dual
                           ? `${formatNumber(stats.avg, 0)}/${formatNumber(stats.avg2!, 0)}`
@@ -231,13 +248,13 @@ export default async function MetricPage({
                     </div>
                     <div>
                       <dt className="text-muted-foreground text-xs">
-                        {dual ? "Lowest systolic" : "Lowest"}
+                        {dual ? t("app.reading.lowestSys") : t("app.reading.lowest")}
                       </dt>
                       <dd className="tabular mt-0.5 text-lg font-semibold">{fmt(stats.min)}</dd>
                     </div>
                     <div>
                       <dt className="text-muted-foreground text-xs">
-                        {dual ? "Highest systolic" : "Highest"}
+                        {dual ? t("app.reading.highestSys") : t("app.reading.highest")}
                       </dt>
                       <dd className="tabular mt-0.5 text-lg font-semibold">{fmt(stats.max)}</dd>
                     </div>
@@ -246,13 +263,10 @@ export default async function MetricPage({
               )}
             </CardContent>
           </Card>
-          <p className="text-muted-foreground mt-3 text-xs">
-            Charts show what you recorded. They don&apos;t indicate whether values are healthy for
-            you. Ask your doctor about your personal targets.
-          </p>
+          <p className="text-muted-foreground mt-3 text-xs">{t("app.reading.disclaimer")}</p>
 
           <section className="mt-8">
-            <h2 className="mb-3 text-base font-semibold">All readings</h2>
+            <h2 className="mb-3 text-base font-semibold">{t("app.dash.allReadings")}</h2>
             <ul className="surface divide-y overflow-hidden">
               {list.items.map((m) => {
                 const pres = presentMeasurement(
@@ -284,11 +298,11 @@ export default async function MetricPage({
                           <Badge variant="secondary">
                             {m.context === "CUSTOM" && m.contextNote
                               ? m.contextNote
-                              : (CONTEXT_LABELS[m.context] ?? m.context)}
+                              : contextLabel(t, m.context)}
                           </Badge>
                         )}
                         {m.notes && <span className="truncate">{m.notes}</span>}
-                        {m.source === "CSV_IMPORT" && <span>Imported</span>}
+                        {m.source === "CSV_IMPORT" && <span>{t("app.reading.imported")}</span>}
                       </div>
                     </div>
                     <ReadingActions
@@ -315,7 +329,7 @@ export default async function MetricPage({
               page={list.page}
               pageCount={list.pageCount}
               total={list.total}
-              label="readings"
+              label={t("app.reading.readingsWord")}
               makeHref={(p) => qs({ page: String(p) })}
             />
           </section>

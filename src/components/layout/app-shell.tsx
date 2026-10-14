@@ -13,8 +13,9 @@ import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { VerifyEmailBanner } from "./verify-email-banner";
+import { getT } from "@/i18n/server";
 
-export function AppShell({
+export async function AppShell({
   user,
   children,
 }: {
@@ -27,13 +28,14 @@ export function AppShell({
   };
   children: React.ReactNode;
 }) {
+  const t = await getT();
   return (
     <div className="min-h-dvh">
       <a
         href="#main"
         className="focus:bg-card sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:px-3 focus:py-2 focus:shadow"
       >
-        Skip to content
+        {t("app.shell.skip")}
       </a>
       <div>
         {/* A glass bar the page scrolls beneath; on computers it floats as a glass panel. */}
@@ -42,7 +44,7 @@ export function AppShell({
             <Link
               href="/dashboard"
               className="inline-flex min-h-11 shrink-0 items-center rounded-full"
-              aria-label="Kosha Health home"
+              aria-label={t("app.shell.home")}
             >
               <Logo compact />
             </Link>
@@ -53,12 +55,12 @@ export function AppShell({
             <div className="flex shrink-0 items-center gap-2">
               {user.isDemo && (
                 <Badge variant="demo" className="hidden xl:inline-flex">
-                  Demo
+                  {t("app.shell.demo")}
                 </Badge>
               )}
               <Button asChild size="sm" className="hidden lg:inline-flex">
                 <Link href="/documents?upload=1">
-                  <Upload /> Add a report
+                  <Upload /> {t("app.dash.addReport")}
                 </Link>
               </Button>
               <UserMenu name={user.name} email={user.email} />
@@ -72,35 +74,31 @@ export function AppShell({
         >
           {children}
           <footer className="text-muted-foreground mt-16 border-t pt-5 text-[12px] leading-relaxed">
-            <p>
-              Kosha Health organises your health information. It doesn&apos;t give medical advice,
-              diagnosis or treatment, and values read automatically or written by AI can be wrong.
-              In an emergency, call 112.
-            </p>
-            <nav aria-label="Contact and legal" className="mt-1 flex flex-wrap gap-x-4">
+            <p>{t("app.shell.disclaimer")}</p>
+            <nav aria-label={t("app.shell.legal")} className="mt-1 flex flex-wrap gap-x-4">
               <a
                 href={`tel:${CONTACT_PHONE_TEL}`}
                 className="hover:text-foreground py-2 underline-offset-2 hover:underline"
               >
-                Call us: {CONTACT_PHONE_DISPLAY}
+                {t("nav.callUs", { phone: CONTACT_PHONE_DISPLAY })}
               </a>
               <Link
                 href="/privacy"
                 className="hover:text-foreground py-2 underline-offset-2 hover:underline"
               >
-                Privacy Policy
+                {t("app.shell.privacy")}
               </Link>
               <Link
                 href="/terms"
                 className="hover:text-foreground py-2 underline-offset-2 hover:underline"
               >
-                Terms of Use
+                {t("app.shell.terms")}
               </Link>
               <a
                 href="/licenses/THIRD_PARTY_NOTICES.txt"
                 className="hover:text-foreground py-2 underline-offset-2 hover:underline"
               >
-                Open-source notices
+                {t("app.shell.notices")}
               </a>
               <LanguageSwitch compact />
             </nav>

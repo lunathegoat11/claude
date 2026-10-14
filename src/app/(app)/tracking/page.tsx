@@ -12,18 +12,23 @@ import { MeasurementDialog } from "@/components/tracking/measurement-dialog";
 import { CustomMetricDialog } from "@/components/tracking/custom-metric-dialog";
 import { Button } from "@/components/ui/button";
 import { formatRelativeDateTime, toDateTimeInputValue } from "@/lib/format";
-import { CONTEXT_LABELS } from "@/lib/catalog/metrics";
 import { presentMeasurement } from "@/lib/display";
 import { preferredInputUnits, toMetricOption } from "@/lib/tracking-helpers";
+import { getT } from "@/i18n/server";
+import { contextLabel, metricName } from "@/components/tracking/metric-labels";
 
-export const metadata: Metadata = { title: "Readings" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("nav.tracking") };
+}
 
 export default async function TrackingPage() {
   const user = await requireUser();
+  const t = await getT();
   const { metrics, tracked } = await metricOverview(user.id);
   const tz = user.timezone;
-  const options = metrics.map(toMetricOption);
-  const trackedIds = new Set(tracked.map((t) => t.metric.id));
+  const options = metrics.map((m) => ({ ...toMetricOption(m), name: metricName(t, m) }));
+  const trackedIds = new Set(tracked.map((x) => x.metric.id));
   const untracked = metrics.filter((m) => !trackedIds.has(m.id));
   const now = toDateTimeInputValue(new Date(), tz);
   const prefs = preferredInputUnits(user.prefs);
@@ -31,13 +36,13 @@ export default async function TrackingPage() {
   return (
     <div>
       <PageHeader
-        title="Readings"
-        description="Blood sugar, blood pressure, weight and anything else you check at home."
+        title={t("nav.tracking")}
+        description={t("app.tracking.description")}
         actions={
           <>
             <Button asChild variant="outline">
               <Link href="/tracking/import">
-                <FileSpreadsheet /> Import CSV
+                <FileSpreadsheet /> {t("app.tracking.importCsv")}
               </Link>
             </Button>
             <CustomMetricDialog />
@@ -51,8 +56,8 @@ export default async function TrackingPage() {
       {tracked.length === 0 ? (
         <EmptyState
           icon={Activity}
-          title="No readings yet"
-          description="Add your first blood pressure, sugar, weight or other reading. You'll see trends once you have a few."
+          title={t("app.tracking.emptyTitle")}
+          description={t("app.tracking.emptyBody")}
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -60,6 +65,7 @@ export default async function TrackingPage() {
             const Icon = metricIcon(metric.key);
             const last = points[points.length - 1];
             const pres = presentMeasurement(metric, last.value, last.value2, user.prefs);
+            const name = metricName(t, metric);
             return (
               <Link
                 key={metric.id}
@@ -70,8 +76,10 @@ export default async function TrackingPage() {
                   <span className="bg-accent text-accent-foreground flex size-7 items-center justify-center rounded-lg">
                     <Icon className="size-4" />
                   </span>
-                  {metric.name}
-                  <span className="ml-auto text-xs font-normal">{count} readings</span>
+                  {name}
+                  <span className="ml-auto text-xs font-normal">
+                    {t.n("app.tracking.count", count)}
+                  </span>
                 </div>
                 <div className="mt-4 flex items-end justify-between gap-3">
                   <div>
@@ -83,13 +91,13 @@ export default async function TrackingPage() {
                     </div>
                     <div className="text-muted-foreground mt-2 text-[13px]">
                       {formatRelativeDateTime(last.at, new Date(), tz)}
-                      {last.context && `, ${CONTEXT_LABELS[last.context] ?? last.context}`}
+                      {last.context && `, ${contextLabel(t, last.context)}`}
                     </div>
                   </div>
                   <Sparkline
                     values={points.map((p) => p.value)}
                     className="h-9 w-24"
-                    label={`${metric.name} trend`}
+                    label={t("app.tracking.trend", { name })}
                   />
                 </div>
               </Link>
@@ -100,7 +108,9 @@ export default async function TrackingPage() {
 
       {untracked.length > 0 && (
         <section className="mt-10">
-          <h2 className="text-muted-foreground mb-3 text-sm font-semibold">Start tracking</h2>
+          <h2 className="text-muted-foreground mb-3 text-sm font-semibold">
+            {t("app.tracking.start")}
+          </h2>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             {untracked.map((m) => {
               const Icon = metricIcon(m.key);
@@ -112,7 +122,7 @@ export default async function TrackingPage() {
                   className="bg-card/50 hover:border-primary/40 hover:bg-card flex items-center gap-2.5 rounded-md border border-dashed px-3 py-3 text-sm transition"
                 >
                   <Icon className="text-muted-foreground size-4" />
-                  <span className="truncate">{m.name}</span>
+                  <span className="truncate">{metricName(t, m)}</span>
                   <Plus className="text-muted-foreground ml-auto size-4" />
                 </Link>
               );

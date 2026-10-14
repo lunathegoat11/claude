@@ -16,8 +16,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { Input, NativeSelect, Textarea } from "@/components/ui/input";
-import { CONTEXT_LABELS, inputUnitsFor } from "@/lib/catalog/metrics";
+import { inputUnitsFor } from "@/lib/catalog/metrics";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
+import { contextLabel, dualLabels } from "./metric-labels";
 
 export interface MetricOption {
   id: string;
@@ -63,6 +65,7 @@ export function MeasurementDialog({
   autoOpenParam?: boolean;
 }) {
   const router = useRouter();
+  const t = useT();
   const sp = useSearchParams();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -105,6 +108,7 @@ export function MeasurementDialog({
   }
 
   if (!metric) return null;
+  const [label1, label2] = dualLabels(t, metric);
   const defaultUnit =
     initial?.unit ??
     (units.includes(preferredUnits[metric.key] ?? "") ? preferredUnits[metric.key] : units[0]);
@@ -115,21 +119,19 @@ export function MeasurementDialog({
         <span onClick={() => onOpenChange(true)}>{trigger}</span>
       ) : (
         <Button variant={triggerVariant} onClick={() => onOpenChange(true)}>
-          <Plus /> Add reading
+          <Plus /> {t("app.reading.add")}
         </Button>
       )}
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{initial ? "Edit reading" : "Add a reading"}</DialogTitle>
-          <DialogDescription>
-            Record a measurement you took at home or at a clinic.
-          </DialogDescription>
+          <DialogTitle>{initial ? t("app.reading.edit") : t("app.dash.addReading")}</DialogTitle>
+          <DialogDescription>{t("app.reading.dialogBody")}</DialogDescription>
         </DialogHeader>
         <form key={formKey} onSubmit={onSubmit} className="space-y-5" noValidate>
           {initial && <input type="hidden" name="id" value={initial.id} />}
           {state.error && !state.fieldErrors && <FormError message={state.error} />}
           {!initial ? (
-            <Field label="Measurement" htmlFor="metricId">
+            <Field label={t("app.reading.measurement")} htmlFor="metricId">
               <NativeSelect
                 id="metricId"
                 name="metricId"
@@ -157,10 +159,10 @@ export function MeasurementDialog({
             )}
           >
             <Field
-              label={metric.valueType === "DUAL" ? (metric.primaryLabel ?? "Value") : "Value"}
+              label={metric.valueType === "DUAL" ? label1 : t("app.reading.value")}
               htmlFor="value"
               error={err("value")}
-              hint={metric.key === "blood_pressure" ? "Top number" : undefined}
+              hint={metric.key === "blood_pressure" ? t("app.reading.top") : undefined}
             >
               <Input
                 id="value"
@@ -175,10 +177,14 @@ export function MeasurementDialog({
             </Field>
             {metric.valueType === "DUAL" ? (
               <Field
-                label={metric.secondaryLabel ?? "Second value"}
+                label={
+                  metric.secondaryLabel || metric.key === "blood_pressure"
+                    ? label2
+                    : t("app.reading.secondValue")
+                }
                 htmlFor="value2"
                 error={err("value2")}
-                hint={metric.key === "blood_pressure" ? "Bottom number" : undefined}
+                hint={metric.key === "blood_pressure" ? t("app.reading.bottom") : undefined}
               >
                 <Input
                   id="value2"
@@ -191,7 +197,7 @@ export function MeasurementDialog({
                 />
               </Field>
             ) : (
-              <Field label="Unit" htmlFor="unit" error={err("unit")}>
+              <Field label={t("app.reading.unit")} htmlFor="unit" error={err("unit")}>
                 {units.length > 1 ? (
                   <NativeSelect id="unit" name="unit" defaultValue={defaultUnit} className="h-12">
                     {units.map((u) => (
@@ -214,8 +220,12 @@ export function MeasurementDialog({
           {metric.contexts.length > 0 && (
             <fieldset>
               <legend className="mb-2 text-sm font-medium">
-                {metric.key === "blood_glucose" ? "When was this taken?" : "Context"}{" "}
-                <span className="text-muted-foreground text-xs font-normal">Optional</span>
+                {metric.key === "blood_glucose"
+                  ? t("app.reading.whenTaken")
+                  : t("app.reading.context")}{" "}
+                <span className="text-muted-foreground text-xs font-normal">
+                  {t("app.reading.optional")}
+                </span>
               </legend>
               <div className="flex flex-wrap gap-2">
                 {metric.contexts.map((c) => (
@@ -237,7 +247,7 @@ export function MeasurementDialog({
                       onClick={() => context === c && setContext("")}
                       className="sr-only"
                     />
-                    {CONTEXT_LABELS[c] ?? c}
+                    {contextLabel(t, c)}
                   </label>
                 ))}
               </div>
@@ -245,15 +255,15 @@ export function MeasurementDialog({
                 <Input
                   name="contextNote"
                   defaultValue={initial?.contextNote}
-                  placeholder="Describe the context, e.g. after evening walk"
+                  placeholder={t("app.reading.contextPh")}
                   className="mt-2"
-                  aria-label="Custom context"
+                  aria-label={t("app.reading.customContext")}
                 />
               )}
             </fieldset>
           )}
 
-          <Field label="Date & time" htmlFor="measuredAt" error={err("measuredAt")}>
+          <Field label={t("app.reading.dateTime")} htmlFor="measuredAt" error={err("measuredAt")}>
             <Input
               id="measuredAt"
               name="measuredAt"
@@ -265,13 +275,13 @@ export function MeasurementDialog({
           </Field>
 
           {showNote ? (
-            <Field label="Note" htmlFor="notes" optional>
+            <Field label={t("app.reading.note")} htmlFor="notes" optional>
               <Textarea
                 id="notes"
                 name="notes"
                 rows={2}
                 defaultValue={initial?.notes}
-                placeholder="e.g. Felt dizzy, after a heavy lunch"
+                placeholder={t("app.reading.notePh")}
               />
             </Field>
           ) : (
@@ -280,16 +290,16 @@ export function MeasurementDialog({
               onClick={() => setShowNote(true)}
               className="text-primary -my-2 py-2 text-sm font-medium pointer-coarse:py-3"
             >
-              + Add a note
+              {t("app.reading.addNote")}
             </button>
           )}
 
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
-              Cancel
+              {t("app.cancel")}
             </Button>
-            <SubmitButton pending={pending} pendingLabel="Saving…">
-              {initial ? "Save changes" : "Save reading"}
+            <SubmitButton pending={pending} pendingLabel={t("app.reading.saving")}>
+              {initial ? t("app.reading.saveChanges") : t("app.reading.save")}
             </SubmitButton>
           </DialogFooter>
         </form>

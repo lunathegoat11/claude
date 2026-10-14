@@ -6,6 +6,7 @@ import { ask, deleteConversation, type AssistantReply } from "@/server/services/
 import { rateLimit } from "@/server/rate-limit";
 import { audit } from "@/server/audit";
 import { uuid } from "@/lib/validation/common";
+import { getT } from "@/i18n/server";
 
 export async function askAction(input: {
   conversationId?: string;
@@ -38,6 +39,7 @@ export async function deleteConversationAction(id: string): Promise<ActionState>
       await requestMeta(),
     );
     revalidatePath("/assistant");
-    return { ok: true, message: "Conversation deleted" };
+    const t = await getT();
+    return { ok: true, message: t("app.action.conversationDeleted") };
   });
 }

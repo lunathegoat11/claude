@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { RotateCcw, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n/client";
 
 export default function AppError({
   error,
@@ -10,6 +11,7 @@ export default function AppError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useT();
   useEffect(() => {
     // Only the opaque digest is reported — never error details that might contain health data.
     if (error.digest) console.error(`Request failed (ref ${error.digest})`);
@@ -19,13 +21,12 @@ export default function AppError({
       <span className="bg-destructive/10 text-destructive flex size-12 items-center justify-center rounded-[var(--radius)]">
         <TriangleAlert className="size-6" />
       </span>
-      <h1 className="mt-4 text-xl font-semibold">Something went wrong</h1>
+      <h1 className="mt-4 text-xl font-semibold">{t("app.error.title")}</h1>
       <p className="text-muted-foreground mt-2 max-w-sm text-sm">
-        We couldn&apos;t load this page. Nothing you saved was lost. Please try again
-        {error.digest ? ` (reference ${error.digest})` : ""}.
+        {error.digest ? t("app.error.bodyRef", { ref: error.digest }) : t("app.error.body")}
       </p>
       <Button onClick={reset} className="mt-6">
-        <RotateCcw /> Try again
+        <RotateCcw /> {t("app.error.retry")}
       </Button>
     </div>
   );

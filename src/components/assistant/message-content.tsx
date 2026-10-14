@@ -2,13 +2,20 @@ import Link from "next/link";
 import { Fragment } from "react";
 import type { Citation } from "@/server/ai/types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useT } from "@/i18n/client";
+import type { T } from "@/i18n/translate";
 
 /**
  * Renders the assistant's restricted markdown subset (paragraphs, bullet
  * lists, **bold**, *italic*, > notes) as React elements — never as raw HTML —
  * and turns [L3]-style references into links to the cited record.
  */
-function inline(text: string, cites: Map<string, Citation>, keyBase: string): React.ReactNode[] {
+function inline(
+  text: string,
+  cites: Map<string, Citation>,
+  keyBase: string,
+  t: T,
+): React.ReactNode[] {
   const out: React.ReactNode[] = [];
   const re = /(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|\[[A-Z]\d{1,3}\])/g;
   let last = 0;
@@ -33,7 +40,7 @@ function inline(text: string, cites: Map<string, Citation>, keyBase: string): Re
               <Link
                 href={c.href}
                 className="bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground mx-0.5 inline-flex h-[18px] -translate-y-px items-center rounded-md px-1.5 align-middle text-[11px] font-semibold no-underline"
-                aria-label={`Source: ${c.label}`}
+                aria-label={t("app.chat.source", { label: c.label })}
               >
                 {c.ref}
               </Link>
@@ -55,6 +62,7 @@ function inline(text: string, cites: Map<string, Citation>, keyBase: string): Re
 }
 
 export function MessageContent({ content, citations }: { content: string; citations: Citation[] }) {
+  const t = useT();
   const cites = new Map(citations.map((c) => [c.ref, c]));
   const blocks: React.ReactNode[] = [];
   const lines = content.split("\n");
@@ -71,7 +79,7 @@ export function MessageContent({ content, citations }: { content: string; citati
             {l.split("\n").map((part, pi) => (
               <Fragment key={pi}>
                 {pi > 0 && <br />}
-                {inline(part, cites, `li-${k}-${j}-${pi}`)}
+                {inline(part, cites, `li-${k}-${j}-${pi}`, t)}
               </Fragment>
             ))}
           </li>
@@ -81,31 +89,31 @@ export function MessageContent({ content, citations }: { content: string; citati
     list = [];
   };
   lines.forEach((line, k) => {
-    const t = line.trimEnd();
-    if (/^\s*[-•]\s+/.test(t)) list.push(t.replace(/^\s*[-•]\s+/, ""));
-    else if (/^\s{2,}\S/.test(line) && list.length) list[list.length - 1] += `\n${t.trim()}`;
+    const trimmed = line.trimEnd();
+    if (/^\s*[-•]\s+/.test(trimmed)) list.push(trimmed.replace(/^\s*[-•]\s+/, ""));
+    else if (/^\s{2,}\S/.test(line) && list.length) list[list.length - 1] += `\n${trimmed.trim()}`;
     else {
       flush(k);
-      if (!t.trim()) return;
-      if (t.startsWith(">"))
+      if (!trimmed.trim()) return;
+      if (trimmed.startsWith(">"))
         blocks.push(
           <p
             key={k}
             className="border-warning bg-warning/8 my-2 rounded-md border-l-2 px-3 py-2 text-[14px]"
           >
-            {inline(t.replace(/^>\s?/, ""), cites, `q-${k}`)}
+            {inline(trimmed.replace(/^>\s?/, ""), cites, `q-${k}`, t)}
           </p>,
         );
-      else if (/^#{1,3}\s/.test(t))
+      else if (/^#{1,3}\s/.test(trimmed))
         blocks.push(
           <p key={k} className="mt-3 mb-1 font-semibold">
-            {inline(t.replace(/^#+\s/, ""), cites, `h-${k}`)}
+            {inline(trimmed.replace(/^#+\s/, ""), cites, `h-${k}`, t)}
           </p>,
         );
       else
         blocks.push(
           <p key={k} className="my-1.5">
-            {inline(t, cites, `p-${k}`)}
+            {inline(trimmed, cites, `p-${k}`, t)}
           </p>,
         );
     }

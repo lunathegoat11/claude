@@ -13,8 +13,12 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatDateLong } from "@/lib/format";
 import { toNum } from "@/lib/utils";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Home" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("nav.home") };
+}
 
 function greeting(tz: string) {
   const h = Number(
@@ -22,7 +26,7 @@ function greeting(tz: string) {
       new Date(),
     ),
   );
-  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  return h < 12 ? "app.dash.morning" : h < 17 ? "app.dash.afternoon" : "app.dash.evening";
 }
 
 function SectionLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -42,6 +46,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ welcome?: string }>;
 }) {
   const user = await requireUser();
+  const t = await getT();
   const [data, pending, sp] = await Promise.all([
     getDashboard(user.id),
     listPendingImports(user.id),
@@ -69,7 +74,7 @@ export default async function DashboardPage({
       <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-[2rem] font-semibold sm:text-[2.5rem]">
-            {sp.welcome ? `Welcome, ${firstName}` : `${greeting(tz)}, ${firstName}`}
+            {t(sp.welcome ? "app.dash.welcome" : greeting(tz), { name: firstName })}
           </h1>
           <p className="text-muted-foreground mt-1">{formatDateLong(new Date(), tz)}</p>
         </div>
@@ -77,12 +82,12 @@ export default async function DashboardPage({
           {/* On computers "Add a report" lives in the top bar. */}
           <Button asChild size="lg" className="w-full sm:w-auto lg:hidden">
             <Link href="/documents?upload=1">
-              <Upload /> Add a report
+              <Upload /> {t("app.dash.addReport")}
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
             <Link href="/tracking?add=1">
-              <Plus /> Add a reading
+              <Plus /> {t("app.dash.addReading")}
             </Link>
           </Button>
         </div>
@@ -90,8 +95,7 @@ export default async function DashboardPage({
 
       {user.isDemo && (
         <p className="border-marigold text-muted-foreground border-l-[3px] pl-3 text-[15px]">
-          This is the demo account. Ananya Sharma is a made-up patient and none of these results are
-          real.
+          {t("app.dash.demo")}
         </p>
       )}
 
@@ -99,14 +103,12 @@ export default async function DashboardPage({
         <div className="surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <p>
             <span className="font-medium">
-              Values from “{pending[0].document?.name}” need a look.
+              {t("app.dash.pendingTitle", { name: pending[0].document?.name ?? "" })}
             </span>{" "}
-            <span className="text-muted-foreground">
-              They were read before results were saved automatically.
-            </span>
+            <span className="text-muted-foreground">{t("app.dash.pendingBody")}</span>
           </p>
           <Button asChild size="sm" variant="outline">
-            <Link href={`/labs/import/${pending[0].id}`}>Review them</Link>
+            <Link href={`/labs/import/${pending[0].id}`}>{t("app.dash.review")}</Link>
           </Button>
         </div>
       )}
@@ -114,18 +116,18 @@ export default async function DashboardPage({
       {isEmpty ? (
         <EmptyState
           icon={Upload}
-          title="Start with a lab report"
-          description="Upload a PDF or take a photo of a report. Kosha reads every test result and saves it with the report's date, so you can see how your numbers change."
+          title={t("app.dash.emptyTitle")}
+          description={t("app.dash.emptyBody")}
           action={
             <>
               <Button asChild>
                 <Link href="/documents?upload=1">
-                  <Upload /> Add a report
+                  <Upload /> {t("app.dash.addReport")}
                 </Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href="/tracking?add=1">
-                  <Plus /> Add a reading
+                  <Plus /> {t("app.dash.addReading")}
                 </Link>
               </Button>
             </>
@@ -137,7 +139,7 @@ export default async function DashboardPage({
             <section aria-labelledby="latest-report">
               <div className="mb-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
                 <div>
-                  <p className="text-muted-foreground text-[15px]">Your latest report</p>
+                  <p className="text-muted-foreground text-[15px]">{t("app.dash.latestReport")}</p>
                   <h2 id="latest-report" className="text-2xl font-semibold">
                     {latest.name}
                   </h2>
@@ -146,26 +148,27 @@ export default async function DashboardPage({
                     {latest.labName && `, ${latest.labName}`}
                     {latestDoc && (
                       <>
-                        {". From "}
+                        {t("app.dash.fromBefore")}
                         <Link
                           href={`/documents/${latestDoc.id}`}
                           className="hover:text-foreground underline underline-offset-2"
                         >
                           {latestDoc.name}
                         </Link>
+                        {t("app.dash.fromAfter")}
                       </>
                     )}
                   </p>
                 </div>
                 <SectionLink href={`/labs/reports/${latest.id}`}>
                   {latest.results.length > latestRows.length
-                    ? `All ${latest.results.length} results`
-                    : "Open report"}
+                    ? t("app.dash.allResults", { n: latest.results.length })
+                    : t("app.dash.openReport")}
                 </SectionLink>
               </div>
               <div className="surface">
                 <ResultLedger
-                  label={`Results from ${latest.name}`}
+                  label={t("app.dash.resultsFrom", { name: latest.name })}
                   results={latestRows.map((r) => ({
                     id: r.id,
                     testName: r.testName,
@@ -187,9 +190,9 @@ export default async function DashboardPage({
               <section aria-labelledby="readings">
                 <div className="mb-3 flex items-end justify-between">
                   <h2 id="readings" className="text-xl font-semibold">
-                    Readings
+                    {t("nav.tracking")}
                   </h2>
-                  <SectionLink href="/tracking">All readings</SectionLink>
+                  <SectionLink href="/tracking">{t("app.dash.allReadings")}</SectionLink>
                 </div>
                 {readings.length ? (
                   <ul className="surface divide-y">
@@ -199,12 +202,12 @@ export default async function DashboardPage({
                   </ul>
                 ) : (
                   <p className="text-muted-foreground">
-                    No readings yet.{" "}
+                    {t("app.dash.noReadings")}{" "}
                     <Link
                       href="/tracking?add=1"
                       className="text-primary font-medium underline-offset-2 hover:underline"
                     >
-                      Add your blood pressure, sugar or weight
+                      {t("app.dash.addFirst")}
                     </Link>
                     .
                   </p>
@@ -215,9 +218,9 @@ export default async function DashboardPage({
                 <section aria-labelledby="lab-trends">
                   <div className="mb-3 flex items-end justify-between">
                     <h2 id="lab-trends" className="text-xl font-semibold">
-                      Tests over time
+                      {t("app.dash.labTrends")}
                     </h2>
-                    <SectionLink href="/labs">All lab results</SectionLink>
+                    <SectionLink href="/labs">{t("app.dash.allLabs")}</SectionLink>
                   </div>
                   <ul className="surface divide-y">
                     {labTrends.map((c) => (
@@ -232,30 +235,25 @@ export default async function DashboardPage({
               <section aria-labelledby="recent">
                 <div className="mb-3 flex items-end justify-between">
                   <h2 id="recent" className="text-xl font-semibold">
-                    Recently added
+                    {t("app.dash.recent")}
                   </h2>
-                  <SectionLink href="/timeline">Timeline</SectionLink>
+                  <SectionLink href="/timeline">{t("nav.timeline")}</SectionLink>
                 </div>
                 {data.timeline.length ? (
                   <TimelineList events={data.timeline} timezone={tz} compact />
                 ) : (
-                  <p className="text-muted-foreground">
-                    Visits, reports and files you add will appear here in date order.
-                  </p>
+                  <p className="text-muted-foreground">{t("app.dash.recentEmpty")}</p>
                 )}
               </section>
 
               <section aria-labelledby="ask" className="surface p-6">
                 <h2 id="ask" className="text-lg font-semibold">
-                  Ask about your records
+                  {t("app.dash.askTitle")}
                 </h2>
-                <p className="text-muted-foreground mt-1 text-[15px]">
-                  For example, “How has my HbA1c changed?” Answers come only from what you&apos;ve
-                  saved, with links to the reports.
-                </p>
+                <p className="text-muted-foreground mt-1 text-[15px]">{t("app.dash.askBody")}</p>
                 <Button asChild variant="outline" className="mt-4">
                   <Link href="/assistant">
-                    <Bot /> Ask Kosha
+                    <Bot /> {t("nav.assistant")}
                   </Link>
                 </Button>
                 {data.recentConversations.length > 0 && (

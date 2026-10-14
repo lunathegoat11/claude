@@ -1,11 +1,65 @@
 "use client";
 import { useEffect, useState } from "react";
-import { LOADING_MESSAGES, type LoadingKind } from "@/lib/loading-messages";
+import type { LoadingKind } from "@/lib/loading-messages";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
 
 const SPINNER_AFTER_MS = 1000;
 const TEXT_AFTER_MS = 2500;
 const NEXT_TEXT_MS = 2200;
+
+/** The words for each kind of wait (the English is also in lib/loading-messages.ts). */
+const ALMOST = "app.loading.almost";
+const TIMELINE = "app.loading.updatingTimeline";
+const LOADING_KEYS: Record<LoadingKind, readonly MessageKey[]> = {
+  page: [
+    "app.loading.page.1",
+    "app.loading.page.2",
+    "app.loading.page.3",
+    "app.loading.page.4",
+    ALMOST,
+  ],
+  upload: [
+    "app.loading.upload.1",
+    "app.loading.upload.2",
+    "app.loading.upload.3",
+    "app.loading.upload.4",
+    "app.loading.upload.5",
+    "app.loading.upload.6",
+    "app.loading.upload.7",
+    "app.loading.upload.8",
+    "app.loading.upload.9",
+    "app.loading.upload.10",
+    ALMOST,
+  ],
+  assistant: [
+    "app.loading.assistant.1",
+    "app.loading.assistant.2",
+    "app.loading.assistant.3",
+    "app.loading.assistant.4",
+    "app.loading.assistant.5",
+    "app.loading.assistant.6",
+    ALMOST,
+  ],
+  save: ["app.loading.save.1", "app.loading.save.2", TIMELINE, ALMOST],
+  signIn: ["app.loading.signIn.1", "app.loading.signIn.2", "app.loading.signIn.3", ALMOST],
+  signUp: ["app.loading.signUp.1", "app.loading.signUp.2", "app.loading.signUp.3", ALMOST],
+  aiKey: ["app.loading.aiKey.1", "app.loading.aiKey.2", "app.loading.aiKey.3", ALMOST],
+  export: [
+    "app.loading.export.1",
+    "app.loading.export.2",
+    "app.loading.export.3",
+    "app.loading.export.4",
+    ALMOST,
+  ],
+  chart: ["app.loading.chart.1", "app.loading.chart.2", ALMOST],
+  document: ["app.loading.document.1", "app.loading.document.2", ALMOST],
+  import: ["app.loading.import.1", "app.loading.import.2", "app.loading.import.3", ALMOST],
+  email: ["app.loading.email.1", ALMOST],
+  signOut: ["app.loading.signOut.1", ALMOST],
+  delete: ["app.loading.delete.1", TIMELINE, ALMOST],
+};
 
 /**
  * How long something has been loading, as a phase: nothing for the first second, then a
@@ -13,7 +67,8 @@ const NEXT_TEXT_MS = 2200;
  * on the last one ("Almost there…").
  */
 export function useLoadingPhase(active: boolean, kind: LoadingKind = "page") {
-  const messages = LOADING_MESSAGES[kind];
+  const t = useT();
+  const messages = LOADING_KEYS[kind];
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     if (!active) {
@@ -29,13 +84,13 @@ export function useLoadingPhase(active: boolean, kind: LoadingKind = "page") {
   const index = showText
     ? Math.min(messages.length - 1, Math.floor((elapsed - TEXT_AFTER_MS) / NEXT_TEXT_MS))
     : -1;
-  return { spinner, message: index >= 0 ? messages[index] : null };
+  return { spinner, message: index >= 0 ? t(messages[index]) : null };
 }
 
 /** The iOS-style activity indicator: twelve spokes fading round a circle. */
 export function Spinner({
   className,
-  label = "Loading",
+  label,
   decorative,
 }: {
   className?: string;
@@ -43,10 +98,13 @@ export function Spinner({
   /** Inside a button whose text already says what's happening. */
   decorative?: boolean;
 }) {
+  const t = useT();
   return (
     <svg
       viewBox="0 0 24 24"
-      {...(decorative ? { "aria-hidden": true } : { role: "img", "aria-label": label })}
+      {...(decorative
+        ? { "aria-hidden": true }
+        : { role: "img", "aria-label": label ?? t("app.loading.label") })}
       className={cn("kosha-spinner text-muted-foreground size-7", className)}
     >
       {Array.from({ length: 12 }).map((_, i) => (
@@ -81,6 +139,7 @@ export function DelayedLoader({
   className?: string;
   size?: "sm" | "md";
 }) {
+  const t = useT();
   const { spinner, message } = useLoadingPhase(active, kind);
   if (!spinner) return <div className={className} aria-busy={active || undefined} />;
   return (
@@ -106,7 +165,7 @@ export function DelayedLoader({
           message && "kosha-fade-in",
         )}
       >
-        {message ?? <span className="sr-only">Loading</span>}
+        {message ?? <span className="sr-only">{t("app.loading.label")}</span>}
       </p>
     </div>
   );

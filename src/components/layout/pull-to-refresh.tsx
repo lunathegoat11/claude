@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/components/shared/delayed-loader";
+import { useT } from "@/i18n/client";
 
 const TRIGGER = 72; // how far (after resistance) a pull must go to reload
 const MAX = 120;
@@ -14,6 +15,7 @@ const MAX = 120;
  */
 export function PullToRefresh() {
   const router = useRouter();
+  const t = useT();
   const [pull, setPull] = useState(0);
   const [refreshing, startRefresh] = useTransition();
   const [holding, setHolding] = useState(false);
@@ -100,7 +102,7 @@ export function PullToRefresh() {
       >
         <Spinner
           className={busy ? "size-6" : "size-6 [animation:none]"}
-          label={busy ? "Refreshing" : "Pull to refresh"}
+          label={busy ? t("app.shell.refreshing") : t("app.shell.pull")}
         />
       </span>
     </div>

@@ -8,6 +8,7 @@ import {
   type MeasurementInitial,
   type MetricOption,
 } from "./measurement-dialog";
+import { useT } from "@/i18n/client";
 
 export function ReadingActions({
   metric,
@@ -20,6 +21,7 @@ export function ReadingActions({
   now: string;
   label: string;
 }) {
+  const t = useT();
   return (
     <div className="flex items-center justify-end gap-0.5">
       <MeasurementDialog
@@ -28,19 +30,19 @@ export function ReadingActions({
         preferredUnits={{}}
         initial={initial}
         trigger={
-          <Button variant="ghost" size="icon-sm" aria-label={`Edit reading ${label}`}>
+          <Button variant="ghost" size="icon-sm" aria-label={t("app.reading.editLabel", { label })}>
             <Pencil className="text-muted-foreground" />
           </Button>
         }
       />
       <ConfirmDelete
         action={deleteMeasurementAction.bind(null, initial.id)}
-        title="Delete this reading?"
-        description={`${metric.name} reading ${label} will be removed.`}
+        title={t("app.reading.deleteTitle")}
+        description={t("app.reading.deleteBody", { name: metric.name, label })}
         iconOnly
         triggerVariant="ghost"
         triggerSize="sm"
-        triggerLabel={`Delete reading ${label}`}
+        triggerLabel={t("app.reading.deleteLabel", { label })}
       />
     </div>
   );

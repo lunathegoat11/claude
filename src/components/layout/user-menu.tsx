@@ -13,14 +13,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { initials } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 export function UserMenu({ name, email }: { name: string; email: string }) {
+  const t = useT();
   const [signingOut, startSignOut] = useTransition();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         className="bg-accent text-accent-foreground ring-offset-background focus-visible:ring-ring flex size-9 items-center justify-center rounded-full text-[13px] font-semibold ring-offset-2 outline-none focus-visible:ring-2 pointer-coarse:size-11"
-        aria-label="Account menu"
+        aria-label={t("app.shell.accountMenu")}
       >
         {initials(name)}
       </DropdownMenuTrigger>
@@ -32,12 +34,12 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/settings">
-            <User /> Profile
+            <User /> {t("app.shell.profile")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/settings?tab=preferences">
-            <Settings /> Settings
+            <Settings /> {t("nav.settings")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -48,7 +50,7 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
           onSelect={() => startSignOut(() => signOutAction())}
         >
           <BusyContent active={signingOut} kind="signOut" icon={<LogOut />}>
-            Sign out
+            {t("nav.signOut")}
           </BusyContent>
         </DropdownMenuItem>
       </DropdownMenuContent>

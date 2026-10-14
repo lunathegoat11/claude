@@ -4,8 +4,10 @@ import { useState, useTransition } from "react";
 import { Mail, X } from "lucide-react";
 import { toast } from "sonner";
 import { resendVerificationAction } from "@/actions/auth";
+import { useT } from "@/i18n/client";
 
 export function VerifyEmailBanner({ email }: { email: string }) {
+  const t = useT();
   const [hidden, setHidden] = useState(false);
   const [pending, start] = useTransition();
   if (hidden) return null;
@@ -14,8 +16,9 @@ export function VerifyEmailBanner({ email }: { email: string }) {
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2.5 text-sm sm:px-6 lg:px-8">
         <Mail className="text-primary size-4 shrink-0" />
         <p className="min-w-0 flex-1">
-          Please confirm your email<span className="hidden sm:inline"> ({email})</span> so you can
-          reset your password if you forget it.
+          {t("app.verify.before")}
+          <span className="hidden sm:inline"> ({email})</span>
+          {t("app.verify.after")}
         </p>
         <button
           type="button"
@@ -30,13 +33,13 @@ export function VerifyEmailBanner({ email }: { email: string }) {
           className="text-primary hover:bg-card inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 font-medium disabled:opacity-60"
         >
           <BusyContent active={pending} kind="email">
-            Resend link
+            {t("app.verify.resend")}
           </BusyContent>
         </button>
         <button
           type="button"
           onClick={() => setHidden(true)}
-          aria-label="Dismiss"
+          aria-label={t("app.verify.dismiss")}
           className="text-muted-foreground hover:bg-card shrink-0 rounded-lg p-1.5"
         >
           <X className="size-4" />

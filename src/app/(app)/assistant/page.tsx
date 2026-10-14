@@ -5,8 +5,12 @@ import { AssistantLayout } from "@/components/assistant/assistant-layout";
 import { Chat } from "@/components/assistant/chat";
 import { PlusOnly } from "@/components/assistant/plus-only";
 import { isPlus } from "@/server/services/billing";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Ask Kosha" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("nav.assistant") };
+}
 
 export default async function AssistantPage() {
   const user = await requireUser();
