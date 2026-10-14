@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/i18n/client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -18,6 +19,7 @@ const tap = () => navigator.vibrate?.(8); // a light tick on Android; iPhones ig
  */
 export function MobileNav() {
   const pathname = usePathname();
+  const t = useT();
   const [open, setOpen] = useState(false);
   const primary = NAV_ITEMS.filter((i) => MOBILE_PRIMARY.includes(i.href));
   const more = NAV_ITEMS.filter((i) => !MOBILE_PRIMARY.includes(i.href));
@@ -41,7 +43,7 @@ export function MobileNav() {
   return (
     <>
       <nav
-        aria-label="Main"
+        aria-label={t("nav.main")}
         className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] lg:hidden"
       >
         <ul
@@ -75,7 +77,7 @@ export function MobileNav() {
                   className={item(i, on)}
                 >
                   <nav.icon className="size-[1.375rem]" strokeWidth={on ? 2.1 : 1.6} />
-                  <span className="truncate">{nav.short ?? nav.label}</span>
+                  <span className="truncate">{t(nav.short ?? nav.label)}</span>
                 </Link>
               </li>
             );
@@ -90,17 +92,15 @@ export function MobileNav() {
               className={item(primary.length, active === primary.length)}
             >
               <MoreHorizontal className="size-[1.375rem]" strokeWidth={1.6} />
-              More
+              {t("nav.more")}
             </button>
           </li>
         </ul>
       </nav>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm">
-          <DialogTitle>More</DialogTitle>
-          <DialogDescription className="sr-only">
-            Other sections, contact and sign out
-          </DialogDescription>
+          <DialogTitle>{t("nav.more")}</DialogTitle>
+          <DialogDescription className="sr-only">{t("nav.moreSections")}</DialogDescription>
           <ul className="grid gap-1">
             {more.map((m) => (
               <li key={m.href}>
@@ -117,7 +117,7 @@ export function MobileNav() {
                   )}
                 >
                   <m.icon className="text-primary size-5" />
-                  {m.label}
+                  {t(m.label)}
                 </Link>
               </li>
             ))}
@@ -128,7 +128,7 @@ export function MobileNav() {
               className="pressable hover:bg-foreground/5 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-[17px]"
             >
               <Phone className="text-primary size-5" />
-              Call us: {CONTACT_PHONE_DISPLAY}
+              {t("nav.callUs", { phone: CONTACT_PHONE_DISPLAY })}
             </a>
             <form action={signOutAction}>
               <button
@@ -136,7 +136,7 @@ export function MobileNav() {
                 className="pressable text-destructive hover:bg-foreground/5 flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 text-[17px]"
               >
                 <LogOut className="size-5" />
-                Sign out
+                {t("nav.signOut")}
               </button>
             </form>
           </div>

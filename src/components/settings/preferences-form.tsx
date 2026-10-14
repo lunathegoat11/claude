@@ -4,6 +4,7 @@ import { useActionForm } from "@/components/forms/use-action-form";
 import { Field, FormSection } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { NativeSelect } from "@/components/ui/input";
+import { LanguageSwitch } from "@/components/shared/language-switch";
 import { ThemeSegmented, TransparencySwitch } from "@/components/shared/theme-toggle";
 
 export function PreferencesForm({
@@ -23,6 +24,7 @@ export function PreferencesForm({
     <div className="space-y-8">
       <FormSection title="Appearance">
         <div className="space-y-5">
+          <LanguageSwitch />
           <ThemeSegmented />
           <TransparencySwitch />
         </div>

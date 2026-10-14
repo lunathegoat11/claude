@@ -1,3 +1,4 @@
+import { LanguageSwitch } from "@/components/shared/language-switch";
 import Link from "next/link";
 import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL } from "@/lib/contact";
 import { Logo } from "@/components/shared/logo";
@@ -35,6 +36,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <Link href="/terms" className="hover:text-foreground py-3 hover:underline">
             Terms of Use
           </Link>
+          <LanguageSwitch compact />
         </nav>
       </footer>
     </div>

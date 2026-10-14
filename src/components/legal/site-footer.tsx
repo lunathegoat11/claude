@@ -1,3 +1,4 @@
+import { LanguageSwitch } from "@/components/shared/language-switch";
 import Link from "next/link";
 import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL } from "@/lib/contact";
 
@@ -28,6 +29,7 @@ export function SiteFooter() {
           >
             Open-source notices
           </a>
+          <LanguageSwitch compact />
         </nav>
       </div>
     </footer>

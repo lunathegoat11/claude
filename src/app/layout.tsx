@@ -7,6 +7,9 @@ import { Toaster } from "sonner";
 import { AppMessages } from "@/components/shared/app-messages";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { I18nProvider } from "@/i18n/client";
+import { getLocale, messagesFor } from "@/i18n/server";
+import { HTML_LANG } from "@/i18n/config";
 import "./globals.css";
 
 /** What search engines and link previews (WhatsApp, X, LinkedIn) show for Kosha. */
@@ -63,8 +66,9 @@ const GLASS_SCRIPT = `try{var p=localStorage.getItem("kosha-glass"),n=navigator,
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Set per request by middleware.ts; only scripts carrying it may run.
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const locale = await getLocale();
   return (
-    <html lang="en-IN" suppressHydrationWarning>
+    <html lang={HTML_LANG[locale]} suppressHydrationWarning>
       <head>
         {/* Runs before the first paint so glass never flickers on, then off. */}
         {/* Browsers hide nonce values from the page, so React sees "" when hydrating. */}
@@ -75,19 +79,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body className="min-h-dvh">
-        <ThemeProvider nonce={nonce}>
-          <TooltipProvider delayDuration={300}>
-            {children}
-            <Suspense>
-              <AppMessages />
-            </Suspense>
-            <Toaster
-              position="top-center"
-              closeButton
-              toastOptions={{ className: "kosha-toast" }}
-            />
-          </TooltipProvider>
-        </ThemeProvider>
+        <I18nProvider locale={locale} messages={messagesFor(locale)}>
+          <ThemeProvider nonce={nonce}>
+            <TooltipProvider delayDuration={300}>
+              {children}
+              <Suspense>
+                <AppMessages />
+              </Suspense>
+              <Toaster
+                position="top-center"
+                closeButton
+                toastOptions={{ className: "kosha-toast" }}
+              />
+            </TooltipProvider>
+          </ThemeProvider>
+        </I18nProvider>
       </body>
     </html>
   );

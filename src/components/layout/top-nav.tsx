@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/i18n/client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS, isActive } from "./nav-items";
@@ -7,8 +8,9 @@ import { cn } from "@/lib/utils";
 /** Desktop navigation: one quiet row of text links, like apple.com's global nav. */
 export function TopNav() {
   const pathname = usePathname();
+  const t = useT();
   return (
-    <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
+    <nav aria-label={t("nav.main")} className="hidden items-center gap-1 lg:flex">
       {NAV_ITEMS.filter((i) => i.href !== "/settings").map((item) => {
         const active = isActive(pathname, item.href);
         return (
@@ -23,7 +25,7 @@ export function TopNav() {
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {item.short ?? item.label}
+            {t(item.short ?? item.label)}
           </Link>
         );
       })}

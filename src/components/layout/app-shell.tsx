@@ -1,3 +1,4 @@
+import { LanguageSwitch } from "@/components/shared/language-switch";
 import { Suspense } from "react";
 import Link from "next/link";
 import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL } from "@/lib/contact";
@@ -101,6 +102,7 @@ export function AppShell({
               >
                 Open-source notices
               </a>
+              <LanguageSwitch compact />
             </nav>
           </footer>
         </main>
