@@ -15,13 +15,30 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input, NativeSelect, Textarea } from "@/components/ui/input";
-import { CONDITION_STATUS_LABELS, SEVERITY_LABELS } from "@/lib/catalog/labels";
+import { useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
 
 type Kind = "medication" | "allergy" | "condition";
-const TITLES: Record<Kind, string> = {
-  medication: "medication",
-  allergy: "allergy",
-  condition: "condition",
+const ADD_TITLES: Record<Kind, MessageKey> = {
+  medication: "account.health.add.medication",
+  allergy: "account.health.add.allergy",
+  condition: "account.health.add.condition",
+};
+const EDIT_TITLES: Record<Kind, MessageKey> = {
+  medication: "account.health.edit.medication",
+  allergy: "account.health.edit.allergy",
+  condition: "account.health.edit.condition",
+};
+const SEVERITY_KEYS: Record<string, MessageKey> = {
+  MILD: "account.severity.MILD",
+  MODERATE: "account.severity.MODERATE",
+  SEVERE: "account.severity.SEVERE",
+  UNKNOWN: "account.severity.UNKNOWN",
+};
+const CONDITION_STATUS_KEYS: Record<string, MessageKey> = {
+  ACTIVE: "account.conditionStatus.ACTIVE",
+  MANAGED: "account.conditionStatus.MANAGED",
+  RESOLVED: "account.conditionStatus.RESOLVED",
 };
 
 export function HealthItemDialog({
@@ -31,6 +48,7 @@ export function HealthItemDialog({
   kind: Kind;
   initial?: Record<string, string | boolean | null>;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const { state, onSubmit, pending, err } = useActionForm(saveHealthItemAction, {
     onSuccess: () => setOpen(false),
@@ -43,24 +61,20 @@ export function HealthItemDialog({
           variant="ghost"
           size="icon-sm"
           onClick={() => setOpen(true)}
-          aria-label={`Edit ${TITLES[kind]}`}
+          aria-label={t(EDIT_TITLES[kind])}
         >
           <Pencil className="text-muted-foreground" />
         </Button>
       ) : (
         <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-          <Plus /> Add {TITLES[kind]}
+          <Plus /> {t(ADD_TITLES[kind])}
         </Button>
       )}
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {initial ? "Edit" : "Add"} {TITLES[kind]}
-          </DialogTitle>
+          <DialogTitle>{t(initial ? EDIT_TITLES[kind] : ADD_TITLES[kind])}</DialogTitle>
           <DialogDescription>
-            {kind === "medication"
-              ? "Record medicines as written on your prescription. Kosha never suggests doses."
-              : "This appears in your health summary."}
+            {kind === "medication" ? t("account.health.medNote") : t("account.health.summaryNote")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
@@ -69,40 +83,50 @@ export function HealthItemDialog({
           {state.error && !state.fieldErrors && <FormError message={state.error} />}
           {kind === "medication" && (
             <>
-              <Field label="Medicine name" htmlFor="h-name" error={err("name")}>
+              <Field label={t("account.health.medName")} htmlFor="h-name" error={err("name")}>
                 <Input
                   id="h-name"
                   name="name"
                   defaultValue={v("name")}
-                  placeholder="e.g. Metformin"
+                  placeholder={t("account.health.medName.ph")}
                   required
                 />
               </Field>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Strength / dose (as prescribed)" htmlFor="h-dosage" optional>
+                <Field label={t("account.health.dose")} htmlFor="h-dosage" optional>
                   <Input
                     id="h-dosage"
                     name="dosage"
                     defaultValue={v("dosage")}
-                    placeholder="e.g. 500 mg"
+                    placeholder={t("account.health.dose.ph")}
                   />
                 </Field>
-                <Field label="How often" htmlFor="h-freq" optional>
+                <Field label={t("account.health.freq")} htmlFor="h-freq" optional>
                   <Input
                     id="h-freq"
                     name="frequency"
                     defaultValue={v("frequency")}
-                    placeholder="e.g. Twice daily after meals"
+                    placeholder={t("account.health.freq.ph")}
                   />
                 </Field>
-                <Field label="Started" htmlFor="h-start" optional error={err("startDate")}>
+                <Field
+                  label={t("account.health.started")}
+                  htmlFor="h-start"
+                  optional
+                  error={err("startDate")}
+                >
                   <Input id="h-start" name="startDate" type="date" defaultValue={v("startDate")} />
                 </Field>
-                <Field label="Stopped" htmlFor="h-end" optional error={err("endDate")}>
+                <Field
+                  label={t("account.health.stoppedOn")}
+                  htmlFor="h-end"
+                  optional
+                  error={err("endDate")}
+                >
                   <Input id="h-end" name="endDate" type="date" defaultValue={v("endDate")} />
                 </Field>
               </div>
-              <Field label="Prescribed by" htmlFor="h-by" optional>
+              <Field label={t("account.health.prescribedBy")} htmlFor="h-by" optional>
                 <Input id="h-by" name="prescribedBy" defaultValue={v("prescribedBy")} />
               </Field>
               <label className="flex items-center gap-2 text-sm">
@@ -112,34 +136,38 @@ export function HealthItemDialog({
                   defaultChecked={initial ? !!initial.active : true}
                   className="size-4 accent-[var(--primary)]"
                 />{" "}
-                I&apos;m currently taking this
+                {t("account.health.taking")}
               </label>
             </>
           )}
           {kind === "allergy" && (
             <>
-              <Field label="Allergic to" htmlFor="h-allergen" error={err("allergen")}>
+              <Field
+                label={t("account.health.allergen")}
+                htmlFor="h-allergen"
+                error={err("allergen")}
+              >
                 <Input
                   id="h-allergen"
                   name="allergen"
                   defaultValue={v("allergen")}
-                  placeholder="e.g. Penicillin, peanuts"
+                  placeholder={t("account.health.allergen.ph")}
                   required
                 />
               </Field>
-              <Field label="Reaction" htmlFor="h-reaction" optional>
+              <Field label={t("account.health.reaction")} htmlFor="h-reaction" optional>
                 <Input
                   id="h-reaction"
                   name="reaction"
                   defaultValue={v("reaction")}
-                  placeholder="e.g. Rash, swelling"
+                  placeholder={t("account.health.reaction.ph")}
                 />
               </Field>
-              <Field label="Severity" htmlFor="h-sev">
+              <Field label={t("account.health.severity")} htmlFor="h-sev">
                 <NativeSelect id="h-sev" name="severity" defaultValue={v("severity") || "UNKNOWN"}>
-                  {Object.entries(SEVERITY_LABELS).map(([k, l]) => (
+                  {Object.entries(SEVERITY_KEYS).map(([k, l]) => (
                     <option key={k} value={k}>
-                      {l}
+                      {t(l)}
                     </option>
                   ))}
                 </NativeSelect>
@@ -148,40 +176,45 @@ export function HealthItemDialog({
           )}
           {kind === "condition" && (
             <>
-              <Field label="Condition" htmlFor="h-cond" error={err("name")}>
+              <Field label={t("account.health.condition")} htmlFor="h-cond" error={err("name")}>
                 <Input
                   id="h-cond"
                   name="name"
                   defaultValue={v("name")}
-                  placeholder="e.g. Asthma"
+                  placeholder={t("account.health.condition.ph")}
                   required
                 />
               </Field>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Status" htmlFor="h-status">
+                <Field label={t("account.health.status")} htmlFor="h-status">
                   <NativeSelect id="h-status" name="status" defaultValue={v("status") || "ACTIVE"}>
-                    {Object.entries(CONDITION_STATUS_LABELS).map(([k, l]) => (
+                    {Object.entries(CONDITION_STATUS_KEYS).map(([k, l]) => (
                       <option key={k} value={k}>
-                        {l}
+                        {t(l)}
                       </option>
                     ))}
                   </NativeSelect>
                 </Field>
-                <Field label="Diagnosed on" htmlFor="h-dx" optional error={err("diagnosedOn")}>
+                <Field
+                  label={t("account.health.diagnosedOn")}
+                  htmlFor="h-dx"
+                  optional
+                  error={err("diagnosedOn")}
+                >
                   <Input id="h-dx" name="diagnosedOn" type="date" defaultValue={v("diagnosedOn")} />
                 </Field>
               </div>
             </>
           )}
-          <Field label="Notes" htmlFor="h-notes" optional>
+          <Field label={t("account.health.notes")} htmlFor="h-notes" optional>
             <Textarea id="h-notes" name="notes" rows={2} defaultValue={v("notes")} />
           </Field>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
-              Cancel
+              {t("account.cancel")}
             </Button>
-            <SubmitButton pending={pending} pendingLabel="Saving…">
-              Save
+            <SubmitButton pending={pending} pendingLabel={t("account.saving")}>
+              {t("account.save")}
             </SubmitButton>
           </DialogFooter>
         </form>

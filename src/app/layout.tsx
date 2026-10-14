@@ -10,6 +10,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/i18n/client";
 import { getLocale, messagesFor } from "@/i18n/server";
 import { HTML_LANG } from "@/i18n/config";
+// Fonts for Hindi, Marathi (Devanagari) and Telugu. Each is split by alphabet, so a
+// phone only downloads them when those letters are on screen.
+import "@fontsource/noto-sans-devanagari/400.css";
+import "@fontsource/noto-sans-devanagari/600.css";
+import "@fontsource/noto-sans-telugu/400.css";
+import "@fontsource/noto-sans-telugu/600.css";
 import "./globals.css";
 
 /** What search engines and link previews (WhatsApp, X, LinkedIn) show for Kosha. */

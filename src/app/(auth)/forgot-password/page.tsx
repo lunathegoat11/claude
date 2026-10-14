@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Forgot password",
-  description:
-    "Reset your Kosha Health password. We'll email you a link that works once, for one hour.",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t("account.meta.forgot.title"),
+    description: t("account.meta.forgot.desc"),
+    robots: { index: false },
+  };
+}
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  const t = await getT();
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-[28px] font-semibold">Forgot your password?</h1>
-        <p className="text-muted-foreground text-[15px]">
-          Enter the email you signed up with and we&apos;ll send you a link to choose a new one.
-        </p>
+        <h1 className="text-[28px] font-semibold">{t("account.forgot.title")}</h1>
+        <p className="text-muted-foreground text-[15px]">{t("account.forgot.desc")}</p>
       </div>
       <ForgotPasswordForm />
     </div>

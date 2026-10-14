@@ -32,10 +32,12 @@ import { AppError } from "@/server/errors";
 import { env } from "@/server/env";
 import { db } from "@/server/db";
 import { safeNext } from "@/lib/safe-next";
+import { getT } from "@/i18n/server";
 
 export async function signInAction(_: ActionState, fd: FormData): Promise<ActionState> {
   let destination = "/dashboard";
   const result = await runAction("signIn", async () => {
+    const t = await getT();
     const meta = await requestMeta();
     const input = signInSchema.parse(formToObject(fd));
     await rateLimit("signIn", `ip:${meta.ip}`);
@@ -43,10 +45,10 @@ export async function signInAction(_: ActionState, fd: FormData): Promise<Action
     const user = await authenticate(input.email, input.password);
     if (!user) {
       await audit(null, "auth.sign_in_failed", undefined, meta);
-      throw new AppError("UNAUTHENTICATED", "That email and password combination didn't work.");
+      throw new AppError("UNAUTHENTICATED", t("account.msg.badLogin"));
     }
     if (user.isDemo && !env().DEMO_LOGIN_ENABLED)
-      throw new AppError("UNAUTHENTICATED", "That email and password combination didn't work.");
+      throw new AppError("UNAUTHENTICATED", t("account.msg.badLogin"));
     // Keep the first age confirmation as the record; later ones only refresh lastAgeConfirmedAt.
     await db.user.update({
       where: { id: user.id },
@@ -95,11 +97,11 @@ export async function signUpAction(_: ActionState, fd: FormData): Promise<Action
 
 export async function demoSignInAction(confirmedAge: boolean): Promise<ActionState> {
   const result = await runAction("demoSignIn", async () => {
-    if (!env().DEMO_LOGIN_ENABLED)
-      throw new AppError("FORBIDDEN", "The demo account is not available.");
+    const t = await getT();
+    if (!env().DEMO_LOGIN_ENABLED) throw new AppError("FORBIDDEN", t("account.msg.demoOff"));
     if (confirmedAge !== true)
-      throw new AppError("VALIDATION", "Kosha is only for people aged 18 or older", {
-        ageConfirmed: ["Kosha is only for people aged 18 or older"],
+      throw new AppError("VALIDATION", t("account.adultsOnly"), {
+        ageConfirmed: [t("account.adultsOnly")],
       });
     const meta = await requestMeta();
     await rateLimit("signIn", `ip:${meta.ip}`);
@@ -127,15 +129,15 @@ export async function signOutAction() {
 
 export async function changePasswordAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction("changePassword", async () => {
+    const t = await getT();
     const user = await requireUserOrThrow();
-    if (user.isDemo)
-      throw new AppError("FORBIDDEN", "The demo account's password can't be changed.");
+    if (user.isDemo) throw new AppError("FORBIDDEN", t("account.privacy.demoPassword"));
     const input = changePasswordSchema.parse(formToObject(fd));
     await rateLimit("signIn", `user:${user.id}`);
     await changePassword(user.id, input.currentPassword, input.newPassword);
     await invalidateOtherSessions(user.id);
     await audit(user.id, "auth.password_changed", undefined, await requestMeta());
-    return { ok: true, message: "Password updated. Other devices have been signed out." };
+    return { ok: true, message: t("account.msg.passwordUpdated") };
   });
 }
 
@@ -144,7 +146,7 @@ export async function revokeOtherSessionsAction(): Promise<ActionState> {
     const user = await requireUserOrThrow();
     await invalidateOtherSessions(user.id);
     await audit(user.id, "auth.sessions_revoked", undefined, await requestMeta());
-    return { ok: true, message: "Signed out of all other devices." };
+    return { ok: true, message: (await getT())("account.msg.signedOutOthers") };
   });
 }
 
@@ -159,7 +161,7 @@ export async function forgotPasswordAction(_: ActionState, fd: FormData): Promis
     // Same answer whether or not the account exists.
     return {
       ok: true,
-      message: "If an account exists for that email, we've sent a link to reset your password.",
+      message: (await getT())("account.msg.resetSent"),
     };
   });
 }
@@ -182,11 +184,12 @@ export async function resendVerificationAction(): Promise<ActionState> {
     const user = await requireUserOrThrow();
     await rateLimit("passwordReset", `verify:${user.id}`);
     const sent = await sendVerification(user.id);
+    const t = await getT();
     return {
       ok: true,
       message: sent
-        ? `We've sent a confirmation link to ${user.email}.`
-        : "Your email is already confirmed.",
+        ? t("account.msg.verifySent", { email: user.email })
+        : t("account.msg.alreadyConfirmed"),
     };
   });
 }
@@ -201,10 +204,12 @@ export async function renewConsentAction(_: ActionState, fd: FormData): Promise<
       select: { ageConfirmedAt: true },
     });
     // Accounts made with Google or Apple confirm their age here, the first time.
-    if (!row?.ageConfirmedAt && input.ageConfirmed !== "on")
-      throw new AppError("VALIDATION", "Kosha is only for people aged 18 or older", {
-        ageConfirmed: ["Kosha is only for people aged 18 or older"],
+    if (!row?.ageConfirmedAt && input.ageConfirmed !== "on") {
+      const t = await getT();
+      throw new AppError("VALIDATION", t("account.adultsOnly"), {
+        ageConfirmed: [t("account.adultsOnly")],
       });
+    }
     const now = new Date();
     await db.user.update({
       where: { id: user.id },

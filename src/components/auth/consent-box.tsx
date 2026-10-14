@@ -36,5 +36,5 @@ export function ConsentBox({
   );
 }
 
-/** India's DPDP Act 2023 treats anyone under 18 as a child; Kosha is for adults only. */
-export const AGE_LABEL = "I am 18 years of age or older.";
+// India's DPDP Act 2023 treats anyone under 18 as a child; Kosha is for adults only. The
+// age box text is "account.consent.age".

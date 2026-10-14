@@ -27,87 +27,102 @@ import {
 import { ConfirmDelete } from "@/components/forms/confirm-delete";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CONDITION_STATUS_LABELS, SEVERITY_LABELS } from "@/lib/catalog/labels";
 import { formatDate, formatDateTime, toDateInputValue } from "@/lib/format";
 import { formatIndianPhone } from "@/lib/india";
 import { cn, toNum } from "@/lib/utils";
+import { getT } from "@/i18n/server";
+import type { MessageKey } from "@/i18n/messages";
 
-export const metadata: Metadata = { title: "Settings" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("nav.settings") };
+}
 
 const TABS = [
-  { key: "profile", label: "Profile" },
-  { key: "health", label: "Health summary" },
-  { key: "preferences", label: "Preferences" },
-  { key: "plan", label: "Plan" },
-  { key: "ai", label: "AI helper" },
-  { key: "privacy", label: "Privacy & security" },
-] as const;
+  { key: "profile", label: "account.tab.profile" },
+  { key: "health", label: "account.tab.health" },
+  { key: "preferences", label: "account.tab.preferences" },
+  { key: "plan", label: "account.tab.plan" },
+  { key: "ai", label: "account.tab.ai" },
+  { key: "privacy", label: "account.tab.privacy" },
+] as const satisfies readonly { key: string; label: MessageKey }[];
 
-const ACTION_LABELS: Record<string, string> = {
-  "auth.sign_in": "Signed in",
-  "auth.sign_out": "Signed out",
-  "auth.sign_up": "Account created",
-  "auth.password_changed": "Password changed",
-  "auth.sessions_revoked": "Signed out other devices",
-  "document.upload": "Uploaded a document",
-  "document.download": "Downloaded a document",
-  "document.view": "Viewed a document",
-  "document.delete": "Deleted a document",
-  "data.export": "Exported data",
-  "ai.query": "Asked the assistant",
-  "record.create": "Added a record",
-  "record.update": "Edited a record",
-  "record.delete": "Deleted a record",
-  "lab.create": "Added lab results",
-  "lab.update": "Edited lab results",
-  "lab.delete": "Deleted lab results",
-  "lab.import_confirmed": "Confirmed imported lab values",
-  "measurement.create": "Added a reading",
-  "measurement.update": "Edited a reading",
-  "measurement.delete": "Deleted a reading",
-  "measurement.import": "Imported readings",
-  "profile.update": "Updated profile",
-  "health_summary.update": "Updated health summary",
-  "ai.key_saved": "Added an AI key",
-  "ai.key_removed": "Removed the AI key",
-  "ai.document_reading": "Changed AI document reading",
-  "consent.given": "Gave consent",
+const ACTION_LABELS: Record<string, MessageKey> = {
+  "auth.sign_in": "account.activity.auth.sign_in",
+  "auth.sign_out": "account.activity.auth.sign_out",
+  "auth.sign_up": "account.activity.auth.sign_up",
+  "auth.password_changed": "account.activity.auth.password_changed",
+  "auth.sessions_revoked": "account.activity.auth.sessions_revoked",
+  "document.upload": "account.activity.document.upload",
+  "document.download": "account.activity.document.download",
+  "document.view": "account.activity.document.view",
+  "document.delete": "account.activity.document.delete",
+  "data.export": "account.activity.data.export",
+  "ai.query": "account.activity.ai.query",
+  "record.create": "account.activity.record.create",
+  "record.update": "account.activity.record.update",
+  "record.delete": "account.activity.record.delete",
+  "lab.create": "account.activity.lab.create",
+  "lab.update": "account.activity.lab.update",
+  "lab.delete": "account.activity.lab.delete",
+  "lab.import_confirmed": "account.activity.lab.import_confirmed",
+  "measurement.create": "account.activity.measurement.create",
+  "measurement.update": "account.activity.measurement.update",
+  "measurement.delete": "account.activity.measurement.delete",
+  "measurement.import": "account.activity.measurement.import",
+  "profile.update": "account.activity.profile.update",
+  "health_summary.update": "account.activity.health_summary.update",
+  "ai.key_saved": "account.activity.ai.key_saved",
+  "ai.key_removed": "account.activity.ai.key_removed",
+  "ai.document_reading": "account.activity.ai.document_reading",
+  "consent.given": "account.activity.consent.given",
 };
+
+const SEVERITY_KEYS = {
+  MILD: "account.severity.MILD",
+  MODERATE: "account.severity.MODERATE",
+  SEVERE: "account.severity.SEVERE",
+  UNKNOWN: "account.severity.UNKNOWN",
+} as const satisfies Record<string, MessageKey>;
+
+const CONDITION_STATUS_KEYS = {
+  ACTIVE: "account.conditionStatus.ACTIVE",
+  MANAGED: "account.conditionStatus.MANAGED",
+  RESOLVED: "account.conditionStatus.RESOLVED",
+} as const satisfies Record<string, MessageKey>;
 
 export default async function SettingsPage({
   searchParams,
 }: {
   searchParams: Promise<{ tab?: string; paid?: string }>;
 }) {
+  const t = await getT();
   const user = await requireUser();
   const { tab: rawTab, paid } = await searchParams;
-  const tab = TABS.find((t) => t.key === rawTab)?.key ?? "profile";
+  const tab = TABS.find((x) => x.key === rawTab)?.key ?? "profile";
   const tz = user.timezone;
   const { user: account, profile, medications, allergies, conditions } = await getProfile(user.id);
 
   return (
     <div className="mx-auto max-w-4xl">
-      <PageHeader
-        title="Settings"
-        description="Your details, health summary, AI helper and privacy."
-      />
+      <PageHeader title={t("nav.settings")} description={t("account.settings.description")} />
       <nav
-        aria-label="Settings sections"
+        aria-label={t("account.settings.sections")}
         className="-mx-4 mb-6 flex gap-1 overflow-x-auto border-b px-4 sm:mx-0 sm:px-0"
       >
-        {TABS.map((t) => (
+        {TABS.map((x) => (
           <Link
-            key={t.key}
-            href={`/settings?tab=${t.key}`}
-            aria-current={tab === t.key ? "page" : undefined}
+            key={x.key}
+            href={`/settings?tab=${x.key}`}
+            aria-current={tab === x.key ? "page" : undefined}
             className={cn(
               "shrink-0 border-b-2 px-3 pt-1 pb-3 text-sm font-medium transition",
-              tab === t.key
+              tab === x.key
                 ? "border-primary text-foreground"
                 : "text-muted-foreground hover:text-foreground border-transparent",
             )}
           >
-            {t.label}
+            {t(x.label)}
           </Link>
         ))}
       </nav>
@@ -148,17 +163,18 @@ export default async function SettingsPage({
         <div className="space-y-6">
           <HealthCard
             icon={HeartPulse}
-            title="Medical conditions"
+            title={t("account.health.conditions")}
             action={<HealthItemDialog kind="condition" />}
-            empty="No conditions added."
+            empty={t("account.health.conditions.empty")}
           >
             {conditions.map((c) => (
               <Row
                 key={c.id}
                 title={c.name}
                 subtitle={[
-                  CONDITION_STATUS_LABELS[c.status],
-                  c.diagnosedOn && `since ${formatDate(c.diagnosedOn, "UTC")}`,
+                  t(CONDITION_STATUS_KEYS[c.status]),
+                  c.diagnosedOn &&
+                    t("account.health.since", { date: formatDate(c.diagnosedOn, "UTC") }),
                 ]
                   .filter(Boolean)
                   .join(", ")}
@@ -176,12 +192,12 @@ export default async function SettingsPage({
                     />
                     <ConfirmDelete
                       action={deleteHealthItemAction.bind(null, "condition", c.id)}
-                      title="Remove this condition?"
+                      title={t("account.health.removeCondition")}
                       description={c.name}
                       iconOnly
                       triggerVariant="ghost"
                       triggerSize="sm"
-                      triggerLabel={`Remove ${c.name}`}
+                      triggerLabel={t("account.health.remove", { name: c.name })}
                     />
                   </>
                 }
@@ -190,20 +206,25 @@ export default async function SettingsPage({
           </HealthCard>
           <HealthCard
             icon={Pill}
-            title="Medications"
+            title={t("account.health.medications")}
             action={<HealthItemDialog kind="medication" />}
-            empty="No medications added."
-            note="Recorded exactly as prescribed. Kosha never recommends medicines or doses."
+            empty={t("account.health.medications.empty")}
+            note={t("account.health.medications.note")}
           >
             {medications.map((m) => (
               <Row
                 key={m.id}
                 title={
                   <>
-                    {m.name} {!m.active && <Badge variant="secondary">Stopped</Badge>}
+                    {m.name}{" "}
+                    {!m.active && <Badge variant="secondary">{t("account.health.stopped")}</Badge>}
                   </>
                 }
-                subtitle={[m.dosage, m.frequency, m.prescribedBy && `by ${m.prescribedBy}`]
+                subtitle={[
+                  m.dosage,
+                  m.frequency,
+                  m.prescribedBy && t("account.health.by", { name: m.prescribedBy }),
+                ]
                   .filter(Boolean)
                   .join(", ")}
                 actions={
@@ -224,12 +245,12 @@ export default async function SettingsPage({
                     />
                     <ConfirmDelete
                       action={deleteHealthItemAction.bind(null, "medication", m.id)}
-                      title="Remove this medication?"
+                      title={t("account.health.removeMedication")}
                       description={m.name}
                       iconOnly
                       triggerVariant="ghost"
                       triggerSize="sm"
-                      triggerLabel={`Remove ${m.name}`}
+                      triggerLabel={t("account.health.remove", { name: m.name })}
                     />
                   </>
                 }
@@ -238,15 +259,15 @@ export default async function SettingsPage({
           </HealthCard>
           <HealthCard
             icon={AlertTriangle}
-            title="Allergies"
+            title={t("account.health.allergies")}
             action={<HealthItemDialog kind="allergy" />}
-            empty="No allergies added."
+            empty={t("account.health.allergies.empty")}
           >
             {allergies.map((a) => (
               <Row
                 key={a.id}
                 title={a.allergen}
-                subtitle={[a.reaction, SEVERITY_LABELS[a.severity]].filter(Boolean).join(", ")}
+                subtitle={[a.reaction, t(SEVERITY_KEYS[a.severity])].filter(Boolean).join(", ")}
                 actions={
                   <>
                     <HealthItemDialog
@@ -261,12 +282,12 @@ export default async function SettingsPage({
                     />
                     <ConfirmDelete
                       action={deleteHealthItemAction.bind(null, "allergy", a.id)}
-                      title="Remove this allergy?"
+                      title={t("account.health.removeAllergy")}
                       description={a.allergen}
                       iconOnly
                       triggerVariant="ghost"
                       triggerSize="sm"
-                      triggerLabel={`Remove ${a.allergen}`}
+                      triggerLabel={t("account.health.remove", { name: a.allergen })}
                     />
                   </>
                 }
@@ -300,6 +321,7 @@ export default async function SettingsPage({
 }
 
 async function AiTab({ userId, isDemo, tz }: { userId: string; isDemo: boolean; tz: string }) {
+  const t = await getT();
   const [saved, consent] = await Promise.all([
     getAiSettings(userId),
     db.user.findUnique({ where: { id: userId }, select: { aiConsentAt: true } }),
@@ -307,7 +329,7 @@ async function AiTab({ userId, isDemo, tz }: { userId: string; isDemo: boolean; 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>AI helper</CardTitle>
+        <CardTitle>{t("account.tab.ai")}</CardTitle>
       </CardHeader>
       <CardContent>
         <AiHelperSettings
@@ -332,6 +354,7 @@ async function AiTab({ userId, isDemo, tz }: { userId: string; isDemo: boolean; 
 }
 
 async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: boolean; tz: string }) {
+  const t = await getT();
   const [sessions, activity, jar, account] = await Promise.all([
     listSessions(userId),
     db.auditLog.findMany({
@@ -366,7 +389,7 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
       {!isDemo && (
         <Card>
           <CardHeader>
-            <CardTitle>Help improve report reading</CardTitle>
+            <CardTitle>{t("account.privacy.improveTitle")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ImproveReadingSwitch initial={!!account?.improveReadingAt} />
@@ -376,83 +399,74 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
       <Card>
         <CardContent className="space-y-3 pt-5 text-sm sm:pt-6">
           <div className="flex items-center gap-2 font-medium">
-            <ShieldCheck className="text-primary size-4" /> How your data is handled
+            <ShieldCheck className="text-primary size-4" /> {t("account.privacy.handling")}
           </div>
           <ul className="text-muted-foreground list-disc space-y-1.5 pl-5">
-            <li>
-              Your records are visible only to your account. Every request is checked on the server.
-            </li>
-            <li>
-              Documents are stored privately and are only served to you after checking your session.
-            </li>
-            <li>
-              The AI assistant only reads the records relevant to each question and never changes
-              your records.
-            </li>
-            <li>Security events are logged without the contents of your records.</li>
+            <li>{t("account.privacy.point1")}</li>
+            <li>{t("account.privacy.point2")}</li>
+            <li>{t("account.privacy.point3")}</li>
+            <li>{t("account.privacy.point4")}</li>
           </ul>
-          <p className="text-muted-foreground text-xs">
-            Kosha is not a government or ABDM-integrated service. It doesn&apos;t share your records
-            with hospitals, insurers or employers, and never sells them. The companies that host
-            Kosha, and an AI service only if you switch AI on, handle them for us; the Privacy
-            Policy lists them.
-          </p>
+          <p className="text-muted-foreground text-xs">{t("account.privacy.sharing")}</p>
           <dl className="grid gap-2 border-t pt-3 sm:grid-cols-2">
             <div>
-              <dt className="text-muted-foreground text-xs">Email</dt>
+              <dt className="text-muted-foreground text-xs">{t("account.email")}</dt>
               <dd>
                 {account?.email} ·{" "}
                 {account?.emailVerified || isDemo ? (
-                  <span className="text-success">confirmed</span>
+                  <span className="text-success">{t("account.privacy.confirmed")}</span>
                 ) : (
-                  <span className="text-warning">not confirmed yet</span>
+                  <span className="text-warning">{t("account.privacy.notConfirmed")}</span>
                 )}
               </dd>
             </div>
             <div>
-              <dt className="text-muted-foreground text-xs">Your consent</dt>
+              <dt className="text-muted-foreground text-xs">{t("account.privacy.consent")}</dt>
               <dd>
                 {account?.healthDataConsentAt
-                  ? `Given ${formatDate(account.healthDataConsentAt, tz)} (version ${account.consentVersion})`
-                  : "Given before consent records were kept"}
+                  ? t("account.privacy.consentGiven", {
+                      date: formatDate(account.healthDataConsentAt, tz),
+                      version: account.consentVersion ?? "",
+                    })
+                  : t("account.privacy.consentOld")}
               </dd>
             </div>
           </dl>
           <p className="text-xs">
             <Link href="/privacy" className="text-primary underline underline-offset-2">
-              Privacy Policy
+              {t("account.link.privacy")}
             </Link>{" "}
             ·{" "}
             <Link href="/terms" className="text-primary underline underline-offset-2">
-              Terms of Use
+              {t("account.link.terms")}
             </Link>
-            . To stop using AI, switch it off under AI helper. To withdraw all consent, delete your
-            account below.
+            . {t("account.privacy.withdraw")}
           </p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Password</CardTitle>
+          <CardTitle>{t("account.password")}</CardTitle>
         </CardHeader>
         <CardContent>
           {isDemo ? (
-            <p className="text-muted-foreground text-sm">
-              The demo account&apos;s password can&apos;t be changed.
-            </p>
+            <p className="text-muted-foreground text-sm">{t("account.privacy.demoPassword")}</p>
           ) : hasPassword ? (
             <ChangePasswordForm />
           ) : (
             <p className="text-muted-foreground text-sm">
-              You sign in with {linked.join(" or ") || "Google or Apple"}, so there&apos;s no Kosha
-              password to change.
+              {t("account.privacy.oauthPassword", {
+                providers: (linked.length ? linked : ["Google", "Apple"]).join(
+                  ` ${t("account.or")} `,
+                ),
+              })}
             </p>
           )}
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Signed-in devices</CardTitle>
+          <CardTitle>{t("account.devices.title")}</CardTitle>
           {sessions.length > 1 && <RevokeSessionsButton />}
         </CardHeader>
         <CardContent>
@@ -460,11 +474,13 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
             {sessions.map((s) => (
               <li key={s.id} className="flex items-center justify-between gap-3 py-2.5">
                 <span>
-                  {s.device ?? "Unknown device"}{" "}
-                  {s.tokenHash === currentHash && <Badge className="ml-1">This device</Badge>}
+                  {s.device ?? t("account.devices.unknown")}{" "}
+                  {s.tokenHash === currentHash && (
+                    <Badge className="ml-1">{t("account.devices.current")}</Badge>
+                  )}
                 </span>
                 <span className="text-muted-foreground text-xs">
-                  Active {formatDateTime(s.lastUsedAt, tz)}
+                  {t("account.devices.active", { time: formatDateTime(s.lastUsedAt, tz) })}
                 </span>
               </li>
             ))}
@@ -473,26 +489,22 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Your data</CardTitle>
+          <CardTitle>{t("account.data.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-muted-foreground text-sm">
-            Download your data in one file: records, lab results, readings, health summary,
-            assistant conversations, consent records, signed-in devices and account activity.
-            Uploaded files themselves are downloaded one by one from Reports &amp; files.
-          </p>
+          <p className="text-muted-foreground text-sm">{t("account.data.desc")}</p>
           <ExportButton />
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Recent account activity</CardTitle>
+          <CardTitle>{t("account.activity.title")}</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="divide-y text-sm">
             {activity.map((a) => (
               <li key={a.id} className="flex justify-between gap-3 py-2">
-                <span>{ACTION_LABELS[a.action] ?? a.action}</span>
+                <span>{ACTION_LABELS[a.action] ? t(ACTION_LABELS[a.action]) : a.action}</span>
                 <span className="text-muted-foreground text-xs">
                   {formatDateTime(a.createdAt, tz)}
                 </span>
@@ -502,9 +514,7 @@ async function PrivacyTab({ userId, isDemo, tz }: { userId: string; isDemo: bool
         </CardContent>
       </Card>
       {isDemo ? (
-        <p className="text-muted-foreground text-sm">
-          The shared demo account can&apos;t be deleted.
-        </p>
+        <p className="text-muted-foreground text-sm">{t("account.delete.demo")}</p>
       ) : (
         <DeleteAccountForm needsPassword={hasPassword} />
       )}

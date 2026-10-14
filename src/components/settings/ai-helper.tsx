@@ -17,6 +17,7 @@ import { Input, NativeSelect } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { AI_SERVICES, AI_SERVICE_IDS, type AiServiceId } from "@/lib/ai-services";
+import { useT } from "@/i18n/client";
 
 export interface AiSettingsView {
   provider: AiServiceId;
@@ -41,14 +42,9 @@ export function AiHelperSettings({
   /** Whether this user has agreed to use that service. */
   serverConsent: boolean;
 }) {
+  const t = useT();
   const [replacing, setReplacing] = useState(false);
-  if (isDemo)
-    return (
-      <p className="text-muted-foreground text-sm">
-        API keys can&apos;t be added to the shared demo account. Create your own account to connect
-        an AI service.
-      </p>
-    );
+  if (isDemo) return <p className="text-muted-foreground text-sm">{t("account.ai.demo")}</p>;
   return (
     <div className="space-y-6">
       {serverAi && !saved && <ServerAiConsent label={serverAi} initial={serverConsent} />}
@@ -59,37 +55,28 @@ export function AiHelperSettings({
       )}
       <div className="text-muted-foreground flex gap-2.5 border-t pt-4 text-[13px]">
         <Lock className="mt-0.5 size-4 shrink-0" />
-        <p>
-          Your key is encrypted before it is stored, is only used for your own questions and
-          documents, and is never shown again or sent back to your browser. With your own key, what
-          you send is handled by your account with that company, under its terms. Without a key or
-          consent, the helper answers from your records with simple built-in summaries (no AI), and
-          documents are read on this server only. Kosha is not affiliated with any of these AI
-          companies.
-        </p>
+        <p>{t("account.ai.keyNote")}</p>
       </div>
     </div>
   );
 }
 
 function ServerAiConsent({ label, initial }: { label: string; initial: boolean }) {
+  const t = useT();
   const [on, setOn] = useState(initial);
   const [pending, start] = useTransition();
   return (
     <label className="flex items-start justify-between gap-4 rounded-md border p-4">
       <span className="text-sm">
-        <span className="block font-medium">Use AI for answers</span>
+        <span className="block font-medium">{t("account.ai.useAi")}</span>
         <span className="text-muted-foreground">
-          Optional. When on, your question, your recent messages in that conversation and the
-          records that relate to it are sent to {label}, which writes the answer. Uploaded reports
-          may also be sent to it to be read. You can turn this off at any time; nothing more is sent
-          after that.
+          {t("account.ai.useAi.desc", { service: label })}
         </span>
       </span>
       <Switch
         checked={on}
         disabled={pending}
-        aria-label="Use AI for answers"
+        aria-label={t("account.ai.useAi")}
         onCheckedChange={(next) => {
           setOn(next);
           start(async () => {
@@ -97,7 +84,7 @@ function ServerAiConsent({ label, initial }: { label: string; initial: boolean }
             if (res.ok) toast.success(res.message);
             else {
               setOn(!next);
-              toast.error(res.error ?? "Couldn't change this setting");
+              toast.error(res.error ?? t("account.changeFailed"));
             }
           });
         }}
@@ -107,6 +94,7 @@ function ServerAiConsent({ label, initial }: { label: string; initial: boolean }
 }
 
 function SavedKey({ saved, onReplace }: { saved: AiSettingsView; onReplace: () => void }) {
+  const t = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [reading, setReading] = useState(saved.readDocuments);
@@ -119,12 +107,12 @@ function SavedKey({ saved, onReplace }: { saved: AiSettingsView; onReplace: () =
         <div className="min-w-0 flex-1">
           <div className="font-medium">{saved.providerLabel}</div>
           <div className="text-muted-foreground text-sm">
-            Key ending <span className="tabular font-mono">…{saved.keyHint}</span>, added{" "}
-            {saved.savedOn}
+            {t("account.ai.keyEnding")} <span className="tabular font-mono">…{saved.keyHint}</span>,{" "}
+            {t("account.ai.addedOn", { date: saved.savedOn })}
             {saved.model && (
               <>
                 {" "}
-                · model <span className="font-mono break-all">{saved.model}</span>
+                · {t("account.ai.model")} <span className="font-mono break-all">{saved.model}</span>
               </>
             )}
           </div>
@@ -132,16 +120,14 @@ function SavedKey({ saved, onReplace }: { saved: AiSettingsView; onReplace: () =
       </div>
       {!saved.usable && (
         <p role="alert" className="border-warning/40 bg-warning/10 rounded-lg border p-3 text-sm">
-          This key can no longer be unlocked because the app&apos;s secret was changed. Paste it
-          again to keep using the AI helper.
+          {t("account.ai.unusable")}
         </p>
       )}
       <label className="flex items-start justify-between gap-4 rounded-md border p-4">
         <span className="text-sm">
-          <span className="block font-medium">Let the AI read documents I upload</span>
+          <span className="block font-medium">{t("account.ai.readDocs")}</span>
           <span className="text-muted-foreground">
-            The PDF or photo is sent to {saved.providerLabel} to read the test results. Most
-            accurate for photos. When off, documents are read on this server only.
+            {t("account.ai.readDocs.desc", { service: saved.providerLabel })}
           </span>
         </span>
         <Switch
@@ -154,16 +140,16 @@ function SavedKey({ saved, onReplace }: { saved: AiSettingsView; onReplace: () =
               if (res.ok) toast.success(res.message);
               else {
                 setReading(!on);
-                toast.error(res.error ?? "Couldn't change this setting");
+                toast.error(res.error ?? t("account.changeFailed"));
               }
             });
           }}
-          aria-label="Let the AI read documents I upload"
+          aria-label={t("account.ai.readDocs")}
         />
       </label>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" onClick={onReplace}>
-          Replace key
+          {t("account.ai.replace")}
         </Button>
         <Button
           variant="ghost"
@@ -174,12 +160,12 @@ function SavedKey({ saved, onReplace }: { saved: AiSettingsView; onReplace: () =
               if (res.ok) {
                 toast.success(res.message);
                 router.refresh();
-              } else toast.error(res.error ?? "Couldn't remove the key");
+              } else toast.error(res.error ?? t("account.ai.removeFailed"));
             })
           }
         >
           <BusyContent active={pending} kind="save" icon={<Trash2 />}>
-            Remove key
+            {t("account.ai.remove")}
           </BusyContent>
         </Button>
       </div>
@@ -188,19 +174,17 @@ function SavedKey({ saved, onReplace }: { saved: AiSettingsView; onReplace: () =
 }
 
 function KeyForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean }) {
+  const t = useT();
   const [provider, setProvider] = useState<AiServiceId>("anthropic");
   const svc = AI_SERVICES[provider];
   const { onSubmit, pending, err } = useActionForm(saveAiKeyAction, { onSuccess: onDone });
   return (
     <form onSubmit={onSubmit} className="space-y-5" autoComplete="off">
       <div className="space-y-2 text-sm">
-        <p>
-          Connect your own AI account to give the helper a proper brain: better answers about your
-          records, and much better reading of report photos.
-        </p>
+        <p>{t("account.ai.intro")}</p>
         <ol className="text-muted-foreground list-decimal space-y-1 pl-5">
           <li>
-            Go to{" "}
+            {t("account.ai.step1.before") && `${t("account.ai.step1.before")} `}
             <a
               href={svc.keysUrl}
               target="_blank"
@@ -209,14 +193,14 @@ function KeyForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
             >
               {svc.keysSite}
             </a>{" "}
-            and sign in (add a payment method or credits if the service asks).
+            {t("account.ai.step1.after")}
           </li>
-          <li>Create a new API key.</li>
-          <li>Copy the key and paste it below.</li>
+          <li>{t("account.ai.step2")}</li>
+          <li>{t("account.ai.step3")}</li>
         </ol>
       </div>
       <div className="grid gap-4 sm:grid-cols-[minmax(0,14rem)_1fr]">
-        <Field label="AI service" htmlFor="ai-provider" error={err("provider")}>
+        <Field label={t("account.ai.service")} htmlFor="ai-provider" error={err("provider")}>
           <NativeSelect
             id="ai-provider"
             name="provider"
@@ -230,26 +214,26 @@ function KeyForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
             ))}
           </NativeSelect>
         </Field>
-        <Field label="API key" htmlFor="ai-key" error={err("apiKey")}>
+        <Field label={t("account.ai.apiKey")} htmlFor="ai-key" error={err("apiKey")}>
           <Input
             id="ai-key"
             name="apiKey"
             type="password"
             autoComplete="off"
             spellCheck={false}
-            placeholder={svc.keyPrefix ? `${svc.keyPrefix}…` : "Paste your key"}
+            placeholder={svc.keyPrefix ? `${svc.keyPrefix}…` : t("account.ai.paste")}
             required
           />
         </Field>
       </div>
       <Field
-        label="Model (optional)"
+        label={t("account.ai.modelLabel")}
         htmlFor="ai-model"
         error={err("model")}
         hint={
           svc.defaultModel
-            ? `Leave empty to use ${svc.defaultModel}. To read report photos, choose a model that can see images.`
-            : "Leave empty to use Kosha's usual Claude model."
+            ? t("account.ai.modelHint", { model: svc.defaultModel })
+            : t("account.ai.modelHintDefault")
         }
       >
         <Input
@@ -258,25 +242,25 @@ function KeyForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
           name="model"
           autoComplete="off"
           spellCheck={false}
-          placeholder={svc.defaultModel ?? "Default"}
+          placeholder={svc.defaultModel ?? t("account.ai.modelDefault")}
         />
       </Field>
       <label className="flex items-start gap-3 text-sm">
         <input type="checkbox" name="readDocuments" className="accent-primary mt-0.5 size-4" />
         <span>
-          Also let the AI read reports I upload (optional).{" "}
+          {t("account.ai.alsoRead")}{" "}
           <span className="text-muted-foreground">
-            Photos and PDFs are sent to {svc.label} to read the results.
+            {t("account.ai.alsoRead.desc", { service: svc.label })}
           </span>
         </span>
       </label>
       <div className="flex flex-wrap gap-2">
-        <SubmitButton pending={pending} pendingLabel="Checking the key…" loadingKind="aiKey">
-          Save key
+        <SubmitButton pending={pending} pendingLabel={t("account.ai.checking")} loadingKind="aiKey">
+          {t("account.ai.saveKey")}
         </SubmitButton>
         {canCancel && (
           <Button type="button" variant="ghost" onClick={onDone}>
-            Cancel
+            {t("account.cancel")}
           </Button>
         )}
       </div>

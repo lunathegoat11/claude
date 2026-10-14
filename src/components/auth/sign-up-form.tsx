@@ -5,7 +5,8 @@ import { useActionForm } from "@/components/forms/use-action-form";
 import { Field, FormError } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Input } from "@/components/ui/input";
-import { AGE_LABEL, ConsentBox } from "./consent-box";
+import { ConsentBox } from "./consent-box";
+import { useT } from "@/i18n/client";
 import { OAuthButtons } from "./oauth-buttons";
 
 export function SignUpForm({
@@ -20,12 +21,17 @@ export function SignUpForm({
   /** From an invite link, so the person doesn't have to type it. */
   invite?: string;
 }) {
+  const t = useT();
   const { state, onSubmit, pending, err } = useActionForm(signUpAction);
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       {state.error && !state.fieldErrors && <FormError message={state.error} />}
       {inviteOnly && (
-        <Field label="Invite code" htmlFor="inviteCode" error={err("inviteCode")}>
+        <Field
+          label={t("account.signUp.inviteCode")}
+          htmlFor="inviteCode"
+          error={err("inviteCode")}
+        >
           <Input
             id="inviteCode"
             name="inviteCode"
@@ -42,10 +48,10 @@ export function SignUpForm({
         apple={apple}
         inviteFieldId={inviteOnly ? "inviteCode" : undefined}
       />
-      <Field label="Your name" htmlFor="name" error={err("name")}>
+      <Field label={t("account.signUp.name")} htmlFor="name" error={err("name")}>
         <Input id="name" name="name" autoComplete="name" required aria-invalid={!!err("name")} />
       </Field>
-      <Field label="Email" htmlFor="email" error={err("email")}>
+      <Field label={t("account.email")} htmlFor="email" error={err("email")}>
         <Input
           id="email"
           name="email"
@@ -57,10 +63,10 @@ export function SignUpForm({
         />
       </Field>
       <Field
-        label="Password"
+        label={t("account.password")}
         htmlFor="password"
         error={err("password")}
-        hint="At least 10 characters, with a number or symbol."
+        hint={t("account.reset.passwordHint")}
       >
         <Input
           id="password"
@@ -72,9 +78,9 @@ export function SignUpForm({
         />
       </Field>
       <fieldset className="bg-muted space-y-3 rounded-2xl p-4">
-        <legend className="sr-only">Consent</legend>
+        <legend className="sr-only">{t("account.consent.legend")}</legend>
         <ConsentBox name="ageConfirmed" error={err("ageConfirmed")}>
-          {AGE_LABEL}
+          {t("account.consent.age")}
         </ConsentBox>
         <TermsConsents err={err} />
         <ImproveReadingConsent />
@@ -83,15 +89,15 @@ export function SignUpForm({
         pending={pending}
         className="w-full"
         size="lg"
-        pendingLabel="Creating account…"
+        pendingLabel={t("account.signUp.creating")}
         loadingKind="signUp"
       >
-        Create account
+        {t("account.signUp.create")}
       </SubmitButton>
       <p className="text-muted-foreground text-center text-sm">
-        Already have an account?{" "}
+        {t("account.signUp.haveAccount")}{" "}
         <Link href="/sign-in" className="text-primary font-medium hover:underline">
-          Sign in
+          {t("account.signIn")}
         </Link>
       </p>
     </form>
@@ -100,31 +106,31 @@ export function SignUpForm({
 
 /** The two consents every account needs: the terms, and processing of health data. */
 export function TermsConsents({ err }: { err: (k: string) => string[] | undefined }) {
+  const t = useT();
+  const before = t("account.consent.termsBefore");
   return (
     <>
       <ConsentBox name="acceptTerms" error={err("acceptTerms")}>
-        I agree to the{" "}
+        {before && `${before} `}
         <Link
           href="/terms"
           target="_blank"
           className="text-primary font-medium underline underline-offset-2"
         >
-          Terms of Use
+          {t("account.consent.termsLink")}
         </Link>{" "}
-        and{" "}
+        {t("account.consent.termsAnd")}{" "}
         <Link
           href="/privacy"
           target="_blank"
           className="text-primary font-medium underline underline-offset-2"
         >
-          Privacy Policy
+          {t("account.consent.privacyLink")}
         </Link>
-        , and I understand Kosha organises my information but does not give medical diagnosis or
-        advice.
+        {t("account.consent.termsAfter")}
       </ConsentBox>
       <ConsentBox name="healthDataConsent" error={err("healthDataConsent")}>
-        I consent to Kosha storing and processing the health information I add, only to provide this
-        service to me. I can download or delete it at any time.
+        {t("account.consent.healthData")}
       </ConsentBox>
     </>
   );
@@ -132,10 +138,6 @@ export function TermsConsents({ err }: { err: (k: string) => string[] | undefine
 
 /** Optional: let corrections improve report reading. Left unticked unless chosen. */
 export function ImproveReadingConsent() {
-  return (
-    <ConsentBox name="improveReading">
-      Optional: when I correct values read from a report, Kosha may learn the kind of mistake it
-      made (never the values themselves). I can change this in Settings.
-    </ConsentBox>
-  );
+  const t = useT();
+  return <ConsentBox name="improveReading">{t("account.consent.improve")}</ConsentBox>;
 }

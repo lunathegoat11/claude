@@ -5,19 +5,24 @@ import { verifyEmailAction } from "@/actions/auth";
 import { findValidToken } from "@/server/auth/email-tokens";
 import { getCurrentUser } from "@/server/auth/session";
 import { Button } from "@/components/ui/button";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Confirm email",
-  description: "Confirm the email address for your Kosha Health account.",
-  referrer: "no-referrer",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t("account.meta.verify.title"),
+    description: t("account.meta.verify.desc"),
+    referrer: "no-referrer",
+    robots: { index: false },
+  };
+}
 
 export default async function VerifyEmailPage({
   searchParams,
 }: {
   searchParams: Promise<{ token?: string; done?: string; failed?: string }>;
 }) {
+  const t = await getT();
   const { token = "", done, failed } = await searchParams;
   const signedIn = !!(await getCurrentUser());
   // Opening the link only checks it; the address is confirmed when the button is pressed.
@@ -41,29 +46,29 @@ export default async function VerifyEmailPage({
       </span>
       <h1 className="text-[28px] font-semibold">
         {state === "done"
-          ? "Email confirmed"
+          ? t("account.verify.done")
           : state === "ready"
-            ? "Confirm your email"
-            : "This link didn't work"}
+            ? t("account.verify.ready")
+            : t("account.verify.failed")}
       </h1>
       <p className="text-muted-foreground text-[15px]">
         {state === "done"
-          ? "Thanks! You can now recover your account by email if you ever forget your password."
+          ? t("account.verify.done.desc")
           : state === "ready"
-            ? "Press the button to confirm this is your email address."
-            : "The link may have expired (they last 24 hours) or already been used. You can send a new one from the banner in the app."}
+            ? t("account.verify.ready.desc")
+            : t("account.verify.failed.desc")}
       </p>
       {state === "ready" ? (
         <form action={verifyEmailAction}>
           <input type="hidden" name="token" value={token} />
           <Button type="submit" size="lg" className="w-full">
-            Confirm my email
+            {t("account.verify.button")}
           </Button>
         </form>
       ) : (
         <Button asChild size="lg" className="w-full">
           <Link href={signedIn ? "/dashboard" : "/sign-in"}>
-            {signedIn ? "Go to dashboard" : "Sign in"}
+            {signedIn ? t("account.verify.dashboard") : t("account.signIn")}
           </Link>
         </Button>
       )}

@@ -6,8 +6,10 @@ import { useActionForm } from "@/components/forms/use-action-form";
 import { Field, FormError } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Input } from "@/components/ui/input";
+import { useT } from "@/i18n/client";
 
 export function ForgotPasswordForm() {
+  const t = useT();
   const { state, onSubmit, pending, err } = useActionForm(forgotPasswordAction, {
     successToast: false,
   });
@@ -18,14 +20,12 @@ export function ForgotPasswordForm() {
           <MailCheck className="size-5" />
         </span>
         <p className="text-[15px]">{state.message}</p>
-        <p className="text-muted-foreground text-sm">
-          The link works for 1 hour. Check your spam folder if you don&apos;t see it.
-        </p>
+        <p className="text-muted-foreground text-sm">{t("account.forgot.linkHour")}</p>
         <Link
           href="/sign-in"
           className="text-primary inline-block text-sm font-medium hover:underline"
         >
-          Back to sign in
+          {t("account.forgot.back")}
         </Link>
       </div>
     );
@@ -33,7 +33,7 @@ export function ForgotPasswordForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       {state.error && !state.fieldErrors && <FormError message={state.error} />}
-      <Field label="Email" htmlFor="email" error={err("email")}>
+      <Field label={t("account.email")} htmlFor="email" error={err("email")}>
         <Input
           id="email"
           name="email"
@@ -48,15 +48,15 @@ export function ForgotPasswordForm() {
         pending={pending}
         className="w-full"
         size="lg"
-        pendingLabel="Sending…"
+        pendingLabel={t("account.forgot.sending")}
         loadingKind="email"
       >
-        Send reset link
+        {t("account.forgot.send")}
       </SubmitButton>
       <p className="text-muted-foreground text-center text-sm">
-        Remembered it?{" "}
+        {t("account.forgot.remembered")}{" "}
         <Link href="/sign-in" className="text-primary font-medium hover:underline">
-          Sign in
+          {t("account.signIn")}
         </Link>
       </p>
     </form>

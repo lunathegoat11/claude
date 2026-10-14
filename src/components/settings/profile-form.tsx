@@ -4,8 +4,17 @@ import { useActionForm } from "@/components/forms/use-action-form";
 import { Field, FormError, FormSection } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Input, NativeSelect } from "@/components/ui/input";
-import { BLOOD_GROUP_LABELS, SEX_LABELS } from "@/lib/catalog/labels";
+import { BLOOD_GROUP_LABELS } from "@/lib/catalog/labels";
+import { useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
 import { INDIAN_STATES, MAJOR_CITIES } from "@/lib/india";
+
+const SEX_KEYS: Record<string, MessageKey> = {
+  FEMALE: "account.sex.FEMALE",
+  MALE: "account.sex.MALE",
+  INTERSEX: "account.sex.INTERSEX",
+  PREFER_NOT_TO_SAY: "account.sex.PREFER_NOT_TO_SAY",
+};
 
 export interface ProfileValues {
   fullName: string;
@@ -30,16 +39,14 @@ export function ProfileForm({
   email: string;
   today: string;
 }) {
+  const t = useT();
   const { state, onSubmit, pending, err } = useActionForm(updateProfileAction);
   return (
     <form onSubmit={onSubmit} className="space-y-8" noValidate>
       {state.error && !state.fieldErrors && <FormError message={state.error} />}
-      <FormSection
-        title="About you"
-        description="Everything except your name is optional. Only add what's useful to you."
-      >
+      <FormSection title={t("account.profile.about")} description={t("account.profile.about.desc")}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Full name" htmlFor="fullName" error={err("fullName")}>
+          <Field label={t("account.profile.fullName")} htmlFor="fullName" error={err("fullName")}>
             <Input
               id="fullName"
               name="fullName"
@@ -48,10 +55,15 @@ export function ProfileForm({
               required
             />
           </Field>
-          <Field label="Email" htmlFor="email" hint="Used to sign in">
+          <Field label={t("account.email")} htmlFor="email" hint={t("account.profile.emailHint")}>
             <Input id="email" value={email} disabled />
           </Field>
-          <Field label="Date of birth" htmlFor="dateOfBirth" optional error={err("dateOfBirth")}>
+          <Field
+            label={t("account.profile.dob")}
+            htmlFor="dateOfBirth"
+            optional
+            error={err("dateOfBirth")}
+          >
             <Input
               id="dateOfBirth"
               name="dateOfBirth"
@@ -61,27 +73,37 @@ export function ProfileForm({
               autoComplete="bday"
             />
           </Field>
-          <Field label="Sex" htmlFor="sex" optional hint="Lab reference ranges often depend on it">
+          <Field
+            label={t("account.profile.sex")}
+            htmlFor="sex"
+            optional
+            hint={t("account.profile.sexHint")}
+          >
             <NativeSelect id="sex" name="sex" defaultValue={values.sex}>
-              <option value="">Not specified</option>
-              {Object.entries(SEX_LABELS).map(([k, v]) => (
+              <option value="">{t("account.profile.notSpecified")}</option>
+              {Object.entries(SEX_KEYS).map(([k, v]) => (
                 <option key={k} value={k}>
-                  {v}
+                  {t(v)}
                 </option>
               ))}
             </NativeSelect>
           </Field>
-          <Field label="Blood group" htmlFor="bloodGroup" optional>
+          <Field label={t("account.profile.bloodGroup")} htmlFor="bloodGroup" optional>
             <NativeSelect id="bloodGroup" name="bloodGroup" defaultValue={values.bloodGroup}>
-              <option value="">Not specified</option>
+              <option value="">{t("account.profile.notSpecified")}</option>
               {Object.entries(BLOOD_GROUP_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>
-                  {v}
+                  {k === "UNKNOWN" ? t("account.profile.bloodUnknown") : v}
                 </option>
               ))}
             </NativeSelect>
           </Field>
-          <Field label="Height (cm)" htmlFor="heightCm" optional error={err("heightCm")}>
+          <Field
+            label={t("account.profile.height")}
+            htmlFor="heightCm"
+            optional
+            error={err("heightCm")}
+          >
             <Input
               id="heightCm"
               name="heightCm"
@@ -91,14 +113,14 @@ export function ProfileForm({
           </Field>
         </div>
       </FormSection>
-      <FormSection title="Contact">
+      <FormSection title={t("account.profile.contact")}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
-            label="Mobile number"
+            label={t("account.profile.mobile")}
             htmlFor="phone"
             optional
             error={err("phone")}
-            hint="Indian number, e.g. +91 98765 43210"
+            hint={t("account.profile.mobileHint")}
           >
             <Input
               id="phone"
@@ -110,7 +132,7 @@ export function ProfileForm({
               placeholder="+91"
             />
           </Field>
-          <Field label="City" htmlFor="city" optional>
+          <Field label={t("account.profile.city")} htmlFor="city" optional>
             <Input
               id="city"
               name="city"
@@ -124,9 +146,9 @@ export function ProfileForm({
               ))}
             </datalist>
           </Field>
-          <Field label="State / UT" htmlFor="state" optional>
+          <Field label={t("account.profile.state")} htmlFor="state" optional>
             <NativeSelect id="state" name="state" defaultValue={values.state}>
-              <option value="">Not specified</option>
+              <option value="">{t("account.profile.notSpecified")}</option>
               {INDIAN_STATES.map((s) => (
                 <option key={s} value={s}>
                   {s}
@@ -137,27 +159,27 @@ export function ProfileForm({
         </div>
       </FormSection>
       <FormSection
-        title="Emergency contact"
-        description="Someone who could be contacted on your behalf."
+        title={t("account.profile.emergency")}
+        description={t("account.profile.emergency.desc")}
       >
         <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="Name" htmlFor="emergencyContactName" optional>
+          <Field label={t("account.profile.name")} htmlFor="emergencyContactName" optional>
             <Input
               id="emergencyContactName"
               name="emergencyContactName"
               defaultValue={values.emergencyContactName}
             />
           </Field>
-          <Field label="Relationship" htmlFor="emergencyContactRelation" optional>
+          <Field label={t("account.profile.relation")} htmlFor="emergencyContactRelation" optional>
             <Input
               id="emergencyContactRelation"
               name="emergencyContactRelation"
               defaultValue={values.emergencyContactRelation}
-              placeholder="e.g. Spouse"
+              placeholder={t("account.profile.relation.ph")}
             />
           </Field>
           <Field
-            label="Phone"
+            label={t("account.profile.phone")}
             htmlFor="emergencyContactPhone"
             optional
             error={err("emergencyContactPhone")}
@@ -174,8 +196,8 @@ export function ProfileForm({
         </div>
       </FormSection>
       <div className="flex justify-end border-t pt-5">
-        <SubmitButton pending={pending} pendingLabel="Saving…">
-          Save profile
+        <SubmitButton pending={pending} pendingLabel={t("account.saving")}>
+          {t("account.profile.save")}
         </SubmitButton>
       </div>
     </form>

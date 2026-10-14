@@ -4,8 +4,10 @@ import { useActionForm } from "@/components/forms/use-action-form";
 import { Field, FormError } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Input } from "@/components/ui/input";
+import { useT } from "@/i18n/client";
 
 export function ResetPasswordForm({ token }: { token: string }) {
+  const t = useT();
   const { state, onSubmit, pending, err } = useActionForm(resetPasswordAction, {
     successToast: false,
   });
@@ -14,10 +16,10 @@ export function ResetPasswordForm({ token }: { token: string }) {
       <input type="hidden" name="token" value={token} />
       {state.error && !state.fieldErrors && <FormError message={state.error} />}
       <Field
-        label="New password"
+        label={t("account.security.new")}
         htmlFor="password"
         error={err("password")}
-        hint="At least 10 characters, with a number or symbol."
+        hint={t("account.reset.passwordHint")}
       >
         <Input
           id="password"
@@ -28,7 +30,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
           aria-invalid={!!err("password")}
         />
       </Field>
-      <Field label="Confirm new password" htmlFor="confirmPassword" error={err("confirmPassword")}>
+      <Field
+        label={t("account.security.confirm")}
+        htmlFor="confirmPassword"
+        error={err("confirmPassword")}
+      >
         <Input
           id="confirmPassword"
           name="confirmPassword"
@@ -38,12 +44,15 @@ export function ResetPasswordForm({ token }: { token: string }) {
           aria-invalid={!!err("confirmPassword")}
         />
       </Field>
-      <SubmitButton pending={pending} className="w-full" size="lg" pendingLabel="Saving…">
-        Set new password
+      <SubmitButton
+        pending={pending}
+        className="w-full"
+        size="lg"
+        pendingLabel={t("account.saving")}
+      >
+        {t("account.reset.set")}
       </SubmitButton>
-      <p className="text-muted-foreground text-center text-xs">
-        For your security, you&apos;ll be signed out on all devices.
-      </p>
+      <p className="text-muted-foreground text-center text-xs">{t("account.reset.signedOut")}</p>
     </form>
   );
 }

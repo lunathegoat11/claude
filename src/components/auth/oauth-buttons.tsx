@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/i18n/client";
 
 /** Google's "G" mark, as its sign-in branding guidelines ask. */
 function GoogleMark() {
@@ -48,6 +49,7 @@ export function OAuthButtons({
   next?: string;
   inviteFieldId?: string;
 }) {
+  const t = useT();
   if (!google && !apple) return null;
   const go = (provider: "google" | "apple") => {
     const q = new URLSearchParams();
@@ -70,7 +72,7 @@ export function OAuthButtons({
             className={`${base} bg-black text-white hover:bg-black/85 dark:bg-white dark:text-black dark:hover:bg-white/90`}
           >
             <AppleMark />
-            Continue with Apple
+            {t("account.oauth.apple")}
           </button>
         )}
         {google && (
@@ -80,13 +82,13 @@ export function OAuthButtons({
             className={`${base} bg-card text-foreground hover:bg-muted shadow-[inset_0_0_0_1px_var(--input)]`}
           >
             <GoogleMark />
-            Continue with Google
+            {t("account.oauth.google")}
           </button>
         )}
       </div>
       <div className="text-muted-foreground flex items-center gap-3 text-[13px]">
         <span className="bg-border h-px flex-1" />
-        or with email
+        {t("account.oauth.orEmail")}
         <span className="bg-border h-px flex-1" />
       </div>
     </div>

@@ -6,6 +6,7 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { NativeSelect } from "@/components/ui/input";
 import { LanguageSwitch } from "@/components/shared/language-switch";
 import { ThemeSegmented, TransparencySwitch } from "@/components/shared/theme-toggle";
+import { useT } from "@/i18n/client";
 
 export function PreferencesForm({
   values,
@@ -19,10 +20,11 @@ export function PreferencesForm({
     autoRegion: string;
   };
 }) {
+  const t = useT();
   const { onSubmit, pending } = useActionForm(updatePreferencesAction);
   return (
     <div className="space-y-8">
-      <FormSection title="Appearance">
+      <FormSection title={t("account.prefs.appearance")}>
         <div className="space-y-5">
           <LanguageSwitch />
           <ThemeSegmented />
@@ -30,59 +32,57 @@ export function PreferencesForm({
         </div>
       </FormSection>
       <form onSubmit={onSubmit} className="space-y-4">
-        <FormSection
-          title="Units"
-          description="Readings are stored precisely and converted for display. Lab results always keep the unit printed on the report."
-        >
+        <FormSection title={t("account.prefs.units")} description={t("account.prefs.units.desc")}>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="Blood glucose" htmlFor="glucoseUnit">
+            <Field label={t("account.prefs.glucose")} htmlFor="glucoseUnit">
               <NativeSelect id="glucoseUnit" name="glucoseUnit" defaultValue={values.glucoseUnit}>
-                <option value="MG_DL">mg/dL (common in India)</option>
+                <option value="MG_DL">{t("account.prefs.glucose.mgdl")}</option>
                 <option value="MMOL_L">mmol/L</option>
               </NativeSelect>
             </Field>
-            <Field label="Weight" htmlFor="weightUnit">
+            <Field label={t("account.prefs.weight")} htmlFor="weightUnit">
               <NativeSelect id="weightUnit" name="weightUnit" defaultValue={values.weightUnit}>
-                <option value="KG">Kilograms (kg)</option>
-                <option value="LB">Pounds (lb)</option>
+                <option value="KG">{t("account.prefs.weight.kg")}</option>
+                <option value="LB">{t("account.prefs.weight.lb")}</option>
               </NativeSelect>
             </Field>
-            <Field label="Temperature" htmlFor="temperatureUnit">
+            <Field label={t("account.prefs.temp")} htmlFor="temperatureUnit">
               <NativeSelect
                 id="temperatureUnit"
                 name="temperatureUnit"
                 defaultValue={values.temperatureUnit}
               >
-                <option value="F">Fahrenheit (°F)</option>
-                <option value="C">Celsius (°C)</option>
+                <option value="F">{t("account.prefs.temp.f")}</option>
+                <option value="C">{t("account.prefs.temp.c")}</option>
               </NativeSelect>
             </Field>
           </div>
         </FormSection>
-        <FormSection
-          title="Reference ranges"
-          description="The ranges your lab results are marked High or Low against."
-        >
+        <FormSection title={t("account.prefs.ranges")} description={t("account.prefs.ranges.desc")}>
           <Field
-            label="Ranges to use"
+            label={t("account.prefs.rangesToUse")}
             htmlFor="rangeRegion"
-            hint="Automatic uses Indian ranges when your phone is set to India's time zone. Indian: the range printed on your report, or India's national range (ICMR, Health Ministry) when there isn't one. International: standard ranges from the US National Institutes of Health (NIH)."
+            hint={t("account.prefs.ranges.hint")}
           >
             <NativeSelect id="rangeRegion" name="rangeRegion" defaultValue={values.rangeRegion}>
               <option value="AUTO">
-                Automatic: {values.autoRegion === "INDIA" ? "Indian" : "international"}
+                {t("account.prefs.auto", {
+                  region: t(
+                    values.autoRegion === "INDIA"
+                      ? "account.prefs.auto.indian"
+                      : "account.prefs.auto.international",
+                  ),
+                })}
               </option>
-              <option value="INDIA">Indian</option>
-              <option value="INTERNATIONAL">International (US NIH)</option>
+              <option value="INDIA">{t("account.prefs.indian")}</option>
+              <option value="INTERNATIONAL">{t("account.prefs.international")}</option>
             </NativeSelect>
           </Field>
         </FormSection>
-        <p className="text-muted-foreground text-sm">
-          Dates are shown as day-month-year, in your phone&rsquo;s time zone.
-        </p>
+        <p className="text-muted-foreground text-sm">{t("account.prefs.dates")}</p>
         <div className="flex justify-end border-t pt-5">
-          <SubmitButton pending={pending} pendingLabel="Saving…">
-            Save preferences
+          <SubmitButton pending={pending} pendingLabel={t("account.saving")}>
+            {t("account.prefs.save")}
           </SubmitButton>
         </div>
       </form>

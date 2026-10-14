@@ -110,13 +110,14 @@
 }
 
 @theme inline {
-  /* San Francisco on Apple devices (zero download); Geist everywhere else. */
+  /* San Francisco on Apple devices (zero download); Geist everywhere else. Hindi and
+     Marathi (Devanagari) and Telugu use Noto, downloaded only when those letters appear. */
   --font-sans:
-    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Geist", "Segoe UI", ui-sans-serif, system-ui,
-    sans-serif;
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Geist", "Segoe UI", "Noto Sans Devanagari",
+    "Noto Sans Telugu", ui-sans-serif, system-ui, sans-serif;
   --font-display:
-    -apple-system, BlinkMacSystemFont, "SF Pro Display", "Geist", "Segoe UI", ui-sans-serif,
-    system-ui, sans-serif;
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "Geist", "Segoe UI",
+    "Noto Sans Devanagari", "Noto Sans Telugu", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   --color-background: var(--background);
@@ -531,4 +532,10 @@
   .glass-pop {
     animation: none;
   }
+}
+
+/* Tighter letter-spacing suits English headings but squeezes Devanagari and Telugu
+   letters into each other, so those languages use normal spacing. */
+html:is([lang^="hi"], [lang^="mr"], [lang^="te"]) * {
+  letter-spacing: normal !important;
 }

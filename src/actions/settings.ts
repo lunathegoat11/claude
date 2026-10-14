@@ -20,6 +20,7 @@ import { AppError } from "@/server/errors";
 import { uuid } from "@/lib/validation/common";
 import { setImproveReading } from "@/server/services/reading-patterns";
 import { reapplyRanges } from "@/server/services/labs";
+import { getT } from "@/i18n/server";
 
 export async function updateProfileAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction("updateProfile", async () => {
@@ -27,7 +28,7 @@ export async function updateProfileAction(_: ActionState, fd: FormData): Promise
     await updateProfile(user.id, formToObject(fd), user.timezone);
     await audit(user.id, "profile.update", { type: "Profile" }, await requestMeta());
     revalidatePath("/", "layout");
-    return { ok: true, message: "Profile saved" };
+    return { ok: true, message: (await getT())("account.msg.profileSaved") };
   });
 }
 
@@ -36,19 +37,20 @@ export async function updatePreferencesAction(_: ActionState, fd: FormData): Pro
     const user = await requireUserOrThrow();
     await updatePreferences(user.id, formToObject(fd));
     revalidatePath("/", "layout");
-    return { ok: true, message: "Preferences saved" };
+    return { ok: true, message: (await getT())("account.msg.prefsSaved") };
   });
 }
 
 export async function saveHealthItemAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction("saveHealthItem", async () => {
+    const t = await getT();
     const user = await requireUserOrThrow();
     const o = formToObject(fd);
     const id = typeof o.id === "string" && o.id ? uuid.parse(o.id) : null;
     if (o.kind === "medication") await upsertMedication(user.id, id, o, user.timezone);
     else if (o.kind === "allergy") await upsertAllergy(user.id, id, o);
     else if (o.kind === "condition") await upsertCondition(user.id, id, o, user.timezone);
-    else throw new AppError("VALIDATION", "Unknown item type.");
+    else throw new AppError("VALIDATION", t("account.msg.unknownItem"));
     await audit(
       user.id,
       "health_summary.update",
@@ -56,7 +58,7 @@ export async function saveHealthItemAction(_: ActionState, fd: FormData): Promis
       await requestMeta(),
     );
     revalidatePath("/settings");
-    return { ok: true, message: "Saved" };
+    return { ok: true, message: t("account.msg.saved") };
   });
 }
 
@@ -65,25 +67,27 @@ export async function deleteHealthItemAction(
   id: string,
 ): Promise<ActionState> {
   return runAction("deleteHealthItem", async () => {
+    const t = await getT();
     const user = await requireUserOrThrow();
     if (!["medication", "allergy", "condition"].includes(kind))
-      throw new AppError("VALIDATION", "Unknown item type.");
+      throw new AppError("VALIDATION", t("account.msg.unknownItem"));
     await deleteHealthItem(user.id, kind, uuid.parse(id));
     await audit(user.id, "health_summary.update", { type: kind, id }, await requestMeta(), {
       deleted: true,
     });
     revalidatePath("/settings");
-    return { ok: true, message: "Removed" };
+    return { ok: true, message: t("account.msg.removed") };
   });
 }
 
 export async function deleteAccountAction(_: ActionState, fd: FormData): Promise<ActionState> {
   const res = await runAction("deleteAccount", async () => {
+    const t = await getT();
     const user = await requireUserOrThrow();
-    if (user.isDemo) throw new AppError("FORBIDDEN", "The shared demo account can't be deleted.");
+    if (user.isDemo) throw new AppError("FORBIDDEN", t("account.delete.demo"));
     if (fd.get("confirm") !== "DELETE")
-      throw new AppError("VALIDATION", "Type DELETE to confirm.", {
-        confirm: ["Type DELETE to confirm"],
+      throw new AppError("VALIDATION", t("account.delete.typeConfirm"), {
+        confirm: [t("account.delete.typeConfirm")],
       });
     await rateLimit("signIn", `user:${user.id}`);
     const row = await db.user.findUnique({
@@ -96,8 +100,8 @@ export async function deleteAccountAction(_: ActionState, fd: FormData): Promise
       row?.passwordHash &&
       !(await verifyPassword(row.passwordHash, String(fd.get("password") ?? "")))
     ) {
-      throw new AppError("VALIDATION", "Password is incorrect.", {
-        password: ["Password is incorrect"],
+      throw new AppError("VALIDATION", t("account.msg.passwordWrong"), {
+        password: [t("account.msg.passwordWrong")],
       });
     }
     await audit(user.id, "account.delete", { type: "User", id: user.id }, await requestMeta());
@@ -112,9 +116,9 @@ export async function deleteAccountAction(_: ActionState, fd: FormData): Promise
 /** Opt in or out of letting corrections improve report reading (anonymous patterns only). */
 export async function setImproveReadingAction(on: boolean): Promise<ActionState> {
   return runAction("setImproveReading", async () => {
+    const t = await getT();
     const user = await requireUserOrThrow();
-    if (user.isDemo)
-      throw new AppError("FORBIDDEN", "This can't be changed on the shared demo account.");
+    if (user.isDemo) throw new AppError("FORBIDDEN", t("account.demoNoChange"));
     await setImproveReading(user.id, on);
     await audit(
       user.id,
@@ -125,9 +129,7 @@ export async function setImproveReadingAction(on: boolean): Promise<ActionState>
     revalidatePath("/settings");
     return {
       ok: true,
-      message: on
-        ? "Thanks! Your corrections will help Kosha read reports better."
-        : "Turned off. Your corrections won't be used.",
+      message: on ? t("account.msg.improveOn") : t("account.msg.improveOff"),
     };
   });
 }
@@ -144,7 +146,7 @@ export async function syncTimezoneAction(timezone: string): Promise<ActionState>
     try {
       new Intl.DateTimeFormat("en", { timeZone: tz });
     } catch {
-      throw new AppError("VALIDATION", "Unknown time zone.");
+      throw new AppError("VALIDATION", (await getT())("account.msg.unknownTz"));
     }
     if (tz === user.timezone) return { ok: true };
     await db.profile.updateMany({ where: { userId: user.id }, data: { timezone: tz } });

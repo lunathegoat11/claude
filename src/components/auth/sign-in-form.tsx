@@ -8,11 +8,13 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useTransition } from "react";
-import { AGE_LABEL, ConsentBox } from "./consent-box";
+import { ConsentBox } from "./consent-box";
+import { useT } from "@/i18n/client";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
 
 export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: boolean }) {
+  const t = useT();
   const { state, onSubmit, pending, err } = useActionForm(signInAction);
   const [demoPending, start] = useTransition();
   const [adult, setAdult] = useState(false);
@@ -23,7 +25,7 @@ export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: 
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <input type="hidden" name="next" value={next ?? ""} />
         {state.error && !state.fieldErrors && <FormError message={state.error} />}
-        <Field label="Email" htmlFor="email" error={err("email")}>
+        <Field label={t("account.email")} htmlFor="email" error={err("email")}>
           <Input
             id="email"
             name="email"
@@ -35,12 +37,12 @@ export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: 
           />
         </Field>
         <Field
-          label="Password"
+          label={t("account.password")}
           htmlFor="password"
           error={err("password")}
           hint={
             <Link href="/forgot-password" className="text-primary font-medium hover:underline">
-              Forgot password?
+              {t("account.signIn.forgot")}
             </Link>
           }
         >
@@ -62,22 +64,22 @@ export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: 
             if (v) setAgeError(undefined);
           }}
         >
-          {AGE_LABEL}
+          {t("account.consent.age")}
         </ConsentBox>
         <SubmitButton
           pending={pending}
           className="w-full"
           size="lg"
-          pendingLabel="Signing in…"
+          pendingLabel={t("account.signIn.signingIn")}
           loadingKind="signIn"
         >
-          Sign in
+          {t("account.signIn")}
         </SubmitButton>
       </form>
       {demoEnabled && (
         <>
           <div className="text-muted-foreground relative text-center text-xs">
-            <span className="bg-card relative z-10 px-3">or</span>
+            <span className="bg-card relative z-10 px-3">{t("account.or")}</span>
             <span className="bg-border absolute inset-x-0 top-1/2 h-px" />
           </div>
           <Button
@@ -86,7 +88,7 @@ export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: 
             className="w-full"
             disabled={demoPending}
             onClick={() => {
-              if (!adult) return setAgeError(["Please confirm you are 18 or older first"]);
+              if (!adult) return setAgeError([t("account.signIn.confirmAge")]);
               start(async () => {
                 const res = await demoSignInAction(true);
                 if (res?.error) toast.error(res.error);
@@ -94,11 +96,11 @@ export function SignInForm({ next, demoEnabled }: { next?: string; demoEnabled: 
             }}
           >
             <BusyContent active={demoPending} kind="signIn" icon={<Sparkles />}>
-              Explore the demo account
+              {t("account.signIn.demo")}
             </BusyContent>
           </Button>
           <p className="text-muted-foreground text-center text-xs">
-            The demo uses a fictional patient. Please don&apos;t add real information to it.
+            {t("account.signIn.demoNote")}
           </p>
         </>
       )}

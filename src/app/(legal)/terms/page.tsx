@@ -116,8 +116,8 @@ export default function TermsPage() {
       <section>
         <h2>7. Plans, payment and refunds</h2>
         <p>
-          Kosha has a free plan, which includes a set number of report uploads each month (shown
-          in Settings, Plan), and a paid plan, Kosha Plus, which adds unlimited uploads and the AI
+          Kosha has a free plan, which includes a set number of report uploads each month (shown in
+          Settings, Plan), and a paid plan, Kosha Plus, which adds unlimited uploads and the AI
           helper. Kosha Plus is paid either monthly or once.
         </p>
         <ul>

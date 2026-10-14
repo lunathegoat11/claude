@@ -11,14 +11,20 @@ import { Field, FormError, FormSection } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useT } from "@/i18n/client";
 
 export function ChangePasswordForm({ disabled }: { disabled?: boolean }) {
+  const t = useT();
   const { state, onSubmit, pending, err } = useActionForm(changePasswordAction);
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       {state.error && !state.fieldErrors && <FormError message={state.error} />}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Current password" htmlFor="currentPassword" error={err("currentPassword")}>
+        <Field
+          label={t("account.security.current")}
+          htmlFor="currentPassword"
+          error={err("currentPassword")}
+        >
           <Input
             id="currentPassword"
             name="currentPassword"
@@ -27,7 +33,7 @@ export function ChangePasswordForm({ disabled }: { disabled?: boolean }) {
             disabled={disabled}
           />
         </Field>
-        <Field label="New password" htmlFor="newPassword" error={err("newPassword")}>
+        <Field label={t("account.security.new")} htmlFor="newPassword" error={err("newPassword")}>
           <Input
             id="newPassword"
             name="newPassword"
@@ -37,7 +43,7 @@ export function ChangePasswordForm({ disabled }: { disabled?: boolean }) {
           />
         </Field>
         <Field
-          label="Confirm new password"
+          label={t("account.security.confirm")}
           htmlFor="confirmPassword"
           error={err("confirmPassword")}
         >
@@ -55,9 +61,9 @@ export function ChangePasswordForm({ disabled }: { disabled?: boolean }) {
           pending={pending}
           variant="secondary"
           disabled={disabled}
-          pendingLabel="Updating…"
+          pendingLabel={t("account.security.updating")}
         >
-          Update password
+          {t("account.security.update")}
         </SubmitButton>
       </div>
     </form>
@@ -65,6 +71,7 @@ export function ChangePasswordForm({ disabled }: { disabled?: boolean }) {
 }
 
 export function RevokeSessionsButton() {
+  const t = useT();
   const [pending, start] = useTransition();
   return (
     <Button
@@ -79,13 +86,14 @@ export function RevokeSessionsButton() {
       }
     >
       <BusyContent active={pending} kind="signOut" icon={<LogOut />}>
-        Sign out other devices
+        {t("account.security.signOutOthers")}
       </BusyContent>
     </Button>
   );
 }
 
 export function ExportButton() {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   async function download() {
     setBusy(true);
@@ -93,7 +101,7 @@ export function ExportButton() {
       const res = await fetch("/api/export");
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error?.message ?? "The download didn't work. Please try again.");
+        throw new Error(body?.error?.message ?? t("account.security.downloadFailed"));
       }
       const url = URL.createObjectURL(await res.blob());
       const a = document.createElement("a");
@@ -102,7 +110,7 @@ export function ExportButton() {
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 10_000);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "The download didn't work. Please try again.");
+      toast.error(e instanceof Error ? e.message : t("account.security.downloadFailed"));
     } finally {
       setBusy(false);
     }
@@ -110,7 +118,7 @@ export function ExportButton() {
   return (
     <Button variant="outline" onClick={download} disabled={busy} aria-busy={busy}>
       <BusyContent active={busy} kind="export" icon={<Download />}>
-        Download my data
+        {t("account.security.download")}
       </BusyContent>
     </Button>
   );
@@ -124,12 +132,10 @@ export function DeleteAccountForm({
   /** False for accounts that sign in only with Google or Apple. */
   needsPassword?: boolean;
 }) {
+  const t = useT();
   const { state, onSubmit, pending, err } = useActionForm(deleteAccountAction);
   return (
-    <FormSection
-      title="Delete account"
-      description="Permanently deletes your account, all records, lab results, readings, conversations and every uploaded file. This cannot be undone."
-    >
+    <FormSection title={t("account.delete.title")} description={t("account.delete.desc")}>
       <form
         onSubmit={onSubmit}
         className="border-destructive/30 bg-destructive/4 space-y-4 rounded-[var(--radius)] border p-4"
@@ -137,11 +143,15 @@ export function DeleteAccountForm({
       >
         {state.error && !state.fieldErrors && <FormError message={state.error} />}
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Type DELETE to confirm" htmlFor="confirm" error={err("confirm")}>
+          <Field label={t("account.delete.typeConfirm")} htmlFor="confirm" error={err("confirm")}>
             <Input id="confirm" name="confirm" autoComplete="off" disabled={disabled} />
           </Field>
           {needsPassword && (
-            <Field label="Your password" htmlFor="del-password" error={err("password")}>
+            <Field
+              label={t("account.delete.password")}
+              htmlFor="del-password"
+              error={err("password")}
+            >
               <Input
                 id="del-password"
                 name="password"
@@ -157,9 +167,9 @@ export function DeleteAccountForm({
             pending={pending}
             variant="destructive"
             disabled={disabled}
-            pendingLabel="Deleting…"
+            pendingLabel={t("account.delete.deleting")}
           >
-            Delete my account permanently
+            {t("account.delete.button")}
           </SubmitButton>
         </div>
       </form>

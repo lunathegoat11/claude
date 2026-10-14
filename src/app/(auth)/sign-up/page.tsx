@@ -4,12 +4,12 @@ import { getCurrentUser } from "@/server/auth/session";
 import { env } from "@/server/env";
 import { SignUpForm } from "@/components/auth/sign-up-form";
 import { oauthEnabled } from "@/server/auth/oauth";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Create your account",
-  description:
-    "Create a free Kosha Health account. Photograph a lab report and Kosha saves every result with its date, so you can see how your numbers change.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("account.meta.signUp.title"), description: t("account.meta.signUp.desc") };
+}
 
 export default async function SignUpPage({
   searchParams,
@@ -17,17 +17,18 @@ export default async function SignUpPage({
   searchParams: Promise<{ invite?: string }>;
 }) {
   // An invite link (/sign-up?invite=CODE) fills in the code for the person.
+  const t = await getT();
   const { invite } = await searchParams;
   if (await getCurrentUser()) redirect("/dashboard");
   if (!env().ALLOW_SIGNUP) redirect("/sign-in");
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-[28px] font-semibold">Create your account</h1>
+        <h1 className="text-[28px] font-semibold">{t("account.meta.signUp.title")}</h1>
         <p className="text-muted-foreground text-[15px]">
           {env().SIGNUP_INVITE_CODE?.trim()
-            ? "Kosha is open to invited people for now. Enter the invite code you were given."
-            : "Start organising your health records. It takes under a minute."}
+            ? t("account.signUp.inviteDesc")
+            : t("account.signUp.desc")}
         </p>
       </div>
       <SignUpForm
