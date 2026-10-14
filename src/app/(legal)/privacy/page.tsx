@@ -217,6 +217,13 @@ export default function PrivacyPage() {
             </li>
           )}
           <li>
+            <strong>Paddle</strong> (paddle.com), only if you buy Kosha Plus. Paddle sells the plan to
+            you and takes the payment: your card, UPI or bank details go straight to Paddle, and we
+            never see them. We receive only your plan, whether it is paid up, and Paddle&apos;s
+            reference numbers for you and your payments. Paddle keeps payment records as tax law
+            requires, under its own privacy policy. No health information is ever sent to Paddle.
+          </li>
+          <li>
             <strong>Google or Apple</strong>, only if you choose to sign in with them: they confirm
             who you are, and learn that you use Kosha Health.
           </li>

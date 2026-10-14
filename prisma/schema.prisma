@@ -66,6 +66,8 @@ model User {
   importJobs      ImportJob[]
   authTokens      AuthToken[]
   aiCredential    AiCredential?
+  plan            Subscription?
+  uploadUsage     UploadUsage[]
 }
 
 /// External identity providers (OAuth / OIDC). Present so Google, Apple or
@@ -703,4 +705,43 @@ model ReadingPattern {
   updatedAt DateTime @updatedAt
 
   @@unique([kind, key, target])
+}
+
+// ───────────────────────────── Plans ─────────────────────────────
+
+enum PlanKind {
+  MONTHLY
+  LIFETIME
+}
+
+/// A paid plan, kept in step with Paddle (the payment company) by its webhooks.
+/// No card details are ever stored here: Paddle holds them.
+model Subscription {
+  id                   String    @id @default(uuid()) @db.Uuid
+  userId               String    @unique @db.Uuid
+  kind                 PlanKind
+  /// Paddle's status: active, trialing, past_due, paused or canceled ("active" for lifetime).
+  status               String
+  paddleCustomerId     String?
+  paddleSubscriptionId String?   @unique
+  paddleTransactionId  String?
+  /// When the paid month ends (monthly plans).
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// How many reports someone uploaded in a month, for the free plan's monthly limit.
+/// Only the count is kept, and it doesn't go down when a report is deleted.
+model UploadUsage {
+  userId String @db.Uuid
+  /// "2026-10", in the person's own time zone.
+  month  String
+  count  Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, month])
 }

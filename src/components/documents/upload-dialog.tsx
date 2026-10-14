@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { DelayedLoader } from "@/components/shared/delayed-loader";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -61,6 +62,7 @@ export function UploadDialog({
   const [name, setName] = useState("");
   const [type, setType] = useState("AUTO");
   const [quality, setQuality] = useState<string | null>(null);
+  const [limit, setLimit] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,6 +119,7 @@ export function UploadDialog({
     setBusy(true);
     setError(null);
     setQuality(null);
+    setLimit(null);
     setFieldErrors({});
     const fd = new FormData(formRef.current);
     fd.set("file", file);
@@ -126,6 +129,7 @@ export function UploadDialog({
       const body = await res.json().catch(() => null);
       if (!res.ok) {
         if (body?.error?.code === "IMAGE_QUALITY") return setQuality(body.error.message);
+        if (body?.error?.code === "PLAN_LIMIT") return setLimit(body.error.message);
         setError(body?.error?.message ?? "Upload failed. Please try again.");
         setFieldErrors(body?.error?.fieldErrors ?? {});
         return;
@@ -187,6 +191,19 @@ export function UploadDialog({
           </DialogHeader>
           <form ref={formRef} onSubmit={submit} className="space-y-4" noValidate>
             {error && <FormError message={error} />}
+            {limit && (
+              <div
+                role="alert"
+                className="border-primary/30 bg-primary/5 space-y-3 rounded-2xl border p-4 text-sm"
+              >
+                <p>{limit}</p>
+                <Button asChild size="sm">
+                  <Link href="/settings?tab=plan" onClick={() => setOpen(false)}>
+                    See Kosha Plus
+                  </Link>
+                </Button>
+              </div>
+            )}
             {quality && (
               <div
                 role="alert"

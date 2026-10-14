@@ -10,7 +10,7 @@ import {
 } from "@/server/services/ai-settings";
 import { AnthropicProvider } from "@/server/ai/providers/anthropic";
 import { AppError, toSafeError } from "@/server/errors";
-import { cleanup, makeUser } from "./helpers/factory";
+import { cleanup, makeUser, givePlus } from "./helpers/factory";
 
 const KEY = "sk-ant-api03-" + "x".repeat(40) + "WXYZ";
 let alice: { id: string };
@@ -18,6 +18,7 @@ let bob: { id: string };
 beforeAll(async () => {
   alice = await makeUser("Alice");
   bob = await makeUser("Bob");
+  await givePlus(alice.id, bob.id);
 });
 afterAll(async () => {
   vi.restoreAllMocks();

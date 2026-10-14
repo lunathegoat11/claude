@@ -1,4 +1,5 @@
 import "server-only";
+import { requirePlus } from "./billing";
 import { AppError } from "@/server/errors";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
@@ -49,6 +50,7 @@ function titleFrom(q: string) {
 }
 
 export async function ask(userId: string, raw: unknown, timezone: string): Promise<AssistantReply> {
+  await requirePlus(userId);
   const { conversationId, message } = assistantQuestionSchema.parse(raw);
 
   const conversation = conversationId

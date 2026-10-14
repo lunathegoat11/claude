@@ -4,6 +4,7 @@ import { withApi, json } from "@/server/api";
 import { AppError } from "@/server/errors";
 import { listDocuments, uploadDocument } from "@/server/services/documents";
 import { audit } from "@/server/audit";
+import { reserveUpload } from "@/server/services/billing";
 import { DOCUMENT_TYPES } from "@/lib/validation/health";
 import type { DocumentType } from "@prisma/client";
 
@@ -54,13 +55,19 @@ export const POST = withApi(
       if (typeof v === "string") meta[key] = v;
     }
     const buffer = Buffer.from(await file.arrayBuffer());
+    // The free plan has a few uploads a month; this counts the upload (and gives it back
+    // if the upload fails).
+    const giveBack = await reserveUpload(user.id, user.timezone);
     const result = await uploadDocument(
       user.id,
       { buffer, filename: file.name, declaredMime: file.type },
       meta,
       user.timezone,
       { allowPoorQuality: form.get("allowPoorQuality") === "1" },
-    );
+    ).catch(async (e) => {
+      await giveBack();
+      throw e;
+    });
     await audit(
       user.id,
       "document.upload",

@@ -9,13 +9,14 @@ import { createLabPanel } from "@/server/services/labs";
 import { createMeasurement } from "@/server/services/measurements";
 import { createRecord } from "@/server/services/records";
 import { db } from "@/server/db";
-import { TZ, cleanup, daysAgoInput, makeUser, metricId } from "./helpers/factory";
+import { TZ, cleanup, daysAgoInput, makeUser, metricId, givePlus } from "./helpers/factory";
 
 let alice: { id: string };
 let bob: { id: string };
 beforeAll(async () => {
   alice = await makeUser("Alice");
   bob = await makeUser("Bob");
+  await givePlus(alice.id, bob.id);
   const g = await metricId("blood_glucose");
   for (let d = 1; d <= 40; d++) {
     await createMeasurement(
@@ -238,6 +239,7 @@ describe("assistant end-to-end", () => {
 
   it("says when nothing relevant exists instead of inventing data", async () => {
     const empty = await makeUser("Empty");
+    await givePlus(empty.id);
     const r = await ask(empty.id, { message: "Show me my HbA1c trend" }, TZ);
     expect(r.message.content).toMatch(/couldn't find anything in your records/);
     expect(r.message.citations).toHaveLength(0);

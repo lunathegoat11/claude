@@ -1,4 +1,5 @@
 import "server-only";
+import { isPlus } from "./billing";
 import { z } from "zod";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
@@ -140,6 +141,9 @@ export interface ResolvedAI {
  */
 export async function aiForUser(userId: string): Promise<ResolvedAI> {
   const forced = providerOverride();
+  // The AI helper is part of Kosha Plus; on the free plan reports are read on this server.
+  if (!forced && !(await isPlus(userId)))
+    return { provider: demoProvider, readDocuments: false, source: "demo" };
   if (forced) return { provider: forced, readDocuments: forced.supportsVision, source: "server" };
   const c = await db.aiCredential.findUnique({ where: { userId } });
   if (c) {

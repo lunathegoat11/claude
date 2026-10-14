@@ -3,11 +3,12 @@ import { createProvider } from "@/server/ai";
 import { aiForUser, getAiSettings, saveAiKey } from "@/server/services/ai-settings";
 import { AI_SERVICES, AI_SERVICE_IDS } from "@/lib/ai-services";
 import { toSafeError } from "@/server/errors";
-import { cleanup, makeUser } from "./helpers/factory";
+import { cleanup, makeUser, givePlus } from "./helpers/factory";
 
 let user: { id: string };
 beforeAll(async () => {
   user = await makeUser("Keys");
+  await givePlus(user.id);
 });
 afterAll(async () => cleanup(user.id));
 afterEach(() => vi.unstubAllGlobals());

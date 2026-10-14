@@ -119,6 +119,26 @@ else
     "Anyone can sign up. For a soft launch, set SIGNUP_INVITE_CODE and share it with the people you invite.",
   );
 
+const paddle = [
+  "PADDLE_API_KEY",
+  "PADDLE_CLIENT_TOKEN",
+  "PADDLE_WEBHOOK_SECRET",
+  "PADDLE_PRICE_MONTHLY",
+  "PADDLE_PRICE_LIFETIME",
+];
+if (paddle.every(set))
+  good.push(
+    `Payments are on (Paddle, ${env.PADDLE_ENV === "sandbox" ? "TEST mode: no real money" : "live"})`,
+  );
+else
+  todo.push(
+    `Kosha Plus can't be bought yet. To take payments, set ${paddle.filter((k) => !set(k)).join(", ")} (from Paddle).`,
+  );
+if (set("FREE_ACCESS_EMAILS"))
+  good.push(
+    `${env.FREE_ACCESS_EMAILS.split(/[,\s;]+/).filter(Boolean).length} account(s) get Kosha Plus free`,
+  );
+
 todo.push(
   "Turn on automatic database backups with your host (on Railway: the Postgres service → Backups).",
   "Get an independent security test before real patients sign up.",

@@ -10,6 +10,9 @@ import { deleteHealthItemAction } from "@/actions/settings";
 import { PageHeader } from "@/components/shared/page-header";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { PreferencesForm } from "@/components/settings/preferences-form";
+import { PlanPanel } from "@/components/settings/plan-panel";
+import { checkoutConfig, getPlan } from "@/server/services/billing";
+import { PRICES } from "@/lib/pricing";
 import { regionFor } from "@/lib/catalog/standard-ranges";
 import { ImproveReadingSwitch } from "@/components/settings/improve-reading";
 import { AiHelperSettings } from "@/components/settings/ai-helper";
@@ -35,6 +38,7 @@ const TABS = [
   { key: "profile", label: "Profile" },
   { key: "health", label: "Health summary" },
   { key: "preferences", label: "Preferences" },
+  { key: "plan", label: "Plan" },
   { key: "ai", label: "AI helper" },
   { key: "privacy", label: "Privacy & security" },
 ] as const;
@@ -73,10 +77,10 @@ const ACTION_LABELS: Record<string, string> = {
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; paid?: string }>;
 }) {
   const user = await requireUser();
-  const { tab: rawTab } = await searchParams;
+  const { tab: rawTab, paid } = await searchParams;
   const tab = TABS.find((t) => t.key === rawTab)?.key ?? "profile";
   const tz = user.timezone;
   const { user: account, profile, medications, allergies, conditions } = await getProfile(user.id);
@@ -107,6 +111,14 @@ export default async function SettingsPage({
           </Link>
         ))}
       </nav>
+
+      {tab === "plan" && (
+        <Card>
+          <CardContent className="pt-5 sm:pt-6">
+            <PlanTab userId={user.id} email={account.email} tz={tz} justPaid={paid === "1"} />
+          </CardContent>
+        </Card>
+      )}
 
       {tab === "profile" && (
         <Card>
@@ -552,5 +564,36 @@ function Row({
       </div>
       <div className="flex shrink-0 items-center">{actions}</div>
     </li>
+  );
+}
+
+async function PlanTab({
+  userId,
+  email,
+  tz,
+  justPaid,
+}: {
+  userId: string;
+  email: string;
+  tz: string;
+  justPaid: boolean;
+}) {
+  const plan = await getPlan(userId, tz);
+  return (
+    <PlanPanel
+      plan={{
+        plus: plan.plus,
+        via: plan.via,
+        status: plan.status,
+        renews: plan.currentPeriodEnd ? formatDate(plan.currentPeriodEnd, tz) : null,
+        canManage: plan.canManage,
+        uploadsThisMonth: plan.uploadsThisMonth,
+        uploadLimit: plan.uploadLimit,
+      }}
+      prices={PRICES[regionFor(null, tz)]}
+      checkout={checkoutConfig()}
+      user={{ id: userId, email }}
+      justPaid={justPaid}
+    />
   );
 }

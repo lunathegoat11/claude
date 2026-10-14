@@ -53,7 +53,7 @@ const FAQ = [
   },
   {
     q: "Is Kosha free?",
-    a: "Yes. There are no paid plans, ads or in-app purchases. If you choose to connect your own AI account for smarter answers, that AI company may charge you directly.",
+    a: "Kosha is free for your records, readings and charts, with 3 report uploads a month. Kosha Plus adds unlimited reports and the AI helper, paid monthly or once. There are no ads.",
   },
   {
     q: "Who can see my records?",

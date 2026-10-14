@@ -27,7 +27,7 @@ import { ask, deleteConversation, getConversation } from "@/server/services/assi
 import { deleteHealthItem, upsertMedication } from "@/server/services/profile";
 import { listTimeline } from "@/server/services/timeline";
 import { AppError } from "@/server/errors";
-import { TZ, cleanup, daysAgoInput, makeUser, metricId } from "./helpers/factory";
+import { TZ, cleanup, daysAgoInput, makeUser, metricId, givePlus } from "./helpers/factory";
 
 /**
  * Every service is scoped by userId. These tests confirm that one user can
@@ -41,6 +41,7 @@ const notFound = (p: Promise<unknown>) =>
 beforeAll(async () => {
   alice = await makeUser("Alice");
   bob = await makeUser("Bob");
+  await givePlus(alice.id, bob.id);
 });
 afterAll(() => cleanup(alice.id, bob.id));
 

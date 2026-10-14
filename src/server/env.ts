@@ -80,6 +80,19 @@ const schema = z.object({
   APPLE_PRIVATE_KEY: z.string().optional(),
   /** The code Google Search Console gives for the "HTML tag" way of proving the site is yours. */
   GOOGLE_SITE_VERIFICATION: z.string().optional(),
+  // ── Plans ──
+  /** Emails (comma-separated) that get Kosha Plus free: the owner, friends, testers. */
+  FREE_ACCESS_EMAILS: z.string().optional(),
+  /** Reports the free plan may upload each month. */
+  FREE_UPLOADS_PER_MONTH: z.coerce.number().int().min(0).max(1000).default(3),
+  // Paddle (paddle.com) takes payments. From Paddle: Developer tools → Authentication
+  // (API key and client-side token), Notifications (webhook secret), Catalog (price IDs).
+  PADDLE_ENV: z.enum(["sandbox", "production"]).default("production"),
+  PADDLE_API_KEY: z.string().optional(),
+  PADDLE_CLIENT_TOKEN: z.string().optional(),
+  PADDLE_WEBHOOK_SECRET: z.string().optional(),
+  PADDLE_PRICE_MONTHLY: z.string().optional(),
+  PADDLE_PRICE_LIFETIME: z.string().optional(),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 

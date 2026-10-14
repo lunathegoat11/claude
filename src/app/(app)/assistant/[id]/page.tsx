@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/server/auth/session";
+import { PlusOnly } from "@/components/assistant/plus-only";
+import { isPlus } from "@/server/services/billing";
 import {
   getConversation,
   listConversations,
@@ -16,6 +18,7 @@ export const metadata: Metadata = { title: "Ask Kosha" };
 
 export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
+  if (!(await isPlus(user.id))) return <PlusOnly />;
   const { id } = await params;
   const [conversation, conversations] = await Promise.all([
     or404(id, (i) => getConversation(user.id, i)),

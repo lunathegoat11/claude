@@ -12,6 +12,7 @@ export type ErrorCode =
   | "UNSUPPORTED_MEDIA"
   | "IMAGE_QUALITY"
   | "AI_UNAVAILABLE"
+  | "PLAN_LIMIT"
   | "STORAGE"
   | "INTERNAL";
 
@@ -26,6 +27,7 @@ const STATUS: Record<ErrorCode, number> = {
   UNSUPPORTED_MEDIA: 415,
   IMAGE_QUALITY: 422,
   AI_UNAVAILABLE: 503,
+  PLAN_LIMIT: 402,
   STORAGE: 500,
   INTERNAL: 500,
 };

@@ -114,12 +114,41 @@ export default function TermsPage() {
         </p>
       </section>
       <section>
-        <h2>7. Price</h2>
+        <h2>7. Plans, payment and refunds</h2>
         <p>
-          Kosha is free to use. It has no paid plans, subscriptions or in-app purchases, and never
-          asks for payment details. If you add your own AI key, the AI company may charge you
-          directly for what you use, under your agreement with them.
+          Kosha has a free plan, which includes a set number of report uploads each month (shown
+          in Settings, Plan), and a paid plan, Kosha Plus, which adds unlimited uploads and the AI
+          helper. Kosha Plus is paid either monthly or once.
         </p>
+        <ul>
+          <li>
+            Payments are taken by Paddle (paddle.com), which sells Kosha Plus to you as the
+            &ldquo;merchant of record&rdquo; and adds any sales tax or GST. Paddle&apos;s buyer
+            terms also apply to your purchase.
+          </li>
+          <li>
+            Monthly plans renew automatically each month until you cancel. You can cancel at any
+            time in Settings, Plan; Kosha Plus then stays on until the end of the month you have
+            paid for, and you are not charged again.
+          </li>
+          <li>
+            A one-time purchase gives Kosha Plus for as long as Kosha Health runs, on the account
+            that bought it.
+          </li>
+          <li>
+            Refunds: if you are not happy, ask within 14 days of a payment (through Paddle&apos;s
+            receipt email or Settings, Plan) for a full refund. This doesn&apos;t limit any rights
+            you have under consumer law.
+          </li>
+          <li>
+            We will tell you at least 30 days before any price change affects a plan you already
+            have.
+          </li>
+          <li>
+            If you add your own AI key, the AI company may charge you directly for what you use,
+            under your agreement with them.
+          </li>
+        </ul>
       </section>
       <section>
         <h2>8. Availability</h2>

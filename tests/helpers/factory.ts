@@ -35,3 +35,9 @@ export function daysAgoInput(days: number, time = "09:00") {
   }).format(d);
   return `${ymd}T${time}`;
 }
+
+/** Give a test account Kosha Plus (as if bought once), for tests of the AI helper. */
+export async function givePlus(...userIds: string[]) {
+  for (const userId of userIds)
+    await db.subscription.create({ data: { userId, kind: "LIFETIME", status: "active" } });
+}
