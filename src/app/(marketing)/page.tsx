@@ -11,10 +11,20 @@ import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/legal/site-footer";
 import { RangeStrip } from "@/components/labs/range-strip";
 import { Reveal } from "@/components/shared/reveal";
+import { getT } from "@/i18n/server";
+import { HTML_LANG } from "@/i18n/config";
 
 /** A made-up report, shown exactly the way Kosha shows a real one. */
 const SAMPLE = [
-  { test: "HbA1c", value: "5.7", unit: "%", low: 4, high: 5.6, range: "4.0 – 5.6", status: "High" },
+  {
+    test: "HbA1c",
+    value: "5.7",
+    unit: "%",
+    low: 4,
+    high: 5.6,
+    range: "4.0 – 5.6",
+    status: "flag.HIGH",
+  },
   {
     test: "Glucose, fasting",
     value: "96",
@@ -22,7 +32,7 @@ const SAMPLE = [
     low: 70,
     high: 100,
     range: "70 – 100",
-    status: "In range",
+    status: "flag.NORMAL",
   },
   {
     test: "TSH",
@@ -31,7 +41,7 @@ const SAMPLE = [
     low: 0.4,
     high: 4.5,
     range: "0.4 – 4.5",
-    status: "In range",
+    status: "flag.NORMAL",
   },
   {
     test: "Vitamin D",
@@ -40,35 +50,32 @@ const SAMPLE = [
     low: 30,
     high: 100,
     range: "30 – 100",
-    status: "Low",
+    status: "flag.LOW",
   },
-];
+] as const;
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const FAQ = [
-  {
-    q: "Which reports can Kosha read?",
-    a: "Printed lab reports such as blood sugar and HbA1c, lipid profile, thyroid, liver and kidney function, complete blood count and vitamins. Take a clear photo or upload the PDF your lab sent. Kosha reads each test, its value, unit and printed range, and the report's date. In India, results are checked against the range printed on the report, or India's national range when there isn't one; elsewhere, against standard US NIH ranges. Reading can make mistakes, so Kosha asks you to check the values against the report.",
-  },
-  {
-    q: "Is Kosha free?",
-    a: "Kosha is free for your records, readings and charts, with 3 report uploads a month. Kosha Plus adds unlimited reports and the AI helper, paid monthly or once. There are no ads.",
-  },
-  {
-    q: "Who can see my records?",
-    a: "Your records are private to your account. Kosha doesn't sell them or share them with doctors, hospitals, insurers or employers, and has no ads or tracking. You can download your data or delete your account at any time.",
-  },
-  {
-    q: "Does Kosha give medical advice?",
-    a: "No. Kosha organises your information and shows how it changes over time. It doesn't diagnose or treat anything. Please discuss your results with your doctor, and in an emergency call 112.",
-  },
-];
+  { q: "marketing.faq.reports.q", a: "marketing.faq.reports.a" },
+  { q: "marketing.faq.free.q", a: "marketing.faq.free.a" },
+  { q: "marketing.faq.privacy.q", a: "marketing.faq.privacy.a" },
+  { q: "marketing.faq.advice.q", a: "marketing.faq.advice.a" },
+] as const;
+
+const ALSO = [
+  ["marketing.also.readings.title", "marketing.also.readings.body"],
+  ["marketing.also.visits.title", "marketing.also.visits.body"],
+  ["marketing.also.ask.title", "marketing.also.ask.body"],
+  ["marketing.also.data.title", "marketing.also.data.body"],
+] as const;
 
 export default async function LandingPage() {
   if (await getCurrentUser()) redirect("/dashboard");
   const inviteOnly = !!env().SIGNUP_INVITE_CODE?.trim();
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const t = await getT();
+  const faq = FAQ.map((f) => ({ q: t(f.q), a: t(f.a) }));
   // Tells search engines what Kosha is (a free health web app), and answers common questions.
   const structured = [
     {
@@ -86,7 +93,8 @@ export default async function LandingPage() {
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      mainEntity: FAQ.map((f) => ({
+      inLanguage: HTML_LANG[t.locale],
+      mainEntity: faq.map((f) => ({
         "@type": "Question",
         name: f.q,
         acceptedAnswer: { "@type": "Answer", text: f.a },
@@ -108,17 +116,17 @@ export default async function LandingPage() {
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8">
           <Link
             href="/"
-            aria-label="Kosha Health home"
+            aria-label={t("marketing.homeLabel")}
             className="inline-flex min-h-11 items-center rounded-full"
           >
             <Logo compact />
           </Link>
           <nav className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">
-              <Link href="/sign-in">Sign in</Link>
+              <Link href="/sign-in">{t("marketing.signIn")}</Link>
             </Button>
             <Button asChild size="sm">
-              <Link href="/sign-up">Get started</Link>
+              <Link href="/sign-up">{t("marketing.getStarted")}</Link>
             </Button>
           </nav>
         </div>
@@ -127,27 +135,25 @@ export default async function LandingPage() {
       <main>
         <section className="enter mx-auto max-w-4xl px-5 pt-16 text-center sm:px-8 sm:pt-24">
           <h1 className="text-[2.75rem] leading-[1.05] font-semibold sm:text-[4rem]">
-            Every lab report, read and kept for you.
+            {t("marketing.hero.title")}
           </h1>
           <p className="text-muted-foreground mx-auto mt-5 max-w-xl text-[19px] sm:text-[21px]">
-            Photograph a report and Kosha saves each result with its date, so you can see how your
-            numbers change.
+            {t("marketing.hero.subtitle")}
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Button asChild size="lg">
-              <Link href="/sign-up">Get started</Link>
+              <Link href="/sign-up">{t("marketing.getStarted")}</Link>
             </Button>
             <Link
               href="/sign-in"
               className="text-info inline-flex min-h-11 items-center text-[17px] hover:underline"
             >
-              Sign in <ChevronRight className="size-4" />
+              {t("marketing.signIn")} <ChevronRight className="size-4" />
             </Link>
           </div>
           {inviteOnly && (
             <p className="text-muted-foreground mt-5 text-[15px]">
-              Kosha is open by invitation while we get ready. Got an invite link? Open it to create
-              your account.
+              {t("marketing.hero.inviteOnly")}
             </p>
           )}
         </section>
@@ -157,15 +163,13 @@ export default async function LandingPage() {
           <div className="surface overflow-hidden">
             <div className="px-6 pt-6 pb-4">
               <div className="font-display text-[22px] font-semibold">
-                Diabetes &amp; thyroid profile
+                {t("marketing.sample.title")}
               </div>
-              <div className="text-muted-foreground text-[15px]">
-                12 Sept 2026, City Pathology Labs, Lucknow. Read from a photo.
-              </div>
+              <div className="text-muted-foreground text-[15px]">{t("marketing.sample.meta")}</div>
             </div>
             <ul className="divide-y">
               {SAMPLE.map((r) => {
-                const out = r.status !== "In range";
+                const out = r.status !== "flag.NORMAL";
                 return (
                   <li
                     key={r.test}
@@ -181,13 +185,13 @@ export default async function LandingPage() {
                     <div className="col-span-2">
                       <RangeStrip value={Number(r.value)} low={r.low} high={r.high} />
                       <div className="text-muted-foreground mt-1.5 flex justify-between text-[13px]">
-                        <span>Report range {r.range}</span>
+                        <span>{t("marketing.sample.reportRange", { range: r.range })}</span>
                         <span
                           className={
                             out ? "text-destructive font-medium" : "text-success font-medium"
                           }
                         >
-                          {r.status}
+                          {t(r.status)}
                         </span>
                       </div>
                     </div>
@@ -197,7 +201,7 @@ export default async function LandingPage() {
             </ul>
           </div>
           <figcaption className="text-muted-foreground mt-4 text-center text-[13px]">
-            A made-up example. In India, High and Low come from the range printed on the report.
+            {t("marketing.sample.caption")}
           </figcaption>
         </Reveal>
 
@@ -205,31 +209,28 @@ export default async function LandingPage() {
         <section className="mx-auto mt-24 max-w-6xl px-5 sm:mt-32 sm:px-8">
           <Reveal>
             <h2 className="text-center text-[2rem] font-semibold sm:text-[3rem]">
-              Three steps. That&apos;s all.
+              {t("marketing.steps.title")}
             </h2>
           </Reveal>
           <div className="mt-10 grid gap-4 md:grid-cols-6">
             <Reveal className="surface p-8 md:col-span-4 md:row-span-2 md:p-10">
               <div className="figure text-primary text-[3.5rem] leading-none font-semibold">1</div>
-              <h3 className="mt-6 text-[28px] font-semibold">Add a report</h3>
+              <h3 className="mt-6 text-[28px] font-semibold">{t("marketing.steps.1.title")}</h3>
               <p className="text-muted-foreground mt-3 max-w-md text-[17px]">
-                Upload the PDF from your lab, or take a photo of the printed page. If the photo is
-                blurry, Kosha tells you straight away so you can take another.
+                {t("marketing.steps.1.body")}
               </p>
             </Reveal>
             <Reveal className="surface p-8 md:col-span-2">
               <div className="figure text-primary text-[2.5rem] leading-none font-semibold">2</div>
-              <h3 className="mt-4 text-[21px] font-semibold">Results are read for you</h3>
+              <h3 className="mt-4 text-[21px] font-semibold">{t("marketing.steps.2.title")}</h3>
               <p className="text-muted-foreground mt-2 text-[15px]">
-                Value, unit, the printed range, the lab and the date. Check them against the report.
+                {t("marketing.steps.2.body")}
               </p>
             </Reveal>
             <Reveal className="bg-primary text-primary-foreground rounded-[var(--radius)] p-8 md:col-span-2">
               <div className="figure text-[2.5rem] leading-none font-semibold opacity-80">3</div>
-              <h3 className="mt-4 text-[21px] font-semibold">See what changed</h3>
-              <p className="mt-2 text-[15px] opacity-85">
-                Each test, report by report. Ready for your next appointment.
-              </p>
+              <h3 className="mt-4 text-[21px] font-semibold">{t("marketing.steps.3.title")}</h3>
+              <p className="mt-2 text-[15px] opacity-85">{t("marketing.steps.3.body")}</p>
             </Reveal>
           </div>
         </section>
@@ -237,32 +238,15 @@ export default async function LandingPage() {
         <section className="mx-auto mt-24 max-w-3xl px-5 sm:mt-32 sm:px-8">
           <Reveal>
             <h2 className="text-center text-[2rem] font-semibold sm:text-[3rem]">
-              Also in your file
+              {t("marketing.also.title")}
             </h2>
           </Reveal>
           <Reveal className="surface mt-10">
             <dl className="divide-y">
-              {[
-                [
-                  "Readings",
-                  "Blood pressure, sugar before and after meals, weight, SpO₂ and anything else you track.",
-                ],
-                [
-                  "Visits and medicines",
-                  "Doctor visits, hospital stays, vaccinations, allergies and prescriptions.",
-                ],
-                [
-                  "Questions about your records",
-                  "Ask “How has my HbA1c changed?” and get an answer built only from what you saved.",
-                ],
-                [
-                  "Your data stays yours",
-                  "Private to your account, never sold, no ads or tracking. Download your data or delete your account any time.",
-                ],
-              ].map(([t, d]) => (
-                <div key={t} className="grid gap-1 px-6 py-5 sm:grid-cols-[14rem_1fr] sm:gap-6">
-                  <dt className="font-semibold">{t}</dt>
-                  <dd className="text-muted-foreground">{d}</dd>
+              {ALSO.map(([title, body]) => (
+                <div key={title} className="grid gap-1 px-6 py-5 sm:grid-cols-[14rem_1fr] sm:gap-6">
+                  <dt className="font-semibold">{t(title)}</dt>
+                  <dd className="text-muted-foreground">{t(body)}</dd>
                 </div>
               ))}
             </dl>
@@ -271,11 +255,13 @@ export default async function LandingPage() {
 
         <section className="mx-auto mt-24 max-w-3xl px-5 sm:mt-32 sm:px-8">
           <Reveal>
-            <h2 className="text-center text-[2rem] font-semibold sm:text-[3rem]">Questions</h2>
+            <h2 className="text-center text-[2rem] font-semibold sm:text-[3rem]">
+              {t("marketing.faq.title")}
+            </h2>
           </Reveal>
           <Reveal className="surface mt-10">
             <div className="divide-y">
-              {FAQ.map((f) => (
+              {faq.map((f) => (
                 <details key={f.q} className="group px-6 py-5">
                   <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 font-semibold">
                     <h3 className="text-[17px]">{f.q}</h3>
@@ -295,12 +281,10 @@ export default async function LandingPage() {
           as="section"
           className="mx-auto mt-24 max-w-3xl px-5 pb-24 text-center sm:mt-32 sm:px-8"
         >
-          <h2 className="text-[2rem] font-semibold sm:text-[3rem]">
-            Start with the report on your table.
-          </h2>
+          <h2 className="text-[2rem] font-semibold sm:text-[3rem]">{t("marketing.cta.title")}</h2>
           <div className="mt-8">
             <Button asChild size="lg">
-              <Link href="/sign-up">Get started</Link>
+              <Link href="/sign-up">{t("marketing.getStarted")}</Link>
             </Button>
           </div>
         </Reveal>
