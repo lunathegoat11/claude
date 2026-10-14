@@ -9,11 +9,16 @@ import { LabPanelForm } from "@/components/labs/lab-panel-form";
 import { toDateInputValue } from "@/lib/format";
 import { toNum } from "@/lib/utils";
 import { formatTestName } from "@/lib/test-name";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Edit lab report" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("labs.meta.edit") };
+}
 
 export default async function EditLabPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
+  const t = await getT();
   const { id } = await params;
   const panel = await or404(id, (i) => getLabPanel(user.id, i));
   const [documents, providers] = await Promise.all([
@@ -24,7 +29,7 @@ export default async function EditLabPage({ params }: { params: Promise<{ id: st
   const s = (n: unknown) => (toNum(n) === null ? "" : String(toNum(n)));
   return (
     <div className="mx-auto max-w-4xl">
-      <PageHeader title="Edit lab report" description={panel.name} />
+      <PageHeader title={t("labs.edit.title")} description={panel.name} />
       <LabPanelForm
         mode="edit"
         panelId={panel.id}

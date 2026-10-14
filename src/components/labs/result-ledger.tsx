@@ -4,6 +4,20 @@ import { RangeStrip } from "./range-strip";
 import { formatNumber } from "@/lib/format";
 import { formatRange } from "@/lib/lab-range";
 import { formatTestName } from "@/lib/test-name";
+import { getT } from "@/i18n/server";
+import type { T } from "@/i18n/translate";
+
+/**
+ * A range label from rangeOf() ("Report range", "NIH range", "Health Ministry range")
+ * in the person's language.
+ */
+export function translateRangeLabel(t: T, label: string) {
+  if (label === "Report range") return t("labs.range.report");
+  const source = label.replace(/ range$/, "");
+  return t("labs.range.source", {
+    source: source === "Health Ministry" ? t("labs.range.healthMinistry") : source,
+  });
+}
 
 export interface LedgerResult {
   id: string;
@@ -27,7 +41,8 @@ export interface LedgerResult {
  * Lab results as ruled register lines: test, value, where it sits in the printed
  * range, and the status in words. Used on the dashboard and on every report.
  */
-export function ResultLedger({ results, label }: { results: LedgerResult[]; label: string }) {
+export async function ResultLedger({ results, label }: { results: LedgerResult[]; label: string }) {
+  const t = await getT();
   return (
     <ul aria-label={label} className="divide-y">
       {results.map((r) => {
@@ -45,7 +60,9 @@ export function ResultLedger({ results, label }: { results: LedgerResult[]; labe
                 {formatTestName(r.testName)}
               </Link>
               {r.previous && (
-                <div className="text-muted-foreground text-[13px]">Before: {r.previous}</div>
+                <div className="text-muted-foreground text-[13px]">
+                  {t("labs.ledger.before", { value: r.previous })}
+                </div>
               )}
               {r.notes && (
                 <div className="text-warning mt-0.5 flex gap-1.5 text-[13px]">
@@ -64,7 +81,9 @@ export function ResultLedger({ results, label }: { results: LedgerResult[]; labe
               <RangeStrip value={r.value} low={r.refLow} high={r.refHigh} />
               <div className="text-muted-foreground mt-1 flex items-center justify-between gap-2 text-[13px]">
                 <span className="tabular">
-                  {range ? `${r.rangeLabel ?? "Report range"} ${range}` : "No range available"}
+                  {range
+                    ? `${r.rangeLabel ? translateRangeLabel(t, r.rangeLabel) : t("labs.range.report")} ${range}`
+                    : t("labs.range.none")}
                 </span>
                 <span className="sm:hidden">
                   <FlagBadge flag={r.flag} compact />

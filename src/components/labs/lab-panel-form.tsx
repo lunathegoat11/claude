@@ -17,6 +17,7 @@ import {
   matchBiomarker,
 } from "@/lib/catalog/biomarkers";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 export interface ResultRow {
   key: string;
@@ -82,6 +83,7 @@ export function LabPanelForm({
   today: string;
 }) {
   const router = useRouter();
+  const tr = useT();
   const [pending, start] = useTransition();
   const [name, setName] = useState(initial?.name ?? "");
   const [collectedAt, setCollectedAt] = useState(initial?.collectedAt ?? today);
@@ -153,11 +155,11 @@ export function LabPanelForm({
           ? await confirmImportAction(jobId, payload)
           : await saveLabPanelAction(panelId ?? null, payload);
       if (res.ok && res.data) {
-        toast.success(res.message ?? "Saved");
+        toast.success(res.message ?? tr("labs.form.saved"));
         router.push(`/labs/reports/${res.data.id}`);
         router.refresh();
       } else {
-        setError(res.error ?? "Could not save. Please check the values.");
+        setError(res.error ?? tr("labs.form.saveError"));
         setFieldErrors(res.fieldErrors ?? {});
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -176,17 +178,11 @@ export function LabPanelForm({
       className="space-y-8"
       noValidate
     >
-      {error && (
-        <FormError
-          message={
-            anyResultErrors ? "Some results need your attention. See the highlighted rows." : error
-          }
-        />
-      )}
+      {error && <FormError message={anyResultErrors ? tr("labs.form.attention") : error} />}
 
       <section className="grid gap-4 sm:grid-cols-2">
         <Field
-          label="Report name"
+          label={tr("labs.form.name")}
           htmlFor="name"
           error={fieldErrors.name}
           className="sm:col-span-2"
@@ -195,11 +191,11 @@ export function LabPanelForm({
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Lipid Profile"
+            placeholder={tr("labs.form.namePlaceholder")}
             required
           />
         </Field>
-        <Field label="Sample collection date" htmlFor="collectedAt" error={fieldErrors.collectedAt}>
+        <Field label={tr("labs.form.date")} htmlFor="collectedAt" error={fieldErrors.collectedAt}>
           <Input
             id="collectedAt"
             type="date"
@@ -209,13 +205,13 @@ export function LabPanelForm({
             required
           />
         </Field>
-        <Field label="Laboratory" htmlFor="labName" optional error={fieldErrors.labName}>
+        <Field label={tr("labs.form.lab")} htmlFor="labName" optional error={fieldErrors.labName}>
           <Input
             id="labName"
             list="lab-providers"
             value={labName}
             onChange={(e) => setLabName(e.target.value)}
-            placeholder="e.g. Metro Diagnostics, Chennai"
+            placeholder={tr("labs.form.labPlaceholder")}
           />
           <datalist id="lab-providers">
             {providers.map((p) => (
@@ -224,13 +220,18 @@ export function LabPanelForm({
           </datalist>
         </Field>
         {mode !== "import" && documents.length > 0 && (
-          <Field label="Linked document" htmlFor="documentId" optional className="sm:col-span-2">
+          <Field
+            label={tr("labs.form.document")}
+            htmlFor="documentId"
+            optional
+            className="sm:col-span-2"
+          >
             <NativeSelect
               id="documentId"
               value={documentId}
               onChange={(e) => setDocumentId(e.target.value)}
             >
-              <option value="">None</option>
+              <option value="">{tr("labs.form.none")}</option>
               {documents.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
@@ -244,10 +245,8 @@ export function LabPanelForm({
       <section className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold">Results</h2>
-            <p className="text-muted-foreground text-sm">
-              Copy values and reference ranges exactly as printed on the report.
-            </p>
+            <h2 className="text-base font-semibold">{tr("labs.form.results")}</h2>
+            <p className="text-muted-foreground text-sm">{tr("labs.form.resultsHint")}</p>
           </div>
           {mode !== "import" && (
             <div className="flex flex-wrap gap-1.5">
@@ -299,14 +298,14 @@ export function LabPanelForm({
                         onChange={(e) => update(r.key, { include: e.target.checked })}
                         className="size-5 accent-[var(--primary)]"
                       />
-                      Include this value
+                      {tr("labs.form.include")}
                     </label>
                     {lowConfidence ? (
                       <Badge variant="warning">
-                        <AlertTriangle /> Please double-check
+                        <AlertTriangle /> {tr("labs.form.doubleCheck")}
                       </Badge>
                     ) : (
-                      <Badge variant="secondary">Read from report</Badge>
+                      <Badge variant="secondary">{tr("labs.form.readFromReport")}</Badge>
                     )}
                     {r.sourceLine && (
                       <span
@@ -329,7 +328,7 @@ export function LabPanelForm({
                 )}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
                   <Field
-                    label="Test"
+                    label={tr("labs.form.test")}
                     htmlFor={`t-${r.key}`}
                     className="col-span-2 sm:col-span-1"
                     error={idx >= 0 ? resultErr(idx, "testName") : undefined}
@@ -339,12 +338,12 @@ export function LabPanelForm({
                       list="biomarkers"
                       value={r.testName}
                       onChange={(e) => update(r.key, { testName: e.target.value })}
-                      placeholder="e.g. HbA1c"
+                      placeholder={tr("labs.form.testPlaceholder")}
                       disabled={!r.include}
                     />
                   </Field>
                   <Field
-                    label="Value"
+                    label={tr("labs.form.value")}
                     htmlFor={`v-${r.key}`}
                     error={idx >= 0 ? resultErr(idx, "value") : undefined}
                   >
@@ -358,7 +357,7 @@ export function LabPanelForm({
                       className="tabular"
                     />
                   </Field>
-                  <Field label="Unit" htmlFor={`u-${r.key}`}>
+                  <Field label={tr("labs.form.unit")} htmlFor={`u-${r.key}`}>
                     <Input
                       id={`u-${r.key}`}
                       list={`units-${r.key}`}
@@ -379,7 +378,11 @@ export function LabPanelForm({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        aria-label={`Remove ${r.testName || "result"}`}
+                        aria-label={
+                          r.testName
+                            ? tr("labs.form.remove", { name: r.testName })
+                            : tr("labs.form.removeResult")
+                        }
                         onClick={() =>
                           setRows((rs) =>
                             rs.length > 1 ? rs.filter((x) => x.key !== r.key) : [emptyRow()],
@@ -408,12 +411,14 @@ export function LabPanelForm({
                     className={cn("size-3.5 transition-transform", rangeOpen && "rotate-180")}
                   />
                   {r.refLow || r.refHigh || r.refText
-                    ? `Reference range: ${r.refText || `${r.refLow || "…"} – ${r.refHigh || "…"}`}`
-                    : "Add reference range from report"}
+                    ? tr("labs.form.refRange", {
+                        range: r.refText || `${r.refLow || "…"} – ${r.refHigh || "…"}`,
+                      })
+                    : tr("labs.form.addRange")}
                 </button>
                 {rangeOpen && (
                   <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <Field label="Range low" htmlFor={`lo-${r.key}`} optional>
+                    <Field label={tr("labs.form.rangeLow")} htmlFor={`lo-${r.key}`} optional>
                       <Input
                         id={`lo-${r.key}`}
                         inputMode="decimal"
@@ -423,7 +428,7 @@ export function LabPanelForm({
                       />
                     </Field>
                     <Field
-                      label="Range high"
+                      label={tr("labs.form.rangeHigh")}
                       htmlFor={`hi-${r.key}`}
                       optional
                       error={idx >= 0 ? resultErr(idx, "refHigh") : undefined}
@@ -437,7 +442,7 @@ export function LabPanelForm({
                       />
                     </Field>
                     <Field
-                      label="Or range as printed"
+                      label={tr("labs.form.rangeText")}
                       htmlFor={`rt-${r.key}`}
                       optional
                       className="col-span-2 sm:col-span-1"
@@ -451,7 +456,7 @@ export function LabPanelForm({
                       />
                     </Field>
                     <Field
-                      label="Lab's flag"
+                      label={tr("labs.form.labFlag")}
                       htmlFor={`f-${r.key}`}
                       optional
                       className="col-span-2 sm:col-span-1"
@@ -462,11 +467,11 @@ export function LabPanelForm({
                         onChange={(e) => update(r.key, { labFlag: e.target.value })}
                         disabled={!r.include}
                       >
-                        <option value="">From range</option>
-                        <option value="HIGH">High (H)</option>
-                        <option value="LOW">Low (L)</option>
-                        <option value="ABNORMAL">Abnormal</option>
-                        <option value="NORMAL">Normal</option>
+                        <option value="">{tr("labs.form.flagAuto")}</option>
+                        <option value="HIGH">{tr("labs.form.flagHigh")}</option>
+                        <option value="LOW">{tr("labs.form.flagLow")}</option>
+                        <option value="ABNORMAL">{tr("labs.form.flagAbnormal")}</option>
+                        <option value="NORMAL">{tr("labs.form.flagNormal")}</option>
                       </NativeSelect>
                     </Field>
                   </div>
@@ -481,32 +486,32 @@ export function LabPanelForm({
             variant="outline"
             onClick={() => setRows((rs) => [...rs, emptyRow()])}
           >
-            <Plus /> Add another test
+            <Plus /> {tr("labs.form.addTest")}
           </Button>
         )}
-        <p className="text-muted-foreground text-xs">
-          Reference ranges differ between labs, testing methods, age and sex. Kosha only compares a
-          value with the range from the same report.
-        </p>
+        <p className="text-muted-foreground text-xs">{tr("labs.form.rangesDiffer")}</p>
       </section>
 
-      <Field label="Notes" htmlFor="panel-notes" optional>
+      <Field label={tr("labs.form.notes")} htmlFor="panel-notes" optional>
         <Input
           id="panel-notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="e.g. Fasting sample, taken at home collection"
+          placeholder={tr("labs.form.notesPlaceholder")}
         />
       </Field>
 
       <div className="surface sticky bottom-20 z-10 flex items-center justify-between gap-2 p-2.5 shadow-lg sm:p-3 lg:bottom-4">
         <span className="text-muted-foreground hidden px-1 text-sm sm:inline">
-          {included.length} result{included.length === 1 ? "" : "s"}{" "}
-          {mode === "import" ? "selected" : ""}
+          {mode === "import"
+            ? tr.n("labs.form.selected", included.length)
+            : tr.n("labs.form.count", included.length)}
         </span>
         <div className="flex flex-1 items-center justify-end gap-2 sm:flex-none">
           <Button asChild variant="ghost">
-            <Link href={panelId ? `/labs/reports/${panelId}` : "/labs"}>Cancel</Link>
+            <Link href={panelId ? `/labs/reports/${panelId}` : "/labs"}>
+              {tr("labs.form.cancel")}
+            </Link>
           </Button>
           <Button
             type="submit"
@@ -515,10 +520,10 @@ export function LabPanelForm({
           >
             <BusyContent active={pending} kind="save">
               {mode === "import"
-                ? "Confirm & save values"
+                ? tr("labs.form.confirmSave")
                 : mode === "edit"
-                  ? "Save changes"
-                  : "Save lab report"}
+                  ? tr("labs.form.saveChanges")
+                  : tr("labs.form.saveReport")}
             </BusyContent>
           </Button>
         </div>

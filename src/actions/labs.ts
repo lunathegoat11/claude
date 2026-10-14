@@ -11,6 +11,7 @@ import {
 import { confirmImport, discardImport } from "@/server/services/imports";
 import { audit } from "@/server/audit";
 import { uuid } from "@/lib/validation/common";
+import { getT } from "@/i18n/server";
 
 export async function saveLabPanelAction(
   panelId: string | null,
@@ -28,7 +29,8 @@ export async function saveLabPanelAction(
       await requestMeta(),
     );
     revalidatePath("/labs");
-    return { ok: true, message: "Lab report saved", data: { id: panel.id } };
+    const t = await getT();
+    return { ok: true, message: t("labs.action.saved"), data: { id: panel.id } };
   });
 }
 
@@ -38,7 +40,8 @@ export async function deleteLabPanelAction(id: string): Promise<ActionState> {
     await deleteLabPanel(user.id, uuid.parse(id));
     await audit(user.id, "lab.delete", { type: "LabPanel", id }, await requestMeta());
     revalidatePath("/labs");
-    return { ok: true, message: "Lab report deleted" };
+    const t = await getT();
+    return { ok: true, message: t("labs.action.deleted") };
   });
 }
 
@@ -48,7 +51,8 @@ export async function deleteLabResultAction(id: string): Promise<ActionState> {
     await deleteLabResult(user.id, uuid.parse(id));
     await audit(user.id, "lab.delete", { type: "LabResult", id }, await requestMeta());
     revalidatePath("/labs");
-    return { ok: true, message: "Result deleted" };
+    const t = await getT();
+    return { ok: true, message: t("labs.action.resultDeleted") };
   });
 }
 
@@ -67,7 +71,8 @@ export async function confirmImportAction(
       { panelId: panel.id },
     );
     revalidatePath("/labs");
-    return { ok: true, message: "Lab values saved", data: { id: panel.id } };
+    const t = await getT();
+    return { ok: true, message: t("labs.action.valuesSaved"), data: { id: panel.id } };
   });
 }
 
@@ -81,6 +86,7 @@ export async function discardImportAction(jobId: string): Promise<ActionState> {
       { type: "ImportJob", id: jobId },
       await requestMeta(),
     );
-    return { ok: true, message: "Extracted values discarded" };
+    const t = await getT();
+    return { ok: true, message: t("labs.discard.success") };
   });
 }

@@ -10,11 +10,16 @@ import { PageHeader } from "@/components/shared/page-header";
 import { LabPanelForm } from "@/components/labs/lab-panel-form";
 import { DiscardImportButton } from "@/components/labs/discard-import";
 import { toDateInputValue } from "@/lib/format";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Review imported values" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("labs.meta.import") };
+}
 
 export default async function ImportReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
+  const t = await getT();
   const { id } = await params;
   const job = await or404(id, (i) => getImportJob(user.id, i));
   if (job.status !== "AWAITING_REVIEW") redirect("/labs");
@@ -32,28 +37,28 @@ export default async function ImportReviewPage({ params }: { params: Promise<{ i
         </Link>
       )}
       <PageHeader
-        title="Review values from your report"
-        description="These values were read automatically and may contain mistakes. Check each one against the original report, correct anything that's wrong, and untick values you don't want to save."
+        title={t("labs.import.title")}
+        description={t("labs.import.description")}
         actions={<DiscardImportButton jobId={job.id} />}
       />
       <div className="bg-accent/40 mb-6 flex items-start gap-3 rounded-[var(--radius)] border p-4 text-sm">
         <ShieldCheck className="text-primary mt-0.5 size-5 shrink-0" />
         <p>
-          Nothing has been saved yet. Values are only added to your lab history after you press{" "}
-          <strong>Confirm &amp; save values</strong>.
+          {t("labs.import.notSavedBefore")} <strong>{t("labs.form.confirmSave")}</strong>
+          {t("labs.import.notSavedAfter")}
           {doc && (
             <>
               {" "}
-              You can{" "}
+              {t("labs.import.compareBefore")}{" "}
               <a
                 href={`/api/documents/${doc.id}/file`}
                 target="_blank"
                 rel="noreferrer"
                 className="text-primary font-medium hover:underline"
               >
-                open the original report
+                {t("labs.import.compareLink")}
               </a>{" "}
-              in a new tab to compare.
+              {t("labs.import.compareAfter")}
             </>
           )}
         </p>
@@ -63,9 +68,7 @@ export default async function ImportReviewPage({ params }: { params: Promise<{ i
           role="note"
           className="border-warning/50 bg-warning/8 mb-6 rounded-[var(--radius)] border p-4 text-sm"
         >
-          <strong>These values were read from a photo.</strong> Photo reading can miss decimal
-          points (for example reading 5.2 as 52) or confuse similar characters. Please compare every
-          value with the report.
+          <strong>{t("labs.import.ocrTitle")}</strong> {t("labs.import.ocrBody")}
         </p>
       )}
       <LabPanelForm
@@ -75,7 +78,7 @@ export default async function ImportReviewPage({ params }: { params: Promise<{ i
         providers={providers.map((p) => p.name)}
         today={toDateInputValue(new Date(), user.timezone)}
         initial={{
-          name: doc?.name ?? "Imported lab report",
+          name: doc?.name ?? t("labs.import.defaultName"),
           collectedAt:
             job.meta.collectedAt ??
             (doc?.documentDate

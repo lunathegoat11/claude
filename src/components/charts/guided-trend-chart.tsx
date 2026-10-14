@@ -4,15 +4,17 @@ import { LazyTrendChart } from "./lazy-trend-chart";
 import type { ChartGuide, TrendPoint } from "./trend-chart";
 import type { ResolvedGuide } from "@/lib/catalog/reference-guides";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
+import type { T } from "@/i18n/translate";
 
 type Source = "india" | "us";
 const PREF_KEY = "kosha.guides";
 
-function bandText(b: { low: number | null; high: number | null }, unit: string) {
+function bandText(t: T, b: { low: number | null; high: number | null }, unit: string) {
   const f = (n: number) => n.toLocaleString("en-IN", { maximumFractionDigits: 2 });
   if (b.low != null && b.high != null) return `${f(b.low)} – ${f(b.high)} ${unit}`;
-  if (b.high != null) return `below ${f(b.high)} ${unit}`;
-  if (b.low != null) return `${f(b.low)} ${unit} or more`;
+  if (b.high != null) return t("labs.chart.below", { value: `${f(b.high)} ${unit}` });
+  if (b.low != null) return t("labs.chart.orMore", { value: `${f(b.low)} ${unit}` });
   return "";
 }
 
@@ -36,6 +38,7 @@ export function GuidedTrendChart({
   band?: { low: number | null; high: number | null; label: string } | null;
   showDots?: boolean;
 }) {
+  const t = useT();
   const [on, setOn] = useState<Record<Source, boolean>>({ india: true, us: false });
   useEffect(() => {
     try {
@@ -72,10 +75,10 @@ export function GuidedTrendChart({
         <div
           className="mb-3 flex flex-wrap items-center gap-2"
           role="group"
-          aria-label="General ranges"
+          aria-label={t("labs.chart.generalRanges")}
         >
           <span className="text-muted-foreground text-[13px]">
-            General ranges, not a diagnosis:
+            {t("labs.chart.generalRangesIntro")}
           </span>
           {available.map((s) => (
             <button
@@ -99,7 +102,7 @@ export function GuidedTrendChart({
               ) : (
                 <span className="border-info w-4 border-t-2 border-dashed" aria-hidden />
               )}
-              {s === "india" ? "India" : "USA"}
+              {t(s === "india" ? "labs.chart.india" : "labs.chart.usa")}
             </button>
           ))}
         </div>
@@ -115,7 +118,7 @@ export function GuidedTrendChart({
                 return (
                   <div key={s}>
                     <dt className="font-medium">
-                      {s === "india" ? "India" : "USA"}:{" "}
+                      {t(s === "india" ? "labs.chart.india" : "labs.chart.usa")}:{" "}
                       <a
                         href={g.url}
                         target="_blank"
@@ -130,17 +133,14 @@ export function GuidedTrendChart({
                         ? `${g.unavailable}.`
                         : `${
                             g.summary ??
-                            g.bands.map((b) => `${b.label}: ${bandText(b, g.unit)}`).join("; ")
+                            g.bands.map((b) => `${b.label}: ${bandText(t, b, g.unit)}`).join("; ")
                           }.${g.note ? ` ${g.note}.` : ""}`}
                     </dd>
                   </div>
                 );
               })}
           </dl>
-          <p className="text-muted-foreground">
-            General ranges are for orientation only. Your report&apos;s own range, and your doctor,
-            decide what a result means for you.
-          </p>
+          <p className="text-muted-foreground">{t("labs.chart.orientation")}</p>
         </div>
       )}
     </div>

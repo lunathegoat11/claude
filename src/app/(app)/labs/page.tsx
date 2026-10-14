@@ -14,11 +14,28 @@ import { FlagBadge } from "@/components/labs/flag-badge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { CATEGORY_LABELS, type BiomarkerCategory } from "@/lib/catalog/biomarkers";
+import type { BiomarkerCategory } from "@/lib/catalog/biomarkers";
+import { getT } from "@/i18n/server";
+import { translateRangeLabel } from "@/components/labs/result-ledger";
 import { formatDate, formatNumber } from "@/lib/format";
 import { cn, toNum } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Lab results" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("labs.meta.list") };
+}
+
+const CATEGORY_KEYS = {
+  CBC: "labs.category.CBC",
+  METABOLIC: "labs.category.METABOLIC",
+  DIABETES: "labs.category.DIABETES",
+  LIPID: "labs.category.LIPID",
+  LIVER: "labs.category.LIVER",
+  KIDNEY: "labs.category.KIDNEY",
+  THYROID: "labs.category.THYROID",
+  VITAMINS: "labs.category.VITAMINS",
+  OTHER: "labs.category.OTHER",
+} as const satisfies Record<BiomarkerCategory, string>;
 
 export default async function LabsPage({
   searchParams,
@@ -26,6 +43,7 @@ export default async function LabsPage({
   searchParams: Promise<{ tab?: string; page?: string }>;
 }) {
   const user = await requireUser();
+  const t = await getT();
   const sp = await searchParams;
   const tab = sp.tab === "reports" ? "reports" : "tests";
   const tz = user.timezone;
@@ -55,18 +73,18 @@ export default async function LabsPage({
   return (
     <div>
       <PageHeader
-        title="Lab results"
-        description="Every test result you've saved, with the range it's checked against."
+        title={t("labs.list.title")}
+        description={t("labs.list.description")}
         actions={
           <>
             <Button asChild variant="outline">
               <Link href="/labs/new">
-                <Plus /> Type in results
+                <Plus /> {t("labs.list.typeIn")}
               </Link>
             </Button>
             <Button asChild>
               <Link href="/documents?upload=1">
-                <Upload /> Add a report
+                <Upload /> {t("labs.list.addReport")}
               </Link>
             </Button>
           </>
@@ -77,13 +95,11 @@ export default async function LabsPage({
         <Card className="border-primary/30 bg-accent/40 mb-6">
           <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm">
-              <strong>
-                {pending.length} imported report{pending.length > 1 ? "s" : ""}
-              </strong>{" "}
-              from before results were saved automatically still need a look.
+              <strong>{t.n("labs.list.pending", pending.length)}</strong>{" "}
+              {t("labs.list.pendingAfter")}
             </p>
             <Button asChild size="sm">
-              <Link href={`/labs/import/${pending[0].id}`}>Review now</Link>
+              <Link href={`/labs/import/${pending[0].id}`}>{t("labs.list.reviewNow")}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -92,18 +108,18 @@ export default async function LabsPage({
       {!hasData ? (
         <EmptyState
           icon={FlaskConical}
-          title="No lab results yet"
-          description="Enter values from a report, or upload a PDF lab report and we'll find the values for you to confirm."
+          title={t("labs.empty.title")}
+          description={t("labs.empty.description")}
           action={
             <>
               <Button asChild>
                 <Link href="/labs/new">
-                  <Plus /> Add results
+                  <Plus /> {t("labs.empty.add")}
                 </Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href="/documents?upload=1">
-                  <Upload /> Upload report
+                  <Upload /> {t("labs.empty.upload")}
                 </Link>
               </Button>
             </>
@@ -111,10 +127,13 @@ export default async function LabsPage({
         />
       ) : (
         <>
-          <nav className="bg-muted mb-6 inline-flex rounded-md p-1" aria-label="Lab views">
+          <nav
+            className="bg-muted mb-6 inline-flex rounded-md p-1"
+            aria-label={t("labs.list.views")}
+          >
             {[
-              ["tests", "By test"],
-              ["reports", "By report"],
+              ["tests", t("labs.list.byTest")],
+              ["reports", t("labs.list.byReport")],
             ].map(([k, l]) => (
               <Link
                 key={k}
@@ -140,7 +159,7 @@ export default async function LabsPage({
                       id={`cat-${cat}`}
                       className="text-muted-foreground mb-3 text-sm font-semibold"
                     >
-                      {CATEGORY_LABELS[cat]}
+                      {t(CATEGORY_KEYS[cat])}
                     </h2>
                     <ul className="surface divide-y overflow-hidden">
                       {grouped.get(cat)!.map((s) => {
@@ -159,8 +178,9 @@ export default async function LabsPage({
                               <div className="min-w-0">
                                 <div className="truncate font-medium">{s.testName}</div>
                                 <div className="text-muted-foreground text-xs">
-                                  {s.count} result{s.count === 1 ? "" : "s"}, latest{" "}
-                                  {formatDate(s.latest.observedAt, tz)}
+                                  {t.n("labs.list.count", s.count, {
+                                    date: formatDate(s.latest.observedAt, tz),
+                                  })}
                                 </div>
                               </div>
                               <div className="text-right sm:text-left">
@@ -172,14 +192,14 @@ export default async function LabsPage({
                                 </span>
                                 {prev !== null && latest !== null && (
                                   <div className="text-muted-foreground tabular text-xs">
-                                    previous {formatNumber(prev, 2)}
+                                    {t("labs.list.previous", { value: formatNumber(prev, 2) })}
                                   </div>
                                 )}
                               </div>
                               <Sparkline
                                 values={s.values}
                                 className="hidden h-8 w-24 sm:block"
-                                label={`${s.testName} history`}
+                                label={t("labs.list.history", { name: s.testName })}
                               />
                               <div className="hidden sm:block sm:justify-self-end">
                                 <FlagBadge flag={s.latest.flag} compact />
@@ -189,8 +209,8 @@ export default async function LabsPage({
                                 <div className="text-muted-foreground mt-1 flex items-center justify-between gap-2 text-[13px]">
                                   <span className="tabular">
                                     {range.text
-                                      ? `${range.label} ${range.text}`
-                                      : "No range available"}
+                                      ? `${translateRangeLabel(t, range.label)} ${range.text}`
+                                      : t("labs.range.none")}
                                   </span>
                                   <span className="sm:hidden">
                                     <FlagBadge flag={s.latest.flag} compact />
@@ -226,10 +246,12 @@ export default async function LabsPage({
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1">
                         <span className="text-muted-foreground text-sm">
-                          {p.resultCount} results
+                          {t.n("labs.list.results", p.resultCount)}
                         </span>
                         {p.flaggedCount > 0 && (
-                          <Badge variant="warning">{p.flaggedCount} outside range</Badge>
+                          <Badge variant="warning">
+                            {t("labs.list.outside", { n: p.flaggedCount })}
+                          </Badge>
                         )}
                       </div>
                     </Link>
@@ -240,7 +262,7 @@ export default async function LabsPage({
                 page={panels.page}
                 pageCount={panels.pageCount}
                 total={panels.total}
-                label="reports"
+                label={t("labs.list.paginationLabel")}
                 makeHref={(p) => `/labs?tab=reports&page=${p}`}
               />
             </>

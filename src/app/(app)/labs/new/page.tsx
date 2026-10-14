@@ -5,8 +5,12 @@ import { listProviderNames } from "@/server/services/providers";
 import { PageHeader } from "@/components/shared/page-header";
 import { LabPanelForm } from "@/components/labs/lab-panel-form";
 import { toDateInputValue } from "@/lib/format";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Add lab results" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("labs.meta.new") };
+}
 
 export default async function NewLabPage({
   searchParams,
@@ -14,6 +18,7 @@ export default async function NewLabPage({
   searchParams: Promise<{ documentId?: string }>;
 }) {
   const user = await requireUser();
+  const t = await getT();
   const { documentId } = await searchParams;
   const [documents, providers] = await Promise.all([
     listDocumentOptions(user.id),
@@ -21,10 +26,7 @@ export default async function NewLabPage({
   ]);
   return (
     <div className="mx-auto max-w-4xl">
-      <PageHeader
-        title="Add lab results"
-        description="Pick a common panel to pre-fill the tests, or add any test by name."
-      />
+      <PageHeader title={t("labs.new.title")} description={t("labs.new.description")} />
       <LabPanelForm
         mode="create"
         initial={{ documentId: documents.some((d) => d.id === documentId) ? documentId : "" }}

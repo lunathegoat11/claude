@@ -17,11 +17,17 @@ import { rangeOf } from "@/lib/lab-range";
 import { RangeStrip } from "@/components/labs/range-strip";
 import { STANDARD_RANGES } from "@/lib/catalog/standard-ranges";
 import { toNum } from "@/lib/utils";
+import { getT } from "@/i18n/server";
+import { translateRangeLabel } from "@/components/labs/result-ledger";
 
-export const metadata: Metadata = { title: "Test history" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("labs.meta.test") };
+}
 
 export default async function TestHistoryPage({ params }: { params: Promise<{ key: string }> }) {
   const user = await requireUser();
+  const t = await getT();
   const profile = await db.profile.findUnique({
     where: { userId: user.id },
     select: { sex: true },
@@ -43,7 +49,9 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
     ranges.size === 1 && shown.length > 0 && (shown[0].low !== null || shown[0].high !== null);
   const latestRange = shown.length && shown[shown.length - 1].text ? shown[shown.length - 1] : null;
   const stdUrl = STANDARD_RANGES[history.results[0].biomarkerCode ?? ""]?.url;
-  const band = sameRange ? { low: shown[0].low, high: shown[0].high, label: shown[0].label } : null;
+  const band = sameRange
+    ? { low: shown[0].low, high: shown[0].high, label: translateRangeLabel(t, shown[0].label) }
+    : null;
   const decimals = Math.max(
     ...numeric.map((r) => String(toNum(r.valueNumeric)).split(".")[1]?.length ?? 0),
     0,
@@ -57,23 +65,25 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
         href="/labs"
         className="text-muted-foreground hover:text-foreground -my-2 mb-3 inline-flex min-h-11 items-center gap-1.5 py-2 text-sm"
       >
-        <ArrowLeft className="size-4" /> Lab results
+        <ArrowLeft className="size-4" /> {t("nav.labs")}
       </Link>
       <div className="mb-6">
         <h1 className="text-[2rem] font-semibold sm:text-[2.5rem]">{history.testName}</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          {rows.length} result{rows.length === 1 ? "" : "s"} from{" "}
-          {formatDate(rows[0].observedAt, tz)} to {formatDate(rows[rows.length - 1].observedAt, tz)}
+          {t.n("labs.test.span", rows.length, {
+            from: formatDate(rows[0].observedAt, tz),
+            to: formatDate(rows[rows.length - 1].observedAt, tz),
+          })}
         </p>
       </div>
 
       {numeric.length >= 1 && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="sr-only">Results over time</CardTitle>
+            <CardTitle className="sr-only">{t("labs.test.overTime")}</CardTitle>
             <div
               className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px]"
-              aria-label="Values in date order"
+              aria-label={t("labs.test.valuesOrder")}
             >
               {numeric.map((r, i) => (
                 <span key={r.id} className="inline-flex items-center gap-2">
@@ -91,7 +101,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
             </div>
             {first !== null && last !== null && numeric.length > 1 && (
               <p className="text-muted-foreground text-sm">
-                Calculated change from first to latest:{" "}
+                {t("labs.test.change")}{" "}
                 <span className="tabular">
                   {formatSigned(last - first, Math.min(decimals, 2))} {latestUnit}
                 </span>
@@ -102,7 +112,9 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                 <RangeStrip value={last} low={latestRange.low} high={latestRange.high} />
                 <div className="text-muted-foreground mt-1 flex items-center justify-between gap-2 text-[13px]">
                   <span className="tabular">
-                    Latest: {latestRange.label} {latestRange.text}
+                    {t("labs.test.latest", {
+                      range: `${translateRangeLabel(t, latestRange.label)} ${latestRange.text}`,
+                    })}
                   </span>
                   <FlagBadge flag={numeric[numeric.length - 1].flag} compact />
                 </div>
@@ -116,7 +128,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                   at: r.observedAt.toISOString(),
                   value: toNum(r.valueNumeric)!,
                   label: [r.labName, r.panel?.name].filter(Boolean).join(", "),
-                  rangeText: rangeOf(r).text || "not given",
+                  rangeText: rangeOf(r).text || t("labs.test.rangeNotGiven"),
                   notes: r.notes,
                 }))}
                 unit={latestUnit ?? ""}
@@ -131,14 +143,12 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                 }
               />
             ) : (
-              <p className="text-muted-foreground text-sm">
-                Add another result to see a trend chart.
-              </p>
+              <p className="text-muted-foreground text-sm">{t("labs.test.needMore")}</p>
             )}
             <p className="text-muted-foreground mt-3 text-xs">
               {band && shown[0].source ? (
                 <>
-                  The grey band is the standard adult range from{" "}
+                  {t("labs.test.bandStdBefore")}{" "}
                   {stdUrl ? (
                     <a
                       href={stdUrl}
@@ -151,16 +161,15 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                   ) : (
                     shown[0].source
                   )}
-                  .
+                  {t("labs.test.bandStdAfter")}
                 </>
               ) : band ? (
-                "The grey band is the reference range printed on these reports."
+                t("labs.test.bandReport")
               ) : (
-                "Reference ranges differ between these results, so no single range is drawn. Hover a point to see each one."
+                t("labs.test.bandDiffer")
               )}
-              {otherUnits > 0 &&
-                ` ${otherUnits} result${otherUnits > 1 ? "s" : ""} in a different unit ${otherUnits > 1 ? "are" : "is"} listed below but not charted.`}{" "}
-              A visual trend is not a diagnosis.
+              {otherUnits > 0 && ` ${t.n("labs.test.otherUnits", otherUnits)}`}{" "}
+              {t("labs.test.notDiagnosis")}
             </p>
           </CardContent>
         </Card>
@@ -170,28 +179,32 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
         <div className="surface mb-6 flex gap-3 p-4 text-sm">
           <Info className="text-primary mt-0.5 size-4 shrink-0" />
           <p>
-            <span className="font-medium">General information:</span> {history.description}{" "}
-            <span className="text-muted-foreground">
-              This describes the test in general and is not specific to you.
-            </span>
+            <span className="font-medium">{t("labs.test.generalLabel")}</span> {history.description}{" "}
+            <span className="text-muted-foreground">{t("labs.test.generalNote")}</span>
           </p>
         </div>
       )}
 
       <div className="surface overflow-hidden">
         <table className="w-full text-sm">
-          <caption className="sr-only">All {history.testName} results</caption>
+          <caption className="sr-only">
+            {t("labs.test.caption", { name: history.testName })}
+          </caption>
           <thead className="bg-muted/50 text-muted-foreground border-b text-left text-xs">
             <tr>
-              <th className="px-4 py-3 font-medium sm:px-5">Date and report</th>
-              <th className="px-3 py-3 text-right font-medium">Result</th>
-              <th className="hidden px-3 py-3 font-medium sm:table-cell">Range</th>
-              <th className="hidden px-3 py-3 font-medium md:table-cell">Lab</th>
+              <th className="px-4 py-3 font-medium sm:px-5">{t("labs.test.colDate")}</th>
+              <th className="px-3 py-3 text-right font-medium">{t("labs.test.colResult")}</th>
+              <th className="hidden px-3 py-3 font-medium sm:table-cell">
+                {t("labs.test.colRange")}
+              </th>
+              <th className="hidden px-3 py-3 font-medium md:table-cell">
+                {t("labs.test.colLab")}
+              </th>
               <th className="px-3 py-3 font-medium">
-                <span className="sr-only">Status</span>
+                <span className="sr-only">{t("labs.test.colStatus")}</span>
               </th>
               <th className="w-12 px-3 py-3">
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{t("labs.test.colActions")}</span>
               </th>
             </tr>
           </thead>
@@ -212,7 +225,7 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                   {r.panel && (
                     <div className="text-muted-foreground mt-0.5 text-xs">
                       {r.panel.document && !r.panel.document.deletedAt
-                        ? `From ${r.panel.document.name}`
+                        ? t("labs.test.fromDoc", { name: r.panel.document.name })
                         : r.panel.name}
                     </div>
                   )}
@@ -243,12 +256,15 @@ export default async function TestHistoryPage({ params }: { params: Promise<{ ke
                   <ConfirmDelete
                     action={deleteLabResultAction.bind(null, r.id)}
                     redirectTo={rows.length === 1 ? "/labs" : undefined}
-                    title="Delete this result?"
-                    description={`${history.testName} from ${formatDate(r.observedAt, tz)} will be removed.`}
+                    title={t("labs.test.deleteTitle")}
+                    description={t("labs.test.deleteDescription", {
+                      name: history.testName,
+                      date: formatDate(r.observedAt, tz),
+                    })}
                     iconOnly
                     triggerVariant="ghost"
                     triggerSize="sm"
-                    triggerLabel="Delete result"
+                    triggerLabel={t("labs.test.deleteTrigger")}
                   />
                 </td>
               </tr>

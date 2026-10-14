@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { CONTEXT_LABELS } from "@/lib/catalog/metrics";
 import { formatDate, formatDayMonth, formatNumber, formatTime } from "@/lib/format";
+import { useT } from "@/i18n/client";
 
 export interface TrendPoint {
   at: string;
@@ -69,6 +70,7 @@ function ChartTooltip({
   seriesLabels,
   timezone,
 }: TooltipProps<number, string> & Omit<Props, "points">) {
+  const t = useT();
   if (!active || !payload?.length) return null;
   const p = payload[0].payload as TrendPoint & { t: number };
   return (
@@ -97,7 +99,9 @@ function ChartTooltip({
       {p.context && <div className="mt-1 text-xs">{CONTEXT_LABELS[p.context] ?? p.context}</div>}
       {p.label && <div className="text-muted-foreground mt-1 text-xs">{p.label}</div>}
       {p.rangeText && (
-        <div className="text-muted-foreground mt-1 text-xs">Range on report: {p.rangeText}</div>
+        <div className="text-muted-foreground mt-1 text-xs">
+          {t("labs.chart.rangeOnReport", { range: p.rangeText })}
+        </div>
       )}
       {p.notes && (
         <div className="text-muted-foreground mt-1.5 line-clamp-3 border-t pt-1.5 text-xs">
@@ -113,13 +117,18 @@ export function TrendChart({
   unit,
   decimals = 1,
   dual,
-  seriesLabels = ["Systolic", "Diastolic"],
+  seriesLabels: seriesLabelsProp,
   timezone,
   band,
   height = 280,
   showDots,
   guides,
 }: Props) {
+  const t = useT();
+  const seriesLabels: [string, string] = seriesLabelsProp ?? [
+    t("labs.chart.systolic"),
+    t("labs.chart.diastolic"),
+  ];
   const data = useMemo(() => points.map((p) => ({ ...p, t: new Date(p.at).getTime() })), [points]);
   const domain = useMemo(() => {
     const vals = data.flatMap((d) => [d.value, ...(dual && d.value2 != null ? [d.value2] : [])]);
@@ -148,7 +157,7 @@ export function TrendChart({
       style={{ height }}
       className="w-full"
       role="img"
-      aria-label={`Chart of ${data.length} readings in ${unit}`}
+      aria-label={t.n("labs.chart.aria", data.length, { unit })}
     >
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 10, right: 12, bottom: 4, left: -8 }}>

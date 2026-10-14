@@ -1,8 +1,10 @@
+import { getT } from "@/i18n/server";
+
 /**
  * Lightweight inline-SVG sparkline (no client JS) for KPI cards.
  * Shows shape only; the card carries the actual value and date.
  */
-export function Sparkline({
+export async function Sparkline({
   values,
   className,
   label,
@@ -12,6 +14,7 @@ export function Sparkline({
   label?: string;
 }) {
   if (values.length < 2) return <div className={className} aria-hidden />;
+  const ariaLabel = label ?? (await getT())("labs.chart.recentTrend");
   const w = 120,
     h = 36,
     pad = 3;
@@ -33,7 +36,7 @@ export function Sparkline({
       preserveAspectRatio="none"
       className={className}
       role="img"
-      aria-label={label ?? "Recent trend"}
+      aria-label={ariaLabel}
     >
       <path d={`${d} L${lx},${h} L${pad},${h} Z`} fill="var(--chart-1)" opacity="0.08" />
       <path
