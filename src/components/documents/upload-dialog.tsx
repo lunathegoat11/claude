@@ -16,7 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input, NativeSelect } from "@/components/ui/input";
 import { Field, FormError } from "@/components/forms/field";
-import { DOCUMENT_TYPE_LABELS } from "@/lib/catalog/labels";
+import { useT } from "@/i18n/client";
+import { DOCUMENT_TYPE_KEYS } from "@/i18n/messages/files-labels";
 import { DOCUMENT_TYPES } from "@/lib/validation/health";
 import { cn, formatBytes } from "@/lib/utils";
 
@@ -52,9 +53,10 @@ export function UploadDialog({
   maxMb: number;
   today: string;
   providers: string[];
-  /** Who reads the report, e.g. "on this server (no AI)". */
+  /** Who reads the report, as a whole sentence, already translated. */
   readBy: string;
 }) {
+  const t = useT();
   const router = useRouter();
   const sp = useSearchParams();
   const [open, setOpen] = useState(false);
@@ -80,9 +82,8 @@ export function UploadDialog({
       setError(null);
       setQuality(null);
       if (f.size > maxMb * 1024 * 1024)
-        return setError(`That file is ${formatBytes(f.size)}. The limit is ${maxMb} MB.`);
-      if (f.type && !ACCEPT.split(",").includes(f.type))
-        return setError("Only PDF, JPG, PNG, WebP and HEIC files are supported.");
+        return setError(t("files.upload.tooBig", { size: formatBytes(f.size), max: maxMb }));
+      if (f.type && !ACCEPT.split(",").includes(f.type)) return setError(t("files.upload.badType"));
       setFile(f);
       setName(
         (n) =>
@@ -94,7 +95,7 @@ export function UploadDialog({
       );
       setType(guessType(f.name));
     },
-    [maxMb],
+    [maxMb, t],
   );
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -115,7 +116,7 @@ export function UploadDialog({
   }
 
   async function send(allowPoorQuality: boolean) {
-    if (!file || !formRef.current) return setError("Choose a file to upload.");
+    if (!file || !formRef.current) return setError(t("files.upload.chooseFirst"));
     setBusy(true);
     setError(null);
     setQuality(null);
@@ -130,7 +131,7 @@ export function UploadDialog({
       if (!res.ok) {
         if (body?.error?.code === "IMAGE_QUALITY") return setQuality(body.error.message);
         if (body?.error?.code === "PLAN_LIMIT") return setLimit(body.error.message);
-        setError(body?.error?.message ?? "Upload failed. Please try again.");
+        setError(body?.error?.message ?? t("files.upload.failed"));
         setFieldErrors(body?.error?.fieldErrors ?? {});
         return;
       }
@@ -139,22 +140,22 @@ export function UploadDialog({
       if (body.panelId) {
         const n = body.resultCount as number;
         toast.success(
-          `Saved ${n} result${n === 1 ? "" : "s"} from ${body.reportName}` +
+          t.n("files.upload.savedResults", n, { name: body.reportName }) +
             (body.dateFound ? `, ${shortDate(body.collectedAt)}` : ""),
           body.dateFound
             ? undefined
             : {
-                description: "No date was printed on the report. You can set it on the next page.",
+                description: t("files.upload.noDate"),
               },
         );
         router.push(`/labs/reports/${body.panelId}?new=1`);
       } else {
-        toast.success("Document saved");
+        toast.success(t("files.upload.saved"));
         router.push(`/documents/${body.id}`);
       }
       router.refresh();
     } catch {
-      setError("We couldn't reach the server. Check your connection and try again.");
+      setError(t("files.upload.offline"));
     } finally {
       setBusy(false);
     }
@@ -168,7 +169,7 @@ export function UploadDialog({
   return (
     <>
       <Button onClick={() => setOpen(true)}>
-        <Upload /> Add a report
+        <Upload /> {t("files.docs.addReport")}
       </Button>
       <Dialog
         open={open}
@@ -182,11 +183,9 @@ export function UploadDialog({
       >
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Add a report or file</DialogTitle>
+            <DialogTitle>{t("files.upload.title")}</DialogTitle>
             <DialogDescription>
-              A PDF or a photo, up to {maxMb} MB. Test results are read {readBy} and saved with the
-              report&apos;s name and date. Reading can make mistakes, so check the values against
-              the report.
+              {t("files.upload.desc.size", { max: maxMb })} {readBy} {t("files.upload.desc.check")}
             </DialogDescription>
           </DialogHeader>
           <form ref={formRef} onSubmit={submit} className="space-y-4" noValidate>
@@ -199,7 +198,7 @@ export function UploadDialog({
                 <p>{limit}</p>
                 <Button asChild size="sm">
                   <Link href="/settings?tab=plan" onClick={() => setOpen(false)}>
-                    See Kosha Plus
+                    {t("files.upload.seePlus")}
                   </Link>
                 </Button>
               </div>
@@ -214,10 +213,10 @@ export function UploadDialog({
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" onClick={retakePhoto}>
-                    <Camera /> Take another photo
+                    <Camera /> {t("files.upload.retake")}
                   </Button>
                   <Button type="button" variant="ghost" onClick={() => void send(true)}>
-                    Save it anyway
+                    {t("files.upload.saveAnyway")}
                   </Button>
                 </div>
               </div>
@@ -247,11 +246,11 @@ export function UploadDialog({
                   <FileUp className="size-6" />
                 </span>
                 <div className="text-sm">
-                  <span className="font-medium">Drag a file here</span>{" "}
-                  <span className="text-muted-foreground">or</span>
+                  <span className="font-medium">{t("files.upload.drag")}</span>{" "}
+                  <span className="text-muted-foreground">{t("files.upload.or")}</span>
                 </div>
                 <Button type="button" variant="outline" onClick={() => inputRef.current?.click()}>
-                  Choose file
+                  {t("files.upload.choose")}
                 </Button>
                 <input
                   ref={inputRef}
@@ -259,7 +258,7 @@ export function UploadDialog({
                   accept={ACCEPT}
                   className="sr-only"
                   onChange={(e) => pick(e.target.files?.[0])}
-                  aria-label="Choose file"
+                  aria-label={t("files.upload.choose")}
                 />
               </div>
             ) : (
@@ -274,7 +273,7 @@ export function UploadDialog({
                   variant="ghost"
                   size="icon-sm"
                   onClick={reset}
-                  aria-label="Remove file"
+                  aria-label={t("files.upload.remove")}
                 >
                   <X />
                 </Button>
@@ -283,7 +282,7 @@ export function UploadDialog({
             {file && !busy && (
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
-                  label="Name"
+                  label={t("files.field.name")}
                   htmlFor="doc-name"
                   className="sm:col-span-2"
                   error={fieldErrors.name}
@@ -296,23 +295,23 @@ export function UploadDialog({
                     required
                   />
                 </Field>
-                <Field label="Type" htmlFor="doc-type" error={fieldErrors.type}>
+                <Field label={t("files.field.type")} htmlFor="doc-type" error={fieldErrors.type}>
                   <NativeSelect
                     id="doc-type"
                     name="type"
                     value={type}
                     onChange={(e) => setType(e.target.value)}
                   >
-                    <option value="AUTO">Work it out for me</option>
-                    {DOCUMENT_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {DOCUMENT_TYPE_LABELS[t]}
+                    <option value="AUTO">{t("files.upload.auto")}</option>
+                    {DOCUMENT_TYPES.map((d) => (
+                      <option key={d} value={d}>
+                        {t(DOCUMENT_TYPE_KEYS[d])}
                       </option>
                     ))}
                   </NativeSelect>
                 </Field>
                 <Field
-                  label="Date on document"
+                  label={t("files.field.documentDate")}
                   htmlFor="doc-date"
                   optional
                   error={fieldErrors.documentDate}
@@ -320,7 +319,7 @@ export function UploadDialog({
                   <Input id="doc-date" name="documentDate" type="date" max={today} />
                 </Field>
                 <Field
-                  label="Hospital, lab or doctor"
+                  label={t("files.field.provider")}
                   htmlFor="doc-provider"
                   optional
                   className="sm:col-span-2"
@@ -329,7 +328,7 @@ export function UploadDialog({
                     id="doc-provider"
                     name="providerName"
                     list="doc-providers"
-                    placeholder="e.g. City Diagnostics, Lucknow"
+                    placeholder={t("files.upload.providerPlaceholder")}
                   />
                   <datalist id="doc-providers">
                     {providers.map((p) => (
@@ -337,9 +336,9 @@ export function UploadDialog({
                     ))}
                   </datalist>
                 </Field>
-                <Field label="Attach to record" htmlFor="doc-record" optional>
+                <Field label={t("files.field.attachRecord")} htmlFor="doc-record" optional>
                   <NativeSelect id="doc-record" name="recordId" defaultValue={presetRecord}>
-                    <option value="">None</option>
+                    <option value="">{t("files.common.none")}</option>
                     {records.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.title}
@@ -347,17 +346,22 @@ export function UploadDialog({
                     ))}
                   </NativeSelect>
                 </Field>
-                <Field label="Tags" htmlFor="doc-tags" optional hint="Comma separated">
+                <Field
+                  label={t("files.field.tags")}
+                  htmlFor="doc-tags"
+                  optional
+                  hint={t("files.field.tagsHint")}
+                >
                   <Input id="doc-tags" name="tags" />
                 </Field>
               </div>
             )}
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
-                Cancel
+                {t("files.common.cancel")}
               </Button>
               <Button type="submit" disabled={!file || busy}>
-                {busy ? "Reading…" : "Upload"}
+                {busy ? t("files.upload.reading") : t("files.upload.upload")}
               </Button>
             </DialogFooter>
           </form>

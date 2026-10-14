@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input, NativeSelect, Textarea } from "@/components/ui/input";
-import { DOCUMENT_TYPE_LABELS } from "@/lib/catalog/labels";
+import { useT } from "@/i18n/client";
+import { DOCUMENT_TYPE_KEYS } from "@/i18n/messages/files-labels";
 import { DOCUMENT_TYPES } from "@/lib/validation/health";
 
 export function EditDocumentDialog({
@@ -34,6 +35,7 @@ export function EditDocumentDialog({
   };
   records: { id: string; title: string }[];
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const { state, onSubmit, pending, err } = useActionForm(updateDocumentAction, {
     onSuccess: () => setOpen(false),
@@ -41,39 +43,44 @@ export function EditDocumentDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <Button variant="outline" onClick={() => setOpen(true)}>
-        <Pencil /> Edit details
+        <Pencil /> {t("files.edit.button")}
       </Button>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit document details</DialogTitle>
-          <DialogDescription>The file itself isn&apos;t changed.</DialogDescription>
+          <DialogTitle>{t("files.edit.title")}</DialogTitle>
+          <DialogDescription>{t("files.edit.description")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <input type="hidden" name="id" value={doc.id} />
           {state.error && !state.fieldErrors && <FormError message={state.error} />}
-          <Field label="Name" htmlFor="e-name" error={err("name")}>
+          <Field label={t("files.field.name")} htmlFor="e-name" error={err("name")}>
             <Input id="e-name" name="name" defaultValue={doc.name} required />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Type" htmlFor="e-type" error={err("type")}>
+            <Field label={t("files.field.type")} htmlFor="e-type" error={err("type")}>
               <NativeSelect id="e-type" name="type" defaultValue={doc.type}>
-                {DOCUMENT_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {DOCUMENT_TYPE_LABELS[t]}
+                {DOCUMENT_TYPES.map((d) => (
+                  <option key={d} value={d}>
+                    {t(DOCUMENT_TYPE_KEYS[d])}
                   </option>
                 ))}
               </NativeSelect>
             </Field>
-            <Field label="Date on document" htmlFor="e-date" optional error={err("documentDate")}>
+            <Field
+              label={t("files.field.documentDate")}
+              htmlFor="e-date"
+              optional
+              error={err("documentDate")}
+            >
               <Input id="e-date" name="documentDate" type="date" defaultValue={doc.documentDate} />
             </Field>
           </div>
-          <Field label="Hospital, lab or doctor" htmlFor="e-provider" optional>
+          <Field label={t("files.field.provider")} htmlFor="e-provider" optional>
             <Input id="e-provider" name="providerName" defaultValue={doc.providerName ?? ""} />
           </Field>
-          <Field label="Attach to record" htmlFor="e-record" optional>
+          <Field label={t("files.field.attachRecord")} htmlFor="e-record" optional>
             <NativeSelect id="e-record" name="recordId" defaultValue={doc.recordId ?? ""}>
-              <option value="">None</option>
+              <option value="">{t("files.common.none")}</option>
               {records.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.title}
@@ -81,18 +88,23 @@ export function EditDocumentDialog({
               ))}
             </NativeSelect>
           </Field>
-          <Field label="Tags" htmlFor="e-tags" optional hint="Comma separated">
+          <Field
+            label={t("files.field.tags")}
+            htmlFor="e-tags"
+            optional
+            hint={t("files.field.tagsHint")}
+          >
             <Input id="e-tags" name="tags" defaultValue={doc.tags.join(", ")} />
           </Field>
-          <Field label="Notes" htmlFor="e-notes" optional>
+          <Field label={t("files.field.notes")} htmlFor="e-notes" optional>
             <Textarea id="e-notes" name="notes" defaultValue={doc.notes ?? ""} rows={3} />
           </Field>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
-              Cancel
+              {t("files.common.cancel")}
             </Button>
-            <SubmitButton pending={pending} pendingLabel="Saving…">
-              Save
+            <SubmitButton pending={pending} pendingLabel={t("files.common.saving")}>
+              {t("files.common.save")}
             </SubmitButton>
           </DialogFooter>
         </form>

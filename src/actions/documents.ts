@@ -5,6 +5,7 @@ import { requireUserOrThrow, requestMeta } from "@/server/auth/session";
 import { deleteDocument, updateDocument } from "@/server/services/documents";
 import { audit } from "@/server/audit";
 import { uuid } from "@/lib/validation/common";
+import { getT } from "@/i18n/server";
 
 export async function updateDocumentAction(_: ActionState, fd: FormData): Promise<ActionState> {
   return runAction("updateDocument", async () => {
@@ -20,7 +21,7 @@ export async function updateDocumentAction(_: ActionState, fd: FormData): Promis
     await audit(user.id, "document.update", { type: "MedicalDocument", id }, await requestMeta());
     revalidatePath(`/documents/${id}`);
     revalidatePath("/documents");
-    return { ok: true, message: "Document details saved" };
+    return { ok: true, message: (await getT())("files.action.docSaved") };
   });
 }
 
@@ -30,6 +31,6 @@ export async function deleteDocumentAction(id: string): Promise<ActionState> {
     await deleteDocument(user.id, uuid.parse(id));
     await audit(user.id, "document.delete", { type: "MedicalDocument", id }, await requestMeta());
     revalidatePath("/documents");
-    return { ok: true, message: "Document deleted" };
+    return { ok: true, message: (await getT())("files.action.docDeleted") };
   });
 }

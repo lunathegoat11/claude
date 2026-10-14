@@ -15,20 +15,29 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { FlagBadge } from "@/components/labs/flag-badge";
 import { Badge } from "@/components/ui/badge";
-import { DOCUMENT_TYPE_LABELS, PROVIDER_TYPE_LABELS } from "@/lib/catalog/labels";
-import { CONTEXT_LABELS } from "@/lib/catalog/metrics";
+import { getT } from "@/i18n/server";
+import type { MessageKey } from "@/i18n/messages";
+import {
+  CONTEXT_KEYS,
+  DOCUMENT_TYPE_KEYS,
+  PROVIDER_TYPE_KEYS,
+  RECORD_TYPE_KEYS,
+} from "@/i18n/messages/files-labels";
 import { formatDate, formatDateTime, formatNumber, parseZonedInput } from "@/lib/format";
 import { presentMeasurement } from "@/lib/display";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Search" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("files.meta.search") };
+}
 
-const TYPE_LABELS: Record<SearchType, string> = {
-  records: "Records",
-  documents: "Documents",
-  labs: "Lab results",
-  measurements: "Measurements",
-  providers: "Providers",
+const TYPE_LABELS: Record<SearchType, MessageKey> = {
+  records: "files.search.type.records",
+  documents: "files.search.type.documents",
+  labs: "files.search.type.labs",
+  measurements: "files.search.type.measurements",
+  providers: "files.search.type.providers",
 };
 
 type SP = { q?: string; type?: string; from?: string; to?: string };
@@ -59,6 +68,7 @@ function Section({
 export default async function SearchPage({ searchParams }: { searchParams: Promise<SP> }) {
   const user = await requireUser();
   const sp = await searchParams;
+  const t = await getT();
   const q = (sp.q ?? "").trim();
   const type = SEARCH_TYPES.includes(sp.type as SearchType) ? (sp.type as SearchType) : undefined;
   const tz = user.timezone;
@@ -77,20 +87,17 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="mx-auto max-w-4xl">
-      <PageHeader
-        title="Search"
-        description="Search across records, documents, lab results, measurements and providers. Try “glucose”, “Pune”, “Sep 2026” or “dengue”."
-      />
+      <PageHeader title={t("files.meta.search")} description={t("files.search.description")} />
       <div className="mb-4">
         <FilterBar
           action="/search"
           q={q}
-          placeholder="Search everything…"
+          placeholder={t("files.search.placeholder")}
           hidden={{ type }}
-          submitLabel="Search"
+          submitLabel={t("files.search.submit")}
         >
           <label className="text-muted-foreground flex items-center gap-2 text-sm">
-            From{" "}
+            {t("files.search.from")}{" "}
             <input
               type="date"
               name="from"
@@ -99,7 +106,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             />
           </label>
           <label className="text-muted-foreground flex items-center gap-2 text-sm">
-            To{" "}
+            {t("files.search.to")}{" "}
             <input
               type="date"
               name="to"
@@ -110,7 +117,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         </FilterBar>
       </div>
       {results && (
-        <nav aria-label="Result types" className="mb-6 flex flex-wrap gap-2">
+        <nav aria-label={t("files.search.typesLabel")} className="mb-6 flex flex-wrap gap-2">
           <Link
             href={qs({ type: undefined })}
             className={cn(
@@ -120,20 +127,20 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                 : "text-muted-foreground hover:bg-muted",
             )}
           >
-            All
+            {t("files.search.all")}
           </Link>
-          {SEARCH_TYPES.map((t) => (
+          {SEARCH_TYPES.map((st) => (
             <Link
-              key={t}
-              href={qs({ type: t })}
+              key={st}
+              href={qs({ type: st })}
               className={cn(
                 "rounded-full border px-3 py-1.5 text-sm pointer-coarse:py-2.5",
-                type === t
+                type === st
                   ? "border-primary bg-accent text-accent-foreground font-medium"
                   : "text-muted-foreground hover:bg-muted",
               )}
             >
-              {TYPE_LABELS[t]}
+              {t(TYPE_LABELS[st])}
             </Link>
           ))}
         </nav>
@@ -142,18 +149,22 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       {!results ? (
         <EmptyState
           icon={SearchIcon}
-          title="Search your health records"
-          description="Type a test name, doctor, hospital, condition, tag or a date like 12/09/2026."
+          title={t("files.search.empty.title")}
+          description={t("files.search.empty.description")}
         />
       ) : results.total === 0 ? (
         <EmptyState
           icon={SearchIcon}
-          title={`No results for “${q}”`}
-          description="Check the spelling or try a broader term, like “sugar” instead of “fasting blood sugar”."
+          title={t("files.search.noResults", { q })}
+          description={t("files.search.noResults.description")}
         />
       ) : (
         <div className="space-y-8">
-          <Section icon={FlaskConical} title="Lab results" count={results.labs.length}>
+          <Section
+            icon={FlaskConical}
+            title={t("files.search.type.labs")}
+            count={results.labs.length}
+          >
             {results.labs.map((r) => (
               <li key={r.id}>
                 <Link
@@ -182,7 +193,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               </li>
             ))}
           </Section>
-          <Section icon={Activity} title="Measurements" count={results.measurements.length}>
+          <Section
+            icon={Activity}
+            title={t("files.search.type.measurements")}
+            count={results.measurements.length}
+          >
             {results.measurements.map((m) => {
               const pres = presentMeasurement(
                 {
@@ -207,7 +222,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                         {m.context && (
                           <span className="text-muted-foreground font-normal">
                             {" "}
-                            , {CONTEXT_LABELS[m.context] ?? m.context}
+                            , {CONTEXT_KEYS[m.context] ? t(CONTEXT_KEYS[m.context]) : m.context}
                           </span>
                         )}
                       </div>
@@ -224,7 +239,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               );
             })}
           </Section>
-          <Section icon={FolderHeart} title="Medical records" count={results.records.length}>
+          <Section
+            icon={FolderHeart}
+            title={t("files.search.section.records")}
+            count={results.records.length}
+          >
             {results.records.map((r) => (
               <li key={r.id}>
                 <Link href={`/records/${r.id}`} className="hover:bg-muted/60 block px-4 py-3">
@@ -235,7 +254,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                     </span>
                   </div>
                   <div className="text-muted-foreground text-xs">
-                    {r.typeLabel}
+                    {t(RECORD_TYPE_KEYS[r.type])}
                     {(r.doctorName || r.facilityName) &&
                       `, ${[r.doctorName, r.facilityName].filter(Boolean).join(", ")}`}
                   </div>
@@ -243,7 +262,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               </li>
             ))}
           </Section>
-          <Section icon={FileText} title="Documents" count={results.documents.length}>
+          <Section
+            icon={FileText}
+            title={t("files.search.type.documents")}
+            count={results.documents.length}
+          >
             {results.documents.map((d) => (
               <li key={d.id}>
                 <Link href={`/documents/${d.id}`} className="hover:bg-muted/60 block px-4 py-3">
@@ -254,7 +277,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                     </span>
                   </div>
                   <div className="text-muted-foreground text-xs">
-                    {DOCUMENT_TYPE_LABELS[d.type]}
+                    {t(DOCUMENT_TYPE_KEYS[d.type])}
                     {d.providerName && `, ${d.providerName}`}
                   </div>
                   {d.snippet && (
@@ -266,7 +289,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               </li>
             ))}
           </Section>
-          <Section icon={Building2} title="Providers" count={results.providers.length}>
+          <Section
+            icon={Building2}
+            title={t("files.search.type.providers")}
+            count={results.providers.length}
+          >
             {results.providers.map((p) => (
               <li key={p.id}>
                 <Link
@@ -276,12 +303,15 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                   <div className="min-w-0 flex-1">
                     <div className="font-medium">{p.name}</div>
                     <div className="text-muted-foreground text-xs">
-                      {PROVIDER_TYPE_LABELS[p.type]}
+                      {t(PROVIDER_TYPE_KEYS[p.type])}
                       {p.city && `, ${p.city}`}
                     </div>
                   </div>
                   <Badge variant="secondary">
-                    {p._count.records + p._count.documents + p._count.labPanels} items
+                    {t.n(
+                      "files.search.items",
+                      p._count.records + p._count.documents + p._count.labPanels,
+                    )}
                   </Badge>
                 </Link>
               </li>

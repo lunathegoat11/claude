@@ -8,7 +8,9 @@ import { Field, FormError } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RECORD_TYPE_LABELS } from "@/lib/catalog/labels";
+import { useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
+import { RECORD_TYPE_KEYS } from "@/i18n/messages/files-labels";
 import { RECORD_TYPES } from "@/lib/validation/health";
 import { cn } from "@/lib/utils";
 
@@ -25,17 +27,17 @@ export interface RecordFormValues {
   tags?: string[];
 }
 
-const TITLE_HINTS: Record<string, string> = {
-  DOCTOR_VISIT: "e.g. Consultation with cardiologist",
-  DIAGNOSIS: "e.g. Type 2 diabetes diagnosed",
-  PROCEDURE: "e.g. Cataract surgery, right eye",
-  HOSPITALIZATION: "e.g. Admitted for pneumonia",
-  PRESCRIPTION: "e.g. Antibiotics for throat infection",
-  VACCINATION: "e.g. Hepatitis B, dose 2",
-  ALLERGY: "e.g. Allergy to sulfa drugs",
-  CONDITION: "e.g. Asthma",
-  FAMILY_HISTORY: "e.g. Mother: high blood pressure",
-  OTHER: "Give this record a short title",
+const TITLE_HINTS: Record<string, MessageKey> = {
+  DOCTOR_VISIT: "files.form.hint.DOCTOR_VISIT",
+  DIAGNOSIS: "files.form.hint.DIAGNOSIS",
+  PROCEDURE: "files.form.hint.PROCEDURE",
+  HOSPITALIZATION: "files.form.hint.HOSPITALIZATION",
+  PRESCRIPTION: "files.form.hint.PRESCRIPTION",
+  VACCINATION: "files.form.hint.VACCINATION",
+  ALLERGY: "files.form.hint.ALLERGY",
+  CONDITION: "files.form.hint.CONDITION",
+  FAMILY_HISTORY: "files.form.hint.FAMILY_HISTORY",
+  OTHER: "files.form.hint.OTHER",
 };
 
 export function RecordForm({
@@ -47,6 +49,7 @@ export function RecordForm({
   providers: string[];
   today: string;
 }) {
+  const t = useT();
   const { state, onSubmit, pending, err } = useActionForm(saveRecordAction, {
     successToast: false,
   });
@@ -65,25 +68,25 @@ export function RecordForm({
       {state.error && !state.fieldErrors && <FormError message={state.error} />}
 
       <fieldset className="space-y-2">
-        <legend className="mb-2 text-sm font-medium">What kind of record is this?</legend>
+        <legend className="mb-2 text-sm font-medium">{t("files.form.kind")}</legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-          {RECORD_TYPES.map((t) => (
+          {RECORD_TYPES.map((rt) => (
             <label
-              key={t}
+              key={rt}
               className={cn(
                 "has-[:focus-visible]:ring-ring/30 flex cursor-pointer items-center justify-center rounded-md border px-2 py-2.5 text-center text-[13px] font-medium transition has-[:focus-visible]:ring-3",
-                type === t ? "border-primary bg-accent text-accent-foreground" : "hover:bg-muted",
+                type === rt ? "border-primary bg-accent text-accent-foreground" : "hover:bg-muted",
               )}
             >
               <input
                 type="radio"
                 name="type"
-                value={t}
-                checked={type === t}
-                onChange={() => setType(t)}
+                value={rt}
+                checked={type === rt}
+                onChange={() => setType(rt)}
                 className="sr-only"
               />
-              {RECORD_TYPE_LABELS[t]}
+              {t(RECORD_TYPE_KEYS[rt])}
             </label>
           ))}
         </div>
@@ -91,18 +94,18 @@ export function RecordForm({
       </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-[1fr_200px]">
-        <Field label="Title" htmlFor="title" error={err("title")}>
+        <Field label={t("files.form.title")} htmlFor="title" error={err("title")}>
           <Input
             id="title"
             name="title"
             defaultValue={initial?.title}
-            placeholder={TITLE_HINTS[type]}
+            placeholder={t(TITLE_HINTS[type] ?? "files.form.hint.OTHER")}
             required
             aria-invalid={!!err("title")}
             maxLength={200}
           />
         </Field>
-        <Field label="Date" htmlFor="date" error={err("date")}>
+        <Field label={t("files.record.date")} htmlFor="date" error={err("date")}>
           <Input
             id="date"
             name="date"
@@ -122,7 +125,7 @@ export function RecordForm({
           aria-expanded={showDetails}
           className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium"
         >
-          Doctor & hospital details
+          {t("files.form.details")}
           <ChevronDown
             className={cn(
               "text-muted-foreground size-4 transition-transform",
@@ -131,25 +134,35 @@ export function RecordForm({
           />
         </button>
         <div className={cn("grid gap-4 border-t p-4 sm:grid-cols-2", !showDetails && "hidden")}>
-          <Field label="Doctor" htmlFor="doctorName" optional error={err("doctorName")}>
+          <Field
+            label={t("files.record.doctor")}
+            htmlFor="doctorName"
+            optional
+            error={err("doctorName")}
+          >
             <Input
               id="doctorName"
               name="doctorName"
               defaultValue={initial?.doctorName ?? ""}
-              placeholder="Dr. …"
+              placeholder={t("files.form.doctorPlaceholder")}
             />
           </Field>
-          <Field label="Specialty" htmlFor="specialty" optional error={err("specialty")}>
+          <Field
+            label={t("files.record.specialty")}
+            htmlFor="specialty"
+            optional
+            error={err("specialty")}
+          >
             <Input
               id="specialty"
               name="specialty"
               list="specialties"
               defaultValue={initial?.specialty ?? ""}
-              placeholder="e.g. Cardiology"
+              placeholder={t("files.form.specialtyPlaceholder")}
             />
           </Field>
           <Field
-            label="Hospital / clinic"
+            label={t("files.record.facility")}
             htmlFor="facilityName"
             optional
             error={err("facilityName")}
@@ -160,12 +173,14 @@ export function RecordForm({
               name="facilityName"
               list="providers"
               defaultValue={initial?.facilityName ?? ""}
-              placeholder="e.g. City Hospital, Jaipur"
+              placeholder={t("files.form.facilityPlaceholder")}
             />
           </Field>
           {(type === "HOSPITALIZATION" || type === "PRESCRIPTION" || initial?.endDate) && (
             <Field
-              label={type === "HOSPITALIZATION" ? "Discharge date" : "End date"}
+              label={t(
+                type === "HOSPITALIZATION" ? "files.form.dischargeDate" : "files.form.endDate",
+              )}
               htmlFor="endDate"
               optional
               error={err("endDate")}
@@ -212,11 +227,11 @@ export function RecordForm({
       </datalist>
 
       <Field
-        label="Notes"
+        label={t("files.field.notes")}
         htmlFor="notes"
         optional
         error={err("notes")}
-        hint="What happened, what the doctor said, any follow-up advised."
+        hint={t("files.form.notesHint")}
       >
         <Textarea
           id="notes"
@@ -228,21 +243,23 @@ export function RecordForm({
       </Field>
 
       <Field
-        label="Tags"
+        label={t("files.field.tags")}
         htmlFor="tags"
         optional
         error={err("tags")}
-        hint="Separate with commas, e.g. diabetes, follow-up"
+        hint={t("files.form.tagsHint")}
       >
         <Input id="tags" name="tags" defaultValue={initial?.tags?.join(", ") ?? ""} />
       </Field>
 
       <div className="flex flex-col-reverse gap-2 border-t pt-5 sm:flex-row sm:justify-end">
         <Button asChild variant="ghost">
-          <Link href={initial?.id ? `/records/${initial.id}` : "/records"}>Cancel</Link>
+          <Link href={initial?.id ? `/records/${initial.id}` : "/records"}>
+            {t("files.common.cancel")}
+          </Link>
         </Button>
-        <SubmitButton pending={pending} pendingLabel="Saving…">
-          {initial?.id ? "Save changes" : "Save record"}
+        <SubmitButton pending={pending} pendingLabel={t("files.common.saving")}>
+          {t(initial?.id ? "files.form.saveChanges" : "files.form.saveRecord")}
         </SubmitButton>
       </div>
     </form>

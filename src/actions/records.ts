@@ -6,6 +6,7 @@ import { requireUserOrThrow, requestMeta } from "@/server/auth/session";
 import { createRecord, deleteRecord, updateRecord } from "@/server/services/records";
 import { audit } from "@/server/audit";
 import { uuid } from "@/lib/validation/common";
+import { getT } from "@/i18n/server";
 
 function input(fd: FormData) {
   const o = formToObject(fd);
@@ -37,7 +38,7 @@ export async function saveRecordAction(_: ActionState, fd: FormData): Promise<Ac
       target = `/records/${rec.id}`;
     }
     revalidatePath("/records");
-    return { ok: true, message: "Record saved" };
+    return { ok: true, message: (await getT())("files.record.saved") };
   });
   if (res.ok) redirect(`${target}?saved=1`);
   return res;
@@ -49,6 +50,6 @@ export async function deleteRecordAction(id: string): Promise<ActionState> {
     await deleteRecord(user.id, uuid.parse(id));
     await audit(user.id, "record.delete", { type: "MedicalRecord", id }, await requestMeta());
     revalidatePath("/records");
-    return { ok: true, message: "Record deleted" };
+    return { ok: true, message: (await getT())("files.record.deleted") };
   });
 }

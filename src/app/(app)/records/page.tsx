@@ -11,18 +11,24 @@ import { Pagination } from "@/components/shared/pagination";
 import { RECORD_ICONS } from "@/components/shared/icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RECORD_TYPE_LABELS } from "@/lib/catalog/labels";
+import { getT } from "@/i18n/server";
+import type { T } from "@/i18n/translate";
+import { RECORD_TYPE_KEYS } from "@/i18n/messages/files-labels";
 import { RECORD_TYPES } from "@/lib/validation/health";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Visits & history" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("files.meta.records") };
+}
 
 type SP = { q?: string; type?: string; tag?: string; sort?: string; page?: string; view?: string };
 
 export default async function RecordsPage({ searchParams }: { searchParams: Promise<SP> }) {
   const user = await requireUser();
   const sp = await searchParams;
+  const t = await getT();
   const type = RECORD_TYPES.includes(sp.type as RecordType) ? (sp.type as RecordType) : undefined;
   const sort = sp.sort === "date_asc" || sp.sort === "updated" ? sp.sort : "date_desc";
   const view = sp.view === "timeline" ? "timeline" : "list";
@@ -48,12 +54,12 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
   return (
     <div>
       <PageHeader
-        title="Visits & history"
-        description="Doctor visits, diagnoses, procedures, prescriptions and vaccinations, by date."
+        title={t("nav.records")}
+        description={t("files.records.description")}
         actions={
           <Button asChild>
             <Link href="/records/new">
-              <Plus /> Add record
+              <Plus /> {t("files.records.add")}
             </Link>
           </Button>
         }
@@ -63,45 +69,45 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
         <FilterBar
           action="/records"
           q={sp.q}
-          placeholder="Search titles, doctors, hospitals, notes…"
+          placeholder={t("files.records.searchPlaceholder")}
           clearHref={filtered ? "/records" : undefined}
           hidden={{ view: sp.view }}
         >
           <FilterSelect
             name="type"
             value={type}
-            label="Record type"
+            label={t("files.records.typeLabel")}
             options={[
-              { value: "", label: "All types" },
-              ...RECORD_TYPES.map((t) => ({ value: t, label: RECORD_TYPE_LABELS[t] })),
+              { value: "", label: t("files.common.allTypes") },
+              ...RECORD_TYPES.map((r) => ({ value: r, label: t(RECORD_TYPE_KEYS[r]) })),
             ]}
           />
           {tags.length > 0 && (
             <FilterSelect
               name="tag"
               value={sp.tag}
-              label="Tag"
+              label={t("files.records.tagLabel")}
               options={[
-                { value: "", label: "All tags" },
-                ...tags.map((t) => ({ value: t.tag, label: `#${t.tag}` })),
+                { value: "", label: t("files.records.allTags") },
+                ...tags.map((g) => ({ value: g.tag, label: `#${g.tag}` })),
               ]}
             />
           )}
           <FilterSelect
             name="sort"
             value={sort}
-            label="Sort"
+            label={t("files.records.sortLabel")}
             options={[
-              { value: "date_desc", label: "Newest first" },
-              { value: "date_asc", label: "Oldest first" },
-              { value: "updated", label: "Recently edited" },
+              { value: "date_desc", label: t("files.records.sort.newest") },
+              { value: "date_asc", label: t("files.records.sort.oldest") },
+              { value: "updated", label: t("files.records.sort.updated") },
             ]}
           />
         </FilterBar>
         <div
           className="bg-muted inline-flex self-start rounded-md p-1"
           role="group"
-          aria-label="View"
+          aria-label={t("files.records.viewLabel")}
         >
           <Link
             href={qs({ view: undefined, page: undefined })}
@@ -111,7 +117,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
               view === "list" && "bg-card text-foreground shadow-sm",
             )}
           >
-            <List className="size-4" /> List
+            <List className="size-4" /> {t("files.records.view.list")}
           </Link>
           <Link
             href={qs({ view: "timeline", page: undefined })}
@@ -121,7 +127,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
               view === "timeline" && "bg-card text-foreground shadow-sm",
             )}
           >
-            <Rows3 className="size-4" /> Timeline
+            <Rows3 className="size-4" /> {t("nav.timeline")}
           </Link>
         </div>
       </div>
@@ -130,30 +136,30 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
         filtered ? (
           <EmptyState
             icon={FolderHeart}
-            title="No matching records"
-            description="Try a different search or clear the filters."
+            title={t("files.records.empty.filteredTitle")}
+            description={t("files.common.tryDifferent")}
             action={
               <Button asChild variant="outline">
-                <Link href="/records">Clear filters</Link>
+                <Link href="/records">{t("files.common.clearFilters")}</Link>
               </Button>
             }
           />
         ) : (
           <EmptyState
             icon={FolderHeart}
-            title="No medical records yet"
-            description="Start with your most recent doctor visit or an important diagnosis. You can attach documents later."
+            title={t("files.records.empty.title")}
+            description={t("files.records.empty.description")}
             action={
               <Button asChild>
                 <Link href="/records/new">
-                  <Plus /> Add your first record
+                  <Plus /> {t("files.records.addFirst")}
                 </Link>
               </Button>
             }
           />
         )
       ) : view === "timeline" ? (
-        <RecordsTimeline items={items} tz={user.timezone} />
+        <RecordsTimeline items={items} tz={user.timezone} t={t} />
       ) : (
         <ul className="surface divide-y overflow-hidden">
           {items.map((r) => {
@@ -170,19 +176,19 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span className="font-medium">{r.title}</span>
-                      {r.isDemo && <Badge variant="demo">Sample</Badge>}
+                      {r.isDemo && <Badge variant="demo">{t("files.common.sample")}</Badge>}
                     </div>
                     <div className="text-muted-foreground mt-0.5 text-sm">
-                      {RECORD_TYPE_LABELS[r.type]}
+                      {t(RECORD_TYPE_KEYS[r.type])}
                       {(r.doctorName || r.facilityName) && (
                         <>, {[r.doctorName, r.facilityName].filter(Boolean).join(", ")}</>
                       )}
                     </div>
                     {r.tags.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
-                        {r.tags.slice(0, 4).map((t) => (
-                          <Badge key={t} variant="secondary">
-                            #{t}
+                        {r.tags.slice(0, 4).map((tag) => (
+                          <Badge key={tag} variant="secondary">
+                            #{tag}
                           </Badge>
                         ))}
                       </div>
@@ -191,8 +197,13 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
                   <div className="shrink-0 text-right">
                     <div className="tabular text-sm">{formatDate(r.date, user.timezone)}</div>
                     {r._count.documents > 0 && (
-                      <div className="text-muted-foreground mt-1 inline-flex items-center gap-1 text-xs">
-                        <Paperclip className="size-3" /> {r._count.documents}
+                      <div
+                        className="text-muted-foreground mt-1 inline-flex items-center gap-1 text-xs"
+                        title={t("files.records.attachedCount")}
+                      >
+                        <Paperclip className="size-3" aria-hidden />{" "}
+                        <span className="sr-only">{t("files.records.attachedCount")}:</span>
+                        {r._count.documents}
                       </div>
                     )}
                   </div>
@@ -206,7 +217,7 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
         page={page}
         pageCount={pageCount}
         total={total}
-        label="records"
+        label={t("files.pagination.records")}
         makeHref={(p) => qs({ page: String(p) })}
       />
     </div>
@@ -216,9 +227,11 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
 function RecordsTimeline({
   items,
   tz,
+  t,
 }: {
   items: Awaited<ReturnType<typeof listRecords>>["items"];
   tz: string;
+  t: T;
 }) {
   const byYear = new Map<string, typeof items>();
   for (const r of items) {
@@ -243,7 +256,7 @@ function RecordsTimeline({
                     className="surface block p-4 transition hover:shadow-[0_2px_4px_rgb(29_29_31/0.05),0_12px_32px_rgb(29_29_31/0.08)]"
                   >
                     <div className="text-muted-foreground text-xs font-medium">
-                      {formatDate(r.date, tz)}, {RECORD_TYPE_LABELS[r.type]}
+                      {formatDate(r.date, tz)}, {t(RECORD_TYPE_KEYS[r.type])}
                     </div>
                     <div className="mt-1 font-medium">{r.title}</div>
                     {(r.doctorName || r.facilityName) && (

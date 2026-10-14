@@ -1,4 +1,6 @@
+"use client";
 import { Label } from "@/components/ui/label";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
 export function Field({
@@ -18,12 +20,17 @@ export function Field({
   className?: string;
   optional?: boolean;
 }) {
+  const t = useT();
   const msg = Array.isArray(error) ? error[0] : error;
   return (
     <div className={cn("space-y-1.5", className)}>
       <Label htmlFor={htmlFor} className="flex items-baseline gap-1.5">
         {label}
-        {optional && <span className="text-muted-foreground text-xs font-normal">Optional</span>}
+        {optional && (
+          <span className="text-muted-foreground text-xs font-normal">
+            {t("files.field.optional")}
+          </span>
+        )}
       </Label>
       {children}
       {msg ? (

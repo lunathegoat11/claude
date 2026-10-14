@@ -16,14 +16,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import type { ClientActionState } from "./use-action-form";
+import { useT } from "@/i18n/client";
 
 export function ConfirmDelete({
   action,
   title,
   description,
-  confirmLabel = "Delete",
+  confirmLabel,
   redirectTo,
-  triggerLabel = "Delete",
+  triggerLabel: triggerLabelProp,
   triggerVariant = "outline",
   triggerSize = "default",
   iconOnly,
@@ -40,6 +41,8 @@ export function ConfirmDelete({
   iconOnly?: boolean;
   successMessage?: string;
 }) {
+  const t = useT();
+  const triggerLabel = triggerLabelProp ?? t("files.delete.confirm");
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
   const router = useRouter();
@@ -48,12 +51,12 @@ export function ConfirmDelete({
     start(async () => {
       const res = await action();
       if (res.ok) {
-        toast.success(successMessage ?? res.message ?? "Deleted");
+        toast.success(successMessage ?? res.message ?? t("files.delete.done"));
         setOpen(false);
         if (redirectTo) router.push(redirectTo);
         else router.refresh();
       } else {
-        toast.error(res.error ?? "Could not delete. Please try again.");
+        toast.error(res.error ?? t("files.delete.failed"));
       }
     });
   }
@@ -81,10 +84,10 @@ export function ConfirmDelete({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending}>{t("files.common.cancel")}</AlertDialogCancel>
           <Button variant="destructive" onClick={confirm} disabled={pending}>
             <BusyContent active={pending} kind="delete">
-              {confirmLabel}
+              {confirmLabel ?? t("files.delete.confirm")}
             </BusyContent>
           </Button>
         </AlertDialogFooter>

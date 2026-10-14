@@ -2,6 +2,7 @@
 import { useRef } from "react";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
+import { useT } from "@/i18n/client";
 
 /**
  * GET form for list filters. Works without JavaScript; with JS it submits on
@@ -24,6 +25,7 @@ export function FilterBar({
   hidden?: Record<string, string | undefined>;
   submitLabel?: string;
 }) {
+  const t = useT();
   const ref = useRef<HTMLFormElement>(null);
   return (
     <form
@@ -61,7 +63,7 @@ export function FilterBar({
         </button>
       ) : (
         <button type="submit" className="sr-only">
-          Apply filters
+          {t("files.filter.apply")}
         </button>
       )}
       {clearHref && (
@@ -69,7 +71,7 @@ export function FilterBar({
           href={clearHref}
           className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-10 items-center gap-1 rounded-lg px-3 text-sm"
         >
-          <X className="size-4" /> Clear
+          <X className="size-4" /> {t("files.filter.clear")}
         </Link>
       )}
     </form>

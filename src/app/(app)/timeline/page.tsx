@@ -9,20 +9,29 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { TimelineList } from "@/components/timeline/timeline-list";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getT } from "@/i18n/server";
+import type { MessageKey } from "@/i18n/messages";
 
-export const metadata: Metadata = { title: "Timeline" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("files.meta.timeline") };
+}
 
-const FILTERS: { key: string; label: string; category?: TimelineCategory }[] = [
-  { key: "", label: "All" },
-  { key: "VISIT", label: "Visits", category: "VISIT" },
-  { key: "LAB", label: "Lab reports", category: "LAB" },
-  { key: "DIAGNOSIS", label: "Diagnoses", category: "DIAGNOSIS" },
-  { key: "HOSPITALIZATION", label: "Hospital stays", category: "HOSPITALIZATION" },
-  { key: "PROCEDURE", label: "Procedures", category: "PROCEDURE" },
-  { key: "VACCINATION", label: "Vaccinations", category: "VACCINATION" },
-  { key: "PRESCRIPTION", label: "Prescriptions", category: "PRESCRIPTION" },
-  { key: "DOCUMENT", label: "Documents", category: "DOCUMENT" },
-  { key: "MEASUREMENT", label: "Readings", category: "MEASUREMENT" },
+const FILTERS: { key: string; label: MessageKey; category?: TimelineCategory }[] = [
+  { key: "", label: "files.timeline.filter.all" },
+  { key: "VISIT", label: "files.timeline.filter.VISIT", category: "VISIT" },
+  { key: "LAB", label: "files.timeline.filter.LAB", category: "LAB" },
+  { key: "DIAGNOSIS", label: "files.timeline.filter.DIAGNOSIS", category: "DIAGNOSIS" },
+  {
+    key: "HOSPITALIZATION",
+    label: "files.timeline.filter.HOSPITALIZATION",
+    category: "HOSPITALIZATION",
+  },
+  { key: "PROCEDURE", label: "files.timeline.filter.PROCEDURE", category: "PROCEDURE" },
+  { key: "VACCINATION", label: "files.timeline.filter.VACCINATION", category: "VACCINATION" },
+  { key: "PRESCRIPTION", label: "files.timeline.filter.PRESCRIPTION", category: "PRESCRIPTION" },
+  { key: "DOCUMENT", label: "files.timeline.filter.DOCUMENT", category: "DOCUMENT" },
+  { key: "MEASUREMENT", label: "files.timeline.filter.MEASUREMENT", category: "MEASUREMENT" },
 ];
 
 type SP = { category?: string; readings?: string; before?: string };
@@ -30,6 +39,7 @@ type SP = { category?: string; readings?: string; before?: string };
 export default async function TimelinePage({ searchParams }: { searchParams: Promise<SP> }) {
   const user = await requireUser();
   const sp = await searchParams;
+  const t = await getT();
   const filter = FILTERS.find((f) => f.key === sp.category) ?? FILTERS[0];
   const includeRoutine = sp.readings === "1" || filter.category === "MEASUREMENT";
   const before =
@@ -45,13 +55,10 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader
-        title="Your health timeline"
-        description="Every visit, report, document and reading, in the order it happened."
-      />
+      <PageHeader title={t("files.timeline.title")} description={t("files.timeline.description")} />
       <div className="mb-6 space-y-3">
         <nav
-          aria-label="Filter timeline"
+          aria-label={t("files.timeline.filterLabel")}
           className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
         >
           {FILTERS.map((f) => (
@@ -66,7 +73,7 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
                   : "text-muted-foreground hover:bg-muted",
               )}
             >
-              {f.label}
+              {t(f.label)}
             </Link>
           ))}
         </nav>
@@ -92,7 +99,7 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
                 )}
               />
             </span>
-            Show individual readings
+            {t("files.timeline.showReadings")}
           </Link>
         )}
       </div>
@@ -100,8 +107,8 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
       {items.length === 0 ? (
         <EmptyState
           icon={CalendarClock}
-          title={before ? "No earlier events" : "Nothing here yet"}
-          description="As you add records, lab reports, documents and readings, they'll appear here in date order."
+          title={t(before ? "files.timeline.empty.earlier" : "files.timeline.empty.title")}
+          description={t("files.timeline.empty.description")}
         />
       ) : (
         <>
@@ -110,7 +117,7 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
             <div className="mt-8 text-center">
               <Button asChild variant="outline">
                 <Link href={qs({ before: nextCursor.toISOString() })} scroll={false}>
-                  <ChevronDown /> Show earlier events
+                  <ChevronDown /> {t("files.timeline.showEarlier")}
                 </Link>
               </Button>
             </div>
@@ -121,7 +128,7 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
                 href={qs({ before: undefined })}
                 className="text-primary text-sm hover:underline"
               >
-                Back to most recent
+                {t("files.timeline.backToRecent")}
               </Link>
             </div>
           )}

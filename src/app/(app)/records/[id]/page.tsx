@@ -20,29 +20,34 @@ import { DOCUMENT_ICONS, RECORD_ICONS } from "@/components/shared/icons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DOCUMENT_TYPE_LABELS, RECORD_TYPE_LABELS } from "@/lib/catalog/labels";
+import { getT } from "@/i18n/server";
+import { DOCUMENT_TYPE_KEYS, RECORD_TYPE_KEYS } from "@/i18n/messages/files-labels";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { formatBytes } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Medical record" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("files.meta.record") };
+}
 
 export default async function RecordPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
   const { id } = await params;
   const r = await or404(id, (i) => getRecord(user.id, i));
   const tz = user.timezone;
+  const t = await getT();
   const Icon = RECORD_ICONS[r.type];
 
   return (
     <div className="mx-auto max-w-3xl">
       <Suspense>
-        <FlashToast message="Record saved" />
+        <FlashToast message={t("files.record.saved")} />
       </Suspense>
       <Link
         href="/records"
         className="text-muted-foreground hover:text-foreground -my-2 mb-3 inline-flex min-h-11 items-center gap-1.5 py-2 text-sm"
       >
-        <ArrowLeft className="size-4" /> Visits & history
+        <ArrowLeft className="size-4" /> {t("nav.records")}
       </Link>
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -52,7 +57,8 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
           </span>
           <div>
             <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
-              {RECORD_TYPE_LABELS[r.type]} {r.isDemo && <Badge variant="demo">Sample data</Badge>}
+              {t(RECORD_TYPE_KEYS[r.type])}{" "}
+              {r.isDemo && <Badge variant="demo">{t("files.record.sampleData")}</Badge>}
             </div>
             <h1 className="mt-0.5 text-2xl font-semibold text-balance">{r.title}</h1>
           </div>
@@ -60,21 +66,16 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
         <div className="flex gap-2">
           <Button asChild variant="outline">
             <Link href={`/records/${r.id}/edit`}>
-              <Pencil /> Edit
+              <Pencil /> {t("files.record.edit")}
             </Link>
           </Button>
           <ConfirmDelete
             action={deleteRecordAction.bind(null, r.id)}
-            title="Delete this record?"
-            description={
-              <>
-                “{r.title}” will be removed from your records and timeline. Attached documents are
-                kept in Documents.
-              </>
-            }
+            title={t("files.record.delete.title")}
+            description={t("files.record.delete.description", { title: r.title })}
             redirectTo="/records"
             iconOnly
-            triggerLabel="Delete record"
+            triggerLabel={t("files.record.delete.trigger")}
           />
         </div>
       </div>
@@ -83,7 +84,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
         <CardContent className="grid gap-5 pt-5 sm:grid-cols-2 sm:pt-6">
           <Detail
             icon={CalendarDays}
-            label={r.endDate ? "Dates" : "Date"}
+            label={t(r.endDate ? "files.record.dates" : "files.record.date")}
             value={
               r.endDate
                 ? `${formatDate(r.date, tz)} – ${formatDate(r.endDate, tz)}`
@@ -93,29 +94,29 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
           {r.doctorName && (
             <Detail
               icon={Stethoscope}
-              label="Doctor"
+              label={t("files.record.doctor")}
               value={[r.doctorName, r.specialty].filter(Boolean).join(", ")}
             />
           )}
           {!r.doctorName && r.specialty && (
-            <Detail icon={Stethoscope} label="Specialty" value={r.specialty} />
+            <Detail icon={Stethoscope} label={t("files.record.specialty")} value={r.specialty} />
           )}
           {r.facilityName && (
-            <Detail icon={Building2} label="Hospital / clinic" value={r.facilityName} />
+            <Detail icon={Building2} label={t("files.record.facility")} value={r.facilityName} />
           )}
           {r.tags.length > 0 && (
             <div className="flex gap-3">
               <Tag className="text-muted-foreground mt-0.5 size-4" />
               <div>
-                <div className="text-muted-foreground text-xs">Tags</div>
+                <div className="text-muted-foreground text-xs">{t("files.field.tags")}</div>
                 <div className="mt-1 flex flex-wrap gap-1.5">
-                  {r.tags.map((t) => (
+                  {r.tags.map((tag) => (
                     <Link
-                      key={t}
-                      href={`/records?tag=${encodeURIComponent(t)}`}
+                      key={tag}
+                      href={`/records?tag=${encodeURIComponent(tag)}`}
                       className="inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
                     >
-                      <Badge variant="secondary">#{t}</Badge>
+                      <Badge variant="secondary">#{tag}</Badge>
                     </Link>
                   ))}
                 </div>
@@ -124,7 +125,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
           )}
           {r.notes && (
             <div className="sm:col-span-2">
-              <div className="text-muted-foreground mb-1.5 text-xs">Notes</div>
+              <div className="text-muted-foreground mb-1.5 text-xs">{t("files.field.notes")}</div>
               <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{r.notes}</p>
             </div>
           )}
@@ -133,10 +134,10 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
 
       <Card className="mt-6">
         <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Attachments</CardTitle>
+          <CardTitle>{t("files.record.attachments")}</CardTitle>
           <Button asChild size="sm" variant="outline">
             <Link href={`/documents?upload=1&recordId=${r.id}`}>
-              <FilePlus2 /> Attach document
+              <FilePlus2 /> {t("files.record.attach")}
             </Link>
           </Button>
         </CardHeader>
@@ -157,7 +158,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">{d.name}</div>
                         <div className="text-muted-foreground text-xs">
-                          {DOCUMENT_TYPE_LABELS[d.type]}, {formatBytes(d.sizeBytes)}
+                          {t(DOCUMENT_TYPE_KEYS[d.type])}, {formatBytes(d.sizeBytes)}
                         </div>
                       </div>
                     </Link>
@@ -166,15 +167,15 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
               })}
             </ul>
           ) : (
-            <p className="text-muted-foreground text-sm">
-              No documents attached. Attach a prescription, report or discharge summary to keep
-              everything together.
-            </p>
+            <p className="text-muted-foreground text-sm">{t("files.record.noAttachments")}</p>
           )}
         </CardContent>
       </Card>
       <p className="text-muted-foreground mt-6 text-xs">
-        Created {formatDateTime(r.createdAt, tz)}, Last updated {formatDateTime(r.updatedAt, tz)}
+        {t("files.record.createdUpdated", {
+          created: formatDateTime(r.createdAt, tz),
+          updated: formatDateTime(r.updatedAt, tz),
+        })}
       </p>
     </div>
   );

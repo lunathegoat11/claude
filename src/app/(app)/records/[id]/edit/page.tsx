@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getT } from "@/i18n/server";
 import { requireUser } from "@/server/auth/session";
 import { getRecord } from "@/server/services/records";
 import { listProviderNames } from "@/server/services/providers";
@@ -8,7 +9,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toDateInputValue } from "@/lib/format";
 import { or404 } from "@/server/page-utils";
 
-export const metadata: Metadata = { title: "Edit record" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("files.meta.editRecord") };
+}
 
 export default async function EditRecordPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
@@ -16,9 +20,10 @@ export default async function EditRecordPage({ params }: { params: Promise<{ id:
   const record = await or404(id, (i) => getRecord(user.id, i));
   const providers = await listProviderNames(user.id);
   const tz = user.timezone;
+  const t = await getT();
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader title="Edit record" description={record.title} />
+      <PageHeader title={t("files.meta.editRecord")} description={record.title} />
       <Card>
         <CardContent className="pt-5 sm:pt-6">
           <RecordForm

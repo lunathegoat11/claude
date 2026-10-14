@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Eye, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DelayedLoader } from "@/components/shared/delayed-loader";
+import { useT } from "@/i18n/client";
 
 /** Lazily loads the preview only when asked, so opening a document page doesn't download the file. */
 export function DocumentPreview({
@@ -14,6 +15,7 @@ export function DocumentPreview({
   mimeType: string;
   name: string;
 }) {
+  const t = useT();
   const isImage = ["image/jpeg", "image/png", "image/webp"].includes(mimeType);
   const [show, setShow] = useState(isImage);
   const [loaded, setLoaded] = useState(false);
@@ -37,7 +39,7 @@ export function DocumentPreview({
   if (mimeType === "image/heic") {
     return (
       <p className="bg-muted text-muted-foreground rounded-[var(--radius)] p-6 text-[15px]">
-        HEIC photos can&apos;t be shown in most browsers. Download the file to view it.
+        {t("files.preview.heic")}
       </p>
     );
   }
@@ -48,7 +50,7 @@ export function DocumentPreview({
         <FileText className="size-10" strokeWidth={1.4} />
         <Button asChild size="lg">
           <a href={src} target="_blank" rel="noopener">
-            <ExternalLink /> Open the PDF
+            <ExternalLink /> {t("files.preview.openPdf")}
           </a>
         </Button>
       </div>
@@ -60,7 +62,7 @@ export function DocumentPreview({
       <div className="bg-muted text-muted-foreground flex h-72 flex-col items-center justify-center gap-3 rounded-[var(--radius)] sm:h-96">
         <FileText className="size-10" strokeWidth={1.4} />
         <Button variant="outline" onClick={() => setShow(true)}>
-          <Eye /> Show preview
+          <Eye /> {t("files.preview.show")}
         </Button>
       </div>
     );
@@ -72,7 +74,7 @@ export function DocumentPreview({
       {mimeType === "application/pdf" ? (
         <iframe
           src={`${src}#view=FitH`}
-          title={`Preview of ${name}`}
+          title={t("files.preview.of", { name })}
           onLoad={() => setLoaded(true)}
           className="h-[70vh] min-h-96 w-full"
         />
@@ -82,7 +84,7 @@ export function DocumentPreview({
         <img
           ref={imgRef}
           src={src}
-          alt={`Preview of ${name}`}
+          alt={t("files.preview.of", { name })}
           onLoad={() => setLoaded(true)}
           onError={() => setLoaded(true)}
           className="max-h-[75vh] min-h-40 w-full object-contain"

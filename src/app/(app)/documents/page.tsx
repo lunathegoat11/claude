@@ -7,7 +7,10 @@ import { requireUser } from "@/server/auth/session";
 import { listDocuments } from "@/server/services/documents";
 import { listRecordOptions } from "@/server/services/records";
 import { listProviderNames } from "@/server/services/providers";
-import { documentReaderLabel } from "@/server/services/ai-settings";
+import { AI_PROVIDER_LABELS, aiForUser, serverAiLabel } from "@/server/services/ai-settings";
+import type { AiProviderId } from "@/server/ai";
+import { getT } from "@/i18n/server";
+import { DOCUMENT_TYPE_KEYS } from "@/i18n/messages/files-labels";
 import { env } from "@/server/env";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -17,12 +20,14 @@ import { DOCUMENT_ICONS } from "@/components/shared/icons";
 import { UploadDialog } from "@/components/documents/upload-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DOCUMENT_TYPE_LABELS } from "@/lib/catalog/labels";
 import { DOCUMENT_TYPES } from "@/lib/validation/health";
 import { formatDate, toDateInputValue } from "@/lib/format";
 import { formatBytes } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Reports & files" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("files.meta.documents") };
+}
 
 type SP = { q?: string; type?: string; page?: string };
 
@@ -37,7 +42,21 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
     listRecordOptions(user.id),
     listProviderNames(user.id),
   ]);
-  const readBy = await documentReaderLabel(user.id);
+  const t = await getT();
+  // Who reads an uploaded report, as a whole sentence in the person's language.
+  const ai = await aiForUser(user.id);
+  const readBy =
+    !ai.readDocuments || ai.source === "demo"
+      ? t("files.upload.read.local")
+      : ai.source === "server"
+        ? t("files.upload.read.serverAi", {
+            name: serverAiLabel() ?? t("files.upload.anAiService"),
+          })
+        : t("files.upload.read.ownKey", {
+            name:
+              AI_PROVIDER_LABELS[ai.provider.name as AiProviderId] ??
+              t("files.upload.yourAiService"),
+          });
   const filtered = !!(sp.q || type);
   const tz = user.timezone;
   const qs = (over: Partial<SP>) =>
@@ -60,24 +79,24 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
   return (
     <div>
       <PageHeader
-        title="Reports & files"
-        description="Lab reports, prescriptions, discharge summaries and other papers. They're private to your account."
+        title={t("nav.documents")}
+        description={t("files.docs.description")}
         actions={upload}
       />
       <div className="mb-5">
         <FilterBar
           action="/documents"
           q={sp.q}
-          placeholder="Search names, providers, or text inside documents…"
+          placeholder={t("files.docs.searchPlaceholder")}
           clearHref={filtered ? "/documents" : undefined}
         >
           <FilterSelect
             name="type"
             value={type}
-            label="Document type"
+            label={t("files.docs.typeLabel")}
             options={[
-              { value: "", label: "All types" },
-              ...DOCUMENT_TYPES.map((t) => ({ value: t, label: DOCUMENT_TYPE_LABELS[t] })),
+              { value: "", label: t("files.common.allTypes") },
+              ...DOCUMENT_TYPES.map((d) => ({ value: d, label: t(DOCUMENT_TYPE_KEYS[d]) })),
             ]}
           />
         </FilterBar>
@@ -85,18 +104,16 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
       {items.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title={filtered ? "Nothing matches that search" : "No reports or files yet"}
+          title={t(filtered ? "files.docs.empty.filteredTitle" : "files.docs.empty.title")}
           description={
-            filtered
-              ? "Try a different search or clear the filters."
-              : "Add a lab report, prescription or discharge summary. A PDF or a phone photo both work."
+            filtered ? t("files.common.tryDifferent") : t("files.docs.empty.description")
           }
           action={
             filtered ? undefined : (
               // Opens the one upload dialog in the page header (it listens for ?upload=1).
               <Button asChild>
                 <Link href="/documents?upload=1" scroll={false}>
-                  <Upload /> Add a report
+                  <Upload /> {t("files.docs.addReport")}
                 </Link>
               </Button>
             )
@@ -136,21 +153,21 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
                     )}
                     {d.isDemo && (
                       <Badge variant="demo" className="bg-card absolute top-2 left-2">
-                        Sample
+                        {t("files.common.sample")}
                       </Badge>
                     )}
                   </div>
                   <div className="flex flex-1 flex-col p-4">
                     <div className="line-clamp-2 leading-snug font-medium">{d.name}</div>
                     <div className="text-muted-foreground mt-1 text-sm">
-                      {DOCUMENT_TYPE_LABELS[d.type]}
+                      {t(DOCUMENT_TYPE_KEYS[d.type])}
                       {d.providerName && `, ${d.providerName}`}
                     </div>
                     <div className="text-muted-foreground tabular mt-auto flex items-center justify-between pt-3 text-xs">
                       <span>
                         {d.documentDate
                           ? formatDate(d.documentDate, tz)
-                          : `Uploaded ${formatDate(d.createdAt, tz)}`}
+                          : t("files.docs.uploadedOn", { date: formatDate(d.createdAt, tz) })}
                       </span>
                       <span>{formatBytes(d.sizeBytes)}</span>
                     </div>
@@ -165,7 +182,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
         page={page}
         pageCount={pageCount}
         total={total}
-        label="documents"
+        label={t("files.pagination.documents")}
         makeHref={(p) => qs({ page: String(p) })}
       />
     </div>
