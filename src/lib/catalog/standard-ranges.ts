@@ -35,7 +35,7 @@ export interface StandardRange {
 }
 
 /** Raise this when the ranges change, so saved results are re-checked. */
-export const RANGE_VERSION = 2;
+export const RANGE_VERSION = 3;
 
 const MEDLINE = "MedlinePlus (US National Library of Medicine, NIH)";
 const ency = (n: string) => `https://medlineplus.gov/ency/article/${n}.htm`;

@@ -8,6 +8,8 @@ import { or404 } from "@/server/page-utils";
 import { deleteLabPanelAction } from "@/actions/labs";
 import { ConfirmDelete } from "@/components/forms/confirm-delete";
 import { ResultLedger } from "@/components/labs/result-ledger";
+import { groupByCategory } from "@/lib/lab-groups";
+import { CATEGORY_KEYS } from "@/lib/catalog/category-keys";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatNumber } from "@/lib/format";
@@ -41,6 +43,7 @@ export default async function LabReportPage({
   const { id } = await params;
   const justSaved = (await searchParams).new === "1";
   const panel = await or404(id, (i) => getLabPanel(user.id, i));
+  const groups = groupByCategory(panel.results);
   const prev = await getPreviousResults(user.id, panel);
   const tz = user.timezone;
   const flagged = panel.results.filter((r) => ["HIGH", "LOW", "ABNORMAL"].includes(r.flag)).length;
@@ -121,31 +124,42 @@ export default async function LabReportPage({
         </div>
       )}
 
-      <div className="surface">
-        <ResultLedger
-          label={t("labs.report.ledgerLabel", { name: panel.name })}
-          results={panel.results.map((r) => {
-            const p = prev.get(seriesKey(r));
-            const pv = p ? toNum(p.valueNumeric) : null;
-            return {
-              id: r.id,
-              testName: r.testName,
-              href: `/labs/tests/${encodeURIComponent(seriesKey(r))}`,
-              value: toNum(r.valueNumeric),
-              valueText: r.valueText,
-              unit: r.unit,
-              ...ledgerRange(r),
-              flag: r.flag,
-              notes: r.notes,
-              previous: p
-                ? t("labs.report.previous", {
-                    value: `${pv !== null ? formatNumber(pv, 2) : (p.valueText ?? "")}${p.unit && p.unit !== r.unit ? ` ${p.unit}` : ""}`,
-                    date: formatDate(p.observedAt, tz),
-                  })
-                : null,
-            };
-          })}
-        />
+      <div className="space-y-6">
+        {groups.map((group) => (
+          <section key={group.category}>
+            {groups.length > 1 && (
+              <h2 className="text-muted-foreground mb-2 text-sm font-semibold">
+                {t(CATEGORY_KEYS[group.category])}
+              </h2>
+            )}
+            <div className="surface">
+              <ResultLedger
+                label={t("labs.report.ledgerLabel", { name: panel.name })}
+                results={group.rows.map((r) => {
+                  const p = prev.get(seriesKey(r));
+                  const pv = p ? toNum(p.valueNumeric) : null;
+                  return {
+                    id: r.id,
+                    testName: r.testName,
+                    href: `/labs/tests/${encodeURIComponent(seriesKey(r))}`,
+                    value: toNum(r.valueNumeric),
+                    valueText: r.valueText,
+                    unit: r.unit,
+                    ...ledgerRange(r),
+                    flag: r.flag,
+                    notes: r.notes,
+                    previous: p
+                      ? t("labs.report.previous", {
+                          value: `${pv !== null ? formatNumber(pv, 2) : (p.valueText ?? "")}${p.unit && p.unit !== r.unit ? ` ${p.unit}` : ""}`,
+                          date: formatDate(p.observedAt, tz),
+                        })
+                      : null,
+                  };
+                })}
+              />
+            </div>
+          </section>
+        ))}
       </div>
       <div className="text-muted-foreground mt-4 space-y-1 text-[13px]">
         <p>{t("labs.report.statusNote")}</p>

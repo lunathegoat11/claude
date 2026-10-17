@@ -67,7 +67,8 @@ describe("lab panel creation", () => {
     expect(toNum(chol.valueNumeric)).toBe(212);
     expect(toNum(chol.refHigh)).toBe(200);
     expect(chol.flag).toBe("HIGH");
-    const urine = results.find((r) => r.testName === "Urine colour")!;
+    const urine = results.find((r) => r.biomarkerCode === "U_COLOR")!;
+    expect(urine.testName).toBe("Colour (urine)");
     expect(urine.valueNumeric).toBeNull();
     expect(urine.valueText).toBe("Pale yellow");
     expect(urine.flag).toBe("UNKNOWN");

@@ -28,7 +28,7 @@ export const VISION_TRANSCRIBE_PROMPT = `Transcribe the text of this laboratory 
 export const EXTRACT_REPORT_PROMPT = `You are reading a medical laboratory report for the person it belongs to, so the values can be saved in their personal health record.
 
 List EVERY test result printed on the report, in the order printed, exactly as printed:
-- testName: the test name as printed (e.g. "Haemoglobin", "TSH", "HbA1c").
+- testName: the test name as printed (e.g. "Haemoglobin", "TSH", "HbA1c"). For tests in a urine section, put "Urine" in front (e.g. "Urine glucose", "Urine pus cells"), so they are not confused with blood tests.
 - value: the result exactly as printed, without the unit (e.g. "13.2", "5.6", "Negative", "<0.5"). Never round, convert or correct values.
 - unit: the unit as printed, or null.
 - refText: the reference / biological range as printed (e.g. "13.0 - 17.0", "< 200"), or null.

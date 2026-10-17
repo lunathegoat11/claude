@@ -14,7 +14,14 @@ import { FlagBadge } from "@/components/labs/flag-badge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import type { BiomarkerCategory } from "@/lib/catalog/biomarkers";
+import { CATEGORY_KEYS } from "@/lib/catalog/category-keys";
+import {
+  CATEGORY_ORDER,
+  byName,
+  categoriesOf,
+  getBiomarker,
+  type BiomarkerCategory,
+} from "@/lib/catalog/biomarkers";
 import { getT } from "@/i18n/server";
 import { translateRangeLabel } from "@/components/labs/result-ledger";
 import { formatDate, formatNumber } from "@/lib/format";
@@ -24,18 +31,6 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   return { title: t("labs.meta.list") };
 }
-
-const CATEGORY_KEYS = {
-  CBC: "labs.category.CBC",
-  METABOLIC: "labs.category.METABOLIC",
-  DIABETES: "labs.category.DIABETES",
-  LIPID: "labs.category.LIPID",
-  LIVER: "labs.category.LIVER",
-  KIDNEY: "labs.category.KIDNEY",
-  THYROID: "labs.category.THYROID",
-  VITAMINS: "labs.category.VITAMINS",
-  OTHER: "labs.category.OTHER",
-} as const satisfies Record<BiomarkerCategory, string>;
 
 export default async function LabsPage({
   searchParams,
@@ -56,19 +51,14 @@ export default async function LabsPage({
   ]);
   const hasData = panels.total > 0;
 
-  const grouped = new Map<string, typeof series>();
-  for (const s of series) grouped.set(s.category, [...(grouped.get(s.category) ?? []), s]);
-  const order: BiomarkerCategory[] = [
-    "DIABETES",
-    "LIPID",
-    "CBC",
-    "THYROID",
-    "LIVER",
-    "KIDNEY",
-    "METABOLIC",
-    "VITAMINS",
-    "OTHER",
-  ];
+  // Each test under its category (some, like hs-CRP, under two), alphabetically.
+  const grouped = new Map<BiomarkerCategory, typeof series>();
+  for (const s of series)
+    for (const c of categoriesOf(getBiomarker(s.biomarkerCode)))
+      grouped.set(c, [...(grouped.get(c) ?? []), s]);
+  for (const list of grouped.values())
+    list.sort((a, b) => byName({ name: a.testName }, { name: b.testName }));
+  const order = CATEGORY_ORDER;
 
   return (
     <div>

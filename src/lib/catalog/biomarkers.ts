@@ -14,34 +14,68 @@ export interface BiomarkerDef {
   name: string;
   shortName?: string;
   category: BiomarkerCategory;
+  /** Other categories the test is also listed under (e.g. hs-CRP: Other and Heart). */
+  alsoIn?: BiomarkerCategory[];
   units: string[];
   decimals: number;
   aliases: string[];
   description: string;
+  /** The result is usually a word ("Negative", "Pale yellow", "1:80"), not a number. */
+  qualitative?: boolean;
+  /** For word results: "Negative"/"Nil"/"Absent" is normal, "Positive"/"Present" is not. */
+  negativeIsNormal?: boolean;
+  /** Only recognised inside a urine report section (names shared with blood tests). */
+  urineOnly?: boolean;
 }
 
-export type BiomarkerCategory =
-  | "CBC"
-  | "METABOLIC"
-  | "DIABETES"
-  | "LIPID"
-  | "LIVER"
-  | "KIDNEY"
-  | "THYROID"
-  | "VITAMINS"
-  | "OTHER";
+/** Categories, in the order they are shown. */
+export const CATEGORY_ORDER = [
+  "CBC",
+  "CBC_MORPHOLOGY",
+  "SUGAR",
+  "LIPID",
+  "VITAMINS",
+  "HORMONES",
+  "IRON",
+  "LIVER",
+  "KIDNEY",
+  "ELECTROLYTES",
+  "MINERALS",
+  "OTHER",
+  "CLOTTING",
+  "HEART",
+  "URINE",
+  "MALARIA",
+  "TYPHOID",
+  "DENGUE",
+] as const;
+export type BiomarkerCategory = (typeof CATEGORY_ORDER)[number];
 
 export const CATEGORY_LABELS: Record<BiomarkerCategory, string> = {
-  CBC: "Complete blood count",
-  METABOLIC: "Metabolic & electrolytes",
-  DIABETES: "Blood sugar",
-  LIPID: "Lipid profile",
-  LIVER: "Liver function",
-  KIDNEY: "Kidney function",
-  THYROID: "Thyroid profile",
-  VITAMINS: "Vitamins & minerals",
-  OTHER: "Other tests",
+  CBC: "Complete Blood Count (CBC)",
+  CBC_MORPHOLOGY: "CBC morphology",
+  SUGAR: "Blood Sugar Panel",
+  LIPID: "Lipid Panel, Standard",
+  VITAMINS: "Vitamins",
+  HORMONES: "Hormones",
+  IRON: "Iron Panel",
+  LIVER: "Liver Function Test (LFT)",
+  KIDNEY: "Kidney Function Test (KFT)",
+  ELECTROLYTES: "Electrolytes",
+  MINERALS: "Minerals",
+  OTHER: "Other",
+  CLOTTING: "Blood clotting",
+  HEART: "Heart",
+  URINE: "Urine Analysis, Complete",
+  MALARIA: "Malaria",
+  TYPHOID: "Typhoid",
+  DENGUE: "Dengue",
 };
+
+/** Sort tests alphabetically by name, ignoring case ("aPTT" sorts with "A"). */
+export function byName<T extends { name: string }>(a: T, b: T) {
+  return a.name.localeCompare(b.name, "en", { sensitivity: "base", numeric: true });
+}
 
 export const PANEL_TEMPLATES: {
   key: string;
@@ -53,28 +87,33 @@ export const PANEL_TEMPLATES: {
     key: "cbc",
     name: "Complete Blood Count (CBC)",
     category: "CBC",
-    codes: ["HGB", "HCT", "RBC", "WBC", "PLT"],
+    codes: ["HGB", "HCT", "PLT", "RBC", "WBC"],
   },
   {
     key: "sugar",
-    name: "Blood Sugar Profile",
-    category: "DIABETES",
+    name: "Blood Sugar Panel",
+    category: "SUGAR",
     codes: ["GLU_FASTING", "GLU_PP", "HBA1C"],
   },
-  { key: "lipid", name: "Lipid Profile", category: "LIPID", codes: ["CHOL", "LDL", "HDL", "TRIG"] },
+  {
+    key: "lipid",
+    name: "Lipid Panel, Standard",
+    category: "LIPID",
+    codes: ["HDL", "LDL", "CHOL", "TRIG"],
+  },
   {
     key: "lft",
     name: "Liver Function Test (LFT)",
     category: "LIVER",
-    codes: ["ALT", "AST", "BILI_T", "ALB"],
+    codes: ["ALB", "ALT", "AST", "BILI_T"],
   },
   {
     key: "kft",
     name: "Kidney Function Test (KFT)",
     category: "KIDNEY",
-    codes: ["CREAT", "UREA", "NA", "K"],
+    codes: ["BUN", "CREAT", "EGFR", "UREA"],
   },
-  { key: "thyroid", name: "Thyroid Profile", category: "THYROID", codes: ["TSH", "T3", "T4"] },
+  { key: "thyroid", name: "Thyroid Profile", category: "HORMONES", codes: ["T3", "T4", "TSH"] },
 ];
 
 export const BIOMARKERS: BiomarkerDef[] = [
@@ -144,7 +183,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
     code: "GLU_FASTING",
     name: "Glucose, fasting",
     shortName: "FBS",
-    category: "DIABETES",
+    category: "SUGAR",
     units: ["mg/dL", "mmol/L"],
     decimals: 0,
     aliases: [
@@ -167,7 +206,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
     code: "GLU_PP",
     name: "Glucose, post-prandial",
     shortName: "PPBS",
-    category: "DIABETES",
+    category: "SUGAR",
     units: ["mg/dL", "mmol/L"],
     decimals: 0,
     aliases: [
@@ -189,7 +228,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
     code: "GLU_RANDOM",
     name: "Glucose, random",
     shortName: "RBS",
-    category: "DIABETES",
+    category: "SUGAR",
     units: ["mg/dL", "mmol/L"],
     decimals: 0,
     aliases: ["random blood sugar", "rbs", "glucose random", "random glucose"],
@@ -199,7 +238,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
     code: "HBA1C",
     name: "HbA1c",
     shortName: "HbA1c",
-    category: "DIABETES",
+    category: "SUGAR",
     units: ["%", "mmol/mol"],
     decimals: 1,
     aliases: [
@@ -241,7 +280,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
     code: "NA",
     name: "Sodium",
     shortName: "Na⁺",
-    category: "METABOLIC",
+    category: "ELECTROLYTES",
     units: ["mmol/L", "mEq/L"],
     decimals: 0,
     aliases: ["sodium", "serum sodium", "na", "na+"],
@@ -251,7 +290,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
     code: "K",
     name: "Potassium",
     shortName: "K⁺",
-    category: "METABOLIC",
+    category: "ELECTROLYTES",
     units: ["mmol/L", "mEq/L"],
     decimals: 1,
     aliases: ["potassium", "serum potassium", "k", "k+"],
@@ -377,7 +416,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "TSH",
     name: "TSH",
-    category: "THYROID",
+    category: "HORMONES",
     units: ["µIU/mL", "mIU/L"],
     decimals: 2,
     aliases: [
@@ -394,7 +433,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
     code: "T3",
     name: "T3, total",
     shortName: "T3",
-    category: "THYROID",
+    category: "HORMONES",
     units: ["ng/dL", "nmol/L"],
     decimals: 0,
     aliases: ["t3", "total t3", "t3 total", "triiodothyronine", "t3, total"],
@@ -404,7 +443,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
     code: "T4",
     name: "T4, total",
     shortName: "T4",
-    category: "THYROID",
+    category: "HORMONES",
     units: ["µg/dL", "nmol/L"],
     decimals: 1,
     aliases: ["t4", "total t4", "t4 total", "thyroxine", "t4, total"],
@@ -444,7 +483,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "URIC",
     name: "Uric acid",
-    category: "KIDNEY",
+    category: "OTHER",
     units: ["mg/dL", "µmol/L"],
     decimals: 1,
     aliases: ["uric acid", "serum uric acid", "s. uric acid", "urate"],
@@ -472,7 +511,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "CL",
     name: "Chloride",
-    category: "METABOLIC",
+    category: "ELECTROLYTES",
     units: ["mmol/L", "mEq/L"],
     decimals: 0,
     aliases: ["chloride", "serum chloride", "cl", "s. chloride"],
@@ -481,7 +520,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "CA",
     name: "Calcium",
-    category: "METABOLIC",
+    category: "MINERALS",
     units: ["mg/dL", "mmol/L"],
     decimals: 1,
     aliases: ["calcium", "serum calcium", "s. calcium", "total calcium"],
@@ -490,7 +529,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "PHOS",
     name: "Phosphorus",
-    category: "METABOLIC",
+    category: "MINERALS",
     units: ["mg/dL", "mmol/L"],
     decimals: 1,
     aliases: ["phosphorus", "serum phosphorus", "inorganic phosphorus", "phosphate"],
@@ -627,7 +666,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "FT4",
     name: "Free T4",
-    category: "THYROID",
+    category: "HORMONES",
     units: ["ng/dL", "pmol/L"],
     decimals: 2,
     aliases: ["free t4", "ft4", "free thyroxine"],
@@ -636,7 +675,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "FT3",
     name: "Free T3",
-    category: "THYROID",
+    category: "HORMONES",
     units: ["pg/mL", "pmol/L"],
     decimals: 2,
     aliases: ["free t3", "ft3", "free triiodothyronine"],
@@ -645,7 +684,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "FERRITIN",
     name: "Ferritin",
-    category: "VITAMINS",
+    category: "IRON",
     units: ["ng/mL", "µg/L"],
     decimals: 0,
     aliases: ["ferritin", "serum ferritin", "s. ferritin"],
@@ -654,7 +693,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "IRON",
     name: "Iron",
-    category: "VITAMINS",
+    category: "IRON",
     units: ["µg/dL", "µmol/L"],
     decimals: 0,
     aliases: ["iron", "serum iron", "s. iron"],
@@ -881,7 +920,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "BICARB",
     name: "Bicarbonate",
-    category: "METABOLIC",
+    category: "ELECTROLYTES",
     units: ["mmol/L", "mEq/L"],
     decimals: 0,
     aliases: ["bicarbonate", "hco3", "total co2", "co2", "serum bicarbonate", "tco2"],
@@ -890,7 +929,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "ICA",
     name: "Ionised calcium",
-    category: "METABOLIC",
+    category: "MINERALS",
     units: ["mg/dL", "mmol/L"],
     decimals: 2,
     aliases: [
@@ -907,7 +946,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "MG",
     name: "Magnesium",
-    category: "METABOLIC",
+    category: "MINERALS",
     units: ["mg/dL", "mmol/L"],
     decimals: 1,
     aliases: ["magnesium", "serum magnesium", "s. magnesium"],
@@ -943,7 +982,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "TIBC",
     name: "TIBC",
-    category: "VITAMINS",
+    category: "IRON",
     units: ["µg/dL", "µmol/L"],
     decimals: 0,
     aliases: ["tibc", "total iron binding capacity"],
@@ -952,7 +991,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "TSAT",
     name: "Transferrin saturation",
-    category: "VITAMINS",
+    category: "IRON",
     units: ["%"],
     decimals: 0,
     aliases: [
@@ -967,7 +1006,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "TRANSFERRIN",
     name: "Transferrin",
-    category: "VITAMINS",
+    category: "IRON",
     units: ["mg/dL"],
     decimals: 0,
     aliases: ["transferrin", "serum transferrin"],
@@ -986,6 +1025,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
     code: "HSCRP",
     name: "hs-CRP",
     category: "OTHER",
+    alsoIn: ["HEART"],
     units: ["mg/L"],
     decimals: 1,
     aliases: [
@@ -1001,7 +1041,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "PT",
     name: "Prothrombin time",
-    category: "OTHER",
+    category: "CLOTTING",
     units: ["sec"],
     decimals: 1,
     aliases: ["prothrombin time", "pt (test)", "pt test", "pt patient"],
@@ -1010,7 +1050,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "INR",
     name: "INR",
-    category: "OTHER",
+    category: "CLOTTING",
     units: ["ratio"],
     decimals: 2,
     aliases: ["inr", "international normalised ratio", "international normalized ratio", "pt inr"],
@@ -1019,7 +1059,7 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "APTT",
     name: "aPTT",
-    category: "OTHER",
+    category: "CLOTTING",
     units: ["sec"],
     decimals: 1,
     aliases: [
@@ -1035,11 +1075,613 @@ export const BIOMARKERS: BiomarkerDef[] = [
   {
     code: "FIBRINOGEN",
     name: "Fibrinogen",
-    category: "OTHER",
+    category: "CLOTTING",
     units: ["mg/dL", "g/L"],
     decimals: 0,
     aliases: ["fibrinogen", "plasma fibrinogen"],
     description: "A clotting protein made by the liver.",
+  },
+  {
+    code: "RBC_MORPH",
+    name: "RBC morphology",
+    category: "CBC_MORPHOLOGY",
+    units: ["text"],
+    decimals: 0,
+    aliases: [
+      "rbc morphology",
+      "red cell morphology",
+      "rbc morphology (peripheral smear)",
+      "rbc morphology on smear",
+    ],
+    description: "How red blood cells look under the microscope (size, shape and colour).",
+    qualitative: true,
+  },
+  {
+    code: "WBC_MORPH",
+    name: "WBC morphology",
+    category: "CBC_MORPHOLOGY",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["wbc morphology", "white cell morphology", "wbc morphology on smear"],
+    description: "How white blood cells look under the microscope.",
+    qualitative: true,
+  },
+  {
+    code: "PLT_MORPH",
+    name: "Platelet morphology",
+    category: "CBC_MORPHOLOGY",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["platelet morphology", "platelets on smear", "platelets morphology"],
+    description: "How platelets look under the microscope, and whether there are enough.",
+    qualitative: true,
+  },
+  {
+    code: "CPEPTIDE",
+    name: "C-peptide",
+    category: "SUGAR",
+    units: ["ng/mL", "nmol/L"],
+    decimals: 2,
+    aliases: ["c-peptide", "c peptide", "c-peptide (fasting)", "serum c-peptide"],
+    description: "Made along with insulin; shows how much insulin the body is making.",
+  },
+  {
+    code: "CHOL_HDL",
+    name: "Cholesterol/HDL ratio",
+    category: "LIPID",
+    units: ["ratio"],
+    decimals: 1,
+    aliases: [
+      "chol/hdl ratio",
+      "total cholesterol/hdl ratio",
+      "tc/hdl ratio",
+      "cholesterol/hdl ratio",
+      "chol hdl ratio",
+      "tc/hdl",
+    ],
+    description: "Total cholesterol divided by HDL; lower is better for the heart.",
+  },
+  {
+    code: "FSH",
+    name: "FSH",
+    category: "HORMONES",
+    units: ["mIU/mL", "IU/L"],
+    decimals: 2,
+    aliases: ["fsh", "follicle stimulating hormone", "follicle-stimulating hormone"],
+    description: "A pituitary hormone that controls eggs in women and sperm in men.",
+  },
+  {
+    code: "LH",
+    name: "LH",
+    category: "HORMONES",
+    units: ["mIU/mL", "IU/L"],
+    decimals: 2,
+    aliases: ["lh", "luteinising hormone", "luteinizing hormone"],
+    description: "A pituitary hormone that triggers ovulation and testosterone production.",
+  },
+  {
+    code: "PROG",
+    name: "Progesterone",
+    category: "HORMONES",
+    units: ["ng/mL", "nmol/L"],
+    decimals: 2,
+    aliases: ["progesterone", "serum progesterone"],
+    description: "A hormone that prepares the womb for pregnancy.",
+  },
+  {
+    code: "E2",
+    name: "Estrogen (estradiol)",
+    category: "HORMONES",
+    units: ["pg/mL", "pmol/L"],
+    decimals: 1,
+    aliases: ["estradiol", "oestradiol", "estradiol (e2)", "e2", "estrogen", "oestrogen"],
+    description: "The main female sex hormone.",
+  },
+  {
+    code: "TESTO_T",
+    name: "Testosterone, total",
+    category: "HORMONES",
+    units: ["ng/dL", "nmol/L"],
+    decimals: 1,
+    aliases: [
+      "testosterone",
+      "total testosterone",
+      "testosterone total",
+      "testosterone, total",
+      "serum testosterone",
+    ],
+    description: "The main male sex hormone, measured in total.",
+  },
+  {
+    code: "TESTO_F",
+    name: "Testosterone, free",
+    category: "HORMONES",
+    units: ["pg/mL", "pmol/L"],
+    decimals: 2,
+    aliases: ["free testosterone", "testosterone free", "testosterone, free"],
+    description: "The part of testosterone not bound to proteins, which the body can use.",
+  },
+  {
+    code: "BUN_CREAT",
+    name: "BUN/creatinine ratio",
+    category: "KIDNEY",
+    units: ["ratio"],
+    decimals: 1,
+    aliases: [
+      "bun/creatinine ratio",
+      "bun creatinine ratio",
+      "bun/creat ratio",
+      "urea/creatinine ratio",
+    ],
+    description: "Compares two kidney waste products; helps tell dehydration from kidney problems.",
+  },
+  {
+    code: "PSA",
+    name: "PSA, total",
+    category: "OTHER",
+    units: ["ng/mL"],
+    decimals: 2,
+    aliases: [
+      "psa",
+      "total psa",
+      "psa total",
+      "psa, total",
+      "prostate specific antigen",
+      "prostate-specific antigen",
+    ],
+    description: "A protein made by the prostate; used to check prostate health in men.",
+  },
+  {
+    code: "DDIMER",
+    name: "D-dimer",
+    category: "CLOTTING",
+    units: ["µg/mL FEU", "ng/mL FEU", "ng/mL", "mg/L FEU"],
+    decimals: 2,
+    aliases: ["d-dimer", "d dimer", "ddimer", "d-dimer quantitative"],
+    description: "Rises when blood clots are forming and breaking down in the body.",
+  },
+  {
+    code: "CKMB",
+    name: "CK-MB",
+    category: "HEART",
+    units: ["U/L", "ng/mL"],
+    decimals: 1,
+    aliases: ["ck-mb", "ckmb", "ck mb", "creatine kinase-mb", "cpk-mb"],
+    description: "A form of creatine kinase found mainly in heart muscle.",
+  },
+  {
+    code: "TROP_I",
+    name: "Cardiac troponin I",
+    category: "HEART",
+    units: ["ng/mL", "ng/L", "pg/mL"],
+    decimals: 3,
+    aliases: [
+      "troponin i",
+      "troponin-i",
+      "cardiac troponin i",
+      "ctni",
+      "hs troponin i",
+      "hs-troponin i",
+      "trop i",
+    ],
+    description: "A heart-muscle protein that rises when the heart is damaged.",
+  },
+  {
+    code: "TROP_T",
+    name: "Cardiac troponin T",
+    category: "HEART",
+    units: ["ng/mL", "ng/L", "pg/mL"],
+    decimals: 3,
+    aliases: [
+      "troponin t",
+      "troponin-t",
+      "cardiac troponin t",
+      "ctnt",
+      "hs troponin t",
+      "hs-troponin t",
+      "trop t",
+    ],
+    description: "A heart-muscle protein that rises when the heart is damaged.",
+  },
+  {
+    code: "IMA",
+    name: "Ischemia-modified albumin (IMA)",
+    category: "HEART",
+    units: ["U/mL"],
+    decimals: 1,
+    aliases: [
+      "ischemia-modified albumin",
+      "ischaemia modified albumin",
+      "ischemia modified albumin",
+      "ima",
+    ],
+    description: "A marker that can rise when the heart is short of blood.",
+  },
+  {
+    code: "BNP",
+    name: "BNP",
+    category: "HEART",
+    units: ["pg/mL"],
+    decimals: 0,
+    aliases: ["bnp", "b-type natriuretic peptide", "brain natriuretic peptide"],
+    description: "A hormone from the heart that rises when the heart is under strain.",
+  },
+  {
+    code: "NTPROBNP",
+    name: "NT-proBNP",
+    category: "HEART",
+    units: ["pg/mL"],
+    decimals: 0,
+    aliases: ["nt-probnp", "nt probnp", "ntprobnp", "n-terminal pro bnp", "nt-pro bnp"],
+    description: "A fragment released with BNP; rises when the heart is under strain.",
+  },
+  {
+    code: "MRPROANP",
+    name: "MR-proANP",
+    category: "HEART",
+    units: ["pmol/L"],
+    decimals: 0,
+    aliases: ["mr-proanp", "mr proanp", "mid-regional pro-anp"],
+    description: "A heart hormone fragment used to check for heart failure.",
+  },
+  {
+    code: "LPA",
+    name: "Lipoprotein (a)",
+    category: "HEART",
+    units: ["mg/dL", "nmol/L"],
+    decimals: 1,
+    aliases: ["lipoprotein (a)", "lipoprotein a", "lp(a)", "lp (a)", "lpa", "lipoprotein(a)"],
+    description: "A cholesterol-carrying particle, mostly set by genes, linked to heart risk.",
+  },
+  {
+    code: "APOB",
+    name: "Apolipoprotein B (ApoB)",
+    category: "HEART",
+    units: ["mg/dL", "g/L"],
+    decimals: 0,
+    aliases: ["apolipoprotein b", "apo b", "apob", "apo-b", "apolipoprotein b-100"],
+    description:
+      "The protein on every 'bad' cholesterol particle; a measure of how many there are.",
+  },
+  {
+    code: "U_COLOR",
+    name: "Colour (urine)",
+    category: "URINE",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["colour", "color", "urine colour", "urine color"],
+    description: "The colour of the urine.",
+    qualitative: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_APPEAR",
+    name: "Appearance (urine)",
+    category: "URINE",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["appearance", "transparency", "clarity", "urine appearance"],
+    description: "Whether the urine is clear or cloudy.",
+    qualitative: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_SG",
+    name: "Specific gravity (urine)",
+    category: "URINE",
+    units: ["ratio"],
+    decimals: 3,
+    aliases: [
+      "specific gravity",
+      "sp. gravity",
+      "sp gravity",
+      "sp.gravity",
+      "urine specific gravity",
+    ],
+    description: "How concentrated the urine is.",
+    urineOnly: true,
+  },
+  {
+    code: "U_PH",
+    name: "pH (urine)",
+    category: "URINE",
+    units: ["ratio"],
+    decimals: 1,
+    aliases: ["ph", "reaction", "reaction (ph)", "urine ph"],
+    description: "How acidic the urine is.",
+    urineOnly: true,
+  },
+  {
+    code: "U_GLU",
+    name: "Glucose (urine)",
+    category: "URINE",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["glucose", "sugar", "urine glucose", "urine sugar"],
+    description: "Sugar in the urine; normally none.",
+    qualitative: true,
+    negativeIsNormal: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_BILI",
+    name: "Bilirubin (urine)",
+    category: "URINE",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["bilirubin", "bile pigments", "bile pigment", "urine bilirubin"],
+    description: "Bilirubin in the urine; normally none.",
+    qualitative: true,
+    negativeIsNormal: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_KET",
+    name: "Ketones (urine)",
+    category: "URINE",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["ketones", "ketone bodies", "ketone", "acetone", "urine ketones"],
+    description: "Made when the body burns fat for energy; normally none.",
+    qualitative: true,
+    negativeIsNormal: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_BLOOD",
+    name: "Occult blood (urine)",
+    category: "URINE",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["occult blood", "blood", "haemoglobin", "hemoglobin", "urine blood"],
+    description: "Hidden blood in the urine; normally none.",
+    qualitative: true,
+    negativeIsNormal: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_PROT",
+    name: "Protein (urine)",
+    category: "URINE",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["protein", "proteins", "albumin", "urine protein", "urine albumin"],
+    description: "Protein in the urine; normally none or a trace.",
+    qualitative: true,
+    negativeIsNormal: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_NITRITE",
+    name: "Nitrite (urine)",
+    category: "URINE",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["nitrite", "nitrites", "urine nitrite"],
+    description: "Made by some bacteria; a sign of urine infection.",
+    qualitative: true,
+    negativeIsNormal: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_LE",
+    name: "Leukocyte esterase (urine)",
+    category: "URINE",
+    units: ["text"],
+    decimals: 0,
+    aliases: [
+      "leukocyte esterase",
+      "leucocyte esterase",
+      "leukocytes",
+      "leucocytes",
+      "urine leukocyte esterase",
+    ],
+    description: "A sign of white cells in the urine, as in infection.",
+    qualitative: true,
+    negativeIsNormal: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_WBC",
+    name: "WBC (urine)",
+    category: "URINE",
+    units: ["/hpf"],
+    decimals: 0,
+    aliases: [
+      "wbc",
+      "pus cells",
+      "pus cell",
+      "wbcs",
+      "leucocytes (pus cells)",
+      "white blood cells",
+      "urine wbc",
+    ],
+    description: "White blood cells (pus cells) seen in the urine.",
+    qualitative: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_RBC",
+    name: "RBC (urine)",
+    category: "URINE",
+    units: ["/hpf"],
+    decimals: 0,
+    aliases: ["rbc", "rbcs", "red blood cells", "red cells", "urine rbc"],
+    description: "Red blood cells seen in the urine.",
+    qualitative: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_EPI",
+    name: "Squamous epithelial cells (urine)",
+    category: "URINE",
+    units: ["/hpf"],
+    decimals: 0,
+    aliases: ["epithelial cells", "squamous epithelial cells", "epithelial cell", "squamous cells"],
+    description: "Skin-type cells in the urine; a few are normal.",
+    qualitative: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_BACT",
+    name: "Bacteria (urine)",
+    category: "URINE",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["bacteria", "urine bacteria"],
+    description: "Bacteria seen in the urine.",
+    qualitative: true,
+    negativeIsNormal: true,
+    urineOnly: true,
+  },
+  {
+    code: "U_HCAST",
+    name: "Hyaline casts (urine)",
+    category: "URINE",
+    units: ["/lpf"],
+    decimals: 0,
+    aliases: ["hyaline casts", "hyaline cast", "casts"],
+    description: "Tiny protein moulds of the kidney tubes; a few can be normal.",
+    qualitative: true,
+    urineOnly: true,
+  },
+  {
+    code: "MAL_RDT",
+    name: "Malaria antigen (rapid test)",
+    category: "MALARIA",
+    units: ["text"],
+    decimals: 0,
+    aliases: [
+      "malaria antigen",
+      "malaria antigen test",
+      "malaria rapid test",
+      "malaria rdt",
+      "rapid diagnostic test",
+      "malaria card test",
+      "malaria parasite antigen",
+      "pf/pv antigen",
+      "malaria pf/pv",
+    ],
+    description: "A quick test for malaria proteins in the blood.",
+    qualitative: true,
+    negativeIsNormal: true,
+  },
+  {
+    code: "MAL_SMEAR",
+    name: "Malaria peripheral blood smear",
+    category: "MALARIA",
+    units: ["text"],
+    decimals: 0,
+    aliases: [
+      "peripheral blood smear for malaria",
+      "peripheral smear for malaria",
+      "malaria parasite",
+      "malarial parasite",
+      "mp smear",
+      "smear for mp",
+      "malaria smear",
+      "malarial parasites (mp)",
+    ],
+    description: "Looking for malaria parasites in a stained drop of blood.",
+    qualitative: true,
+    negativeIsNormal: true,
+  },
+  {
+    code: "MAL_PCR",
+    name: "Malaria PCR",
+    category: "MALARIA",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["malaria pcr", "plasmodium pcr", "malaria dna pcr"],
+    description: "A very sensitive test for malaria genetic material.",
+    qualitative: true,
+    negativeIsNormal: true,
+  },
+  {
+    code: "WIDAL",
+    name: "Widal test (O and H antibodies)",
+    category: "TYPHOID",
+    units: ["text"],
+    decimals: 0,
+    aliases: [
+      "widal",
+      "widal test",
+      "widal test (slide method)",
+      "widal test (tube method)",
+      "s. typhi o",
+      "s. typhi h",
+      "salmonella typhi o",
+      "salmonella typhi h",
+    ],
+    description: "Looks for antibodies against typhoid bacteria; results are titres like 1:80.",
+    qualitative: true,
+  },
+  {
+    code: "BLOOD_CULTURE",
+    name: "Blood culture",
+    category: "TYPHOID",
+    units: ["text"],
+    decimals: 0,
+    aliases: [
+      "blood culture",
+      "blood culture and sensitivity",
+      "blood c/s",
+      "culture blood",
+      "blood culture & sensitivity",
+    ],
+    description: "Grows bacteria from a blood sample to find an infection such as typhoid.",
+    qualitative: true,
+  },
+  {
+    code: "TYPHIDOT",
+    name: "Typhidot (IgM)",
+    category: "TYPHOID",
+    units: ["text"],
+    decimals: 0,
+    aliases: [
+      "typhidot",
+      "typhidot igm",
+      "typhidot (igm)",
+      "typhidot-m",
+      "typhi dot",
+      "salmonella typhi igm",
+    ],
+    description: "A quick test for recent typhoid infection.",
+    qualitative: true,
+    negativeIsNormal: true,
+  },
+  {
+    code: "DENGUE_NS1",
+    name: "Dengue NS1 antigen",
+    category: "DENGUE",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["dengue ns1", "ns1 antigen", "dengue ns1 antigen", "ns1", "dengue ns1 ag"],
+    description: "Finds dengue virus protein, early in the illness.",
+    qualitative: true,
+    negativeIsNormal: true,
+  },
+  {
+    code: "DENGUE_IGM",
+    name: "Dengue IgM antibody",
+    category: "DENGUE",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["dengue igm", "dengue igm antibody", "dengue igm antibodies"],
+    description: "Antibodies from a recent dengue infection.",
+    qualitative: true,
+    negativeIsNormal: true,
+  },
+  {
+    code: "DENGUE_IGG",
+    name: "Dengue IgG antibody",
+    category: "DENGUE",
+    units: ["text"],
+    decimals: 0,
+    aliases: ["dengue igg", "dengue igg antibody", "dengue igg antibodies"],
+    description: "Antibodies from a past or repeat dengue infection.",
+    qualitative: true,
+    negativeIsNormal: true,
   },
 ];
 
@@ -1057,19 +1699,75 @@ function norm(s: string) {
     .trim();
 }
 
-const aliasIndex: { alias: string; code: string }[] = BIOMARKERS.flatMap((b) =>
-  [b.name, b.shortName ?? "", ...b.aliases]
-    .filter(Boolean)
-    .map((a) => ({ alias: norm(a), code: b.code })),
-).sort((a, b) => b.alias.length - a.alias.length);
+function indexOf(defs: BiomarkerDef[]) {
+  return defs
+    .flatMap((b) =>
+      [b.name, b.shortName ?? "", ...b.aliases]
+        .filter(Boolean)
+        .map((a) => ({ alias: norm(a), code: b.code })),
+    )
+    .sort((a, b) => b.alias.length - a.alias.length);
+}
+// Urine tests share names with blood tests ("Glucose", "RBC", "Protein"), so they are only
+// matched inside a urine report (see the `urine` option below).
+const aliasIndex = [
+  ...indexOf(BIOMARKERS.filter((b) => !b.urineOnly)),
+  // Unmistakable urine names ("Colour (urine)", "urine glucose") match anywhere.
+  ...indexOf(
+    BIOMARKERS.filter((b) => b.urineOnly).map((b) => ({
+      ...b,
+      shortName: undefined,
+      aliases: b.aliases.filter((a) => /urine/i.test(a)),
+    })),
+  ),
+].sort((a, b) => b.alias.length - a.alias.length);
+const urineIndex = indexOf(BIOMARKERS.filter((b) => b.category === "URINE"));
 
-/** Match a free-text test name (e.g. "S. Creatinine") to a catalogue code. */
-export function matchBiomarker(testName: string): BiomarkerDef | undefined {
+/**
+ * Match a free-text test name (e.g. "S. Creatinine") to a catalogue code. With
+ * `urine: true` (a line from a urine report), urine tests are tried first.
+ */
+export function matchBiomarker(
+  testName: string,
+  opts: { urine?: boolean } = {},
+): BiomarkerDef | undefined {
   const n = norm(testName);
   if (!n) return undefined;
-  const exact = aliasIndex.find((a) => a.alias === n);
+  const exact =
+    (opts.urine ? urineIndex.find((a) => a.alias === n) : undefined) ??
+    aliasIndex.find((a) => a.alias === n);
   if (exact) return byCode.get(exact.code);
   return undefined;
+}
+
+/** All categories a test is listed under, its own first. */
+export function categoriesOf(def: BiomarkerDef | undefined): BiomarkerCategory[] {
+  return def ? [def.category, ...(def.alsoIn ?? [])] : ["OTHER"];
+}
+
+/**
+ * For word results ("Negative", "Positive", "Nil", "2+"): whether the value is normal,
+ * for tests where negative is normal. Null when it can't tell.
+ */
+export function qualitativeFlag(
+  def: BiomarkerDef | undefined,
+  value: string | null | undefined,
+): "NORMAL" | "ABNORMAL" | null {
+  if (!def?.negativeIsNormal || !value) return null;
+  const v = value.trim().toLowerCase();
+  if (
+    /^(nil|negative|neg\.?|absent|not\s+detected|non[\s-]?reactive|no\s+growth|none( seen)?|not\s+seen|normal)\b/.test(
+      v,
+    )
+  )
+    return "NORMAL";
+  if (
+    /^(positive|pos\.?|present|detected|reactive|trace|\++|[1-4]\s*\+|few|moderate|many|plenty|numerous|growth)\b|^\++$|\+$/.test(
+      v,
+    )
+  )
+    return "ABNORMAL";
+  return null;
 }
 
 /** Find catalogue biomarkers mentioned anywhere in a piece of text (e.g. a question). */

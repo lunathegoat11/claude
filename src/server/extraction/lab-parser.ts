@@ -1,6 +1,5 @@
 import {
   BIOMARKERS,
-  CATEGORY_LABELS,
   matchBiomarker,
   getBiomarker,
   type BiomarkerCategory,
@@ -40,22 +39,70 @@ export interface ParsedReport {
 }
 
 const UNIT_PATTERN =
-  "(mm\\/hr|mm\\/1st hr|ml\\/min\\/1\\.73\\s?m2|ml\\/min\\/1\\.73\\s?m²|gm\\/dl|gms\\/dl|mg\\/l(?!og)|ratio|mg\\/dl|mg\\/dL|g\\/dl|g\\/dL|g\\/l|mmol\\/l|mmol\\/L|mmol\\/mol|meq\\/l|mEq\\/L|u\\/l|U\\/L|iu\\/l|IU\\/L|µiu\\/ml|uiu\\/ml|µIU\\/mL|uIU\\/mL|miu\\/l|mIU\\/L|ng\\/dl|ng\\/dL|ng\\/ml|ng\\/mL|pg\\/ml|pg\\/mL|µg\\/dl|ug\\/dl|µg\\/dL|ug\\/dL|nmol\\/l|nmol\\/L|pmol\\/l|pmol\\/L|µmol\\/l|umol\\/l|µmol\\/L|umol\\/L|million\\/µl|million\\/ul|million\\/cumm|mill\\/cumm|lakh\\/µl|lakh\\/ul|lakhs\\/cumm|lakh\\/cumm|10\\^3\\/µl|10\\^3\\/ul|10\\^6\\/µl|10\\^6\\/ul|thou\\/ul|\\/cumm|cells\\/cumm|\\/µl|\\/ul|%|fl|pg)";
+  "(mm\\/hr|mm\\/1st hr|ml\\/min\\/1\\.73\\s?m2|ml\\/min\\/1\\.73\\s?m²|gm\\/dl|gms\\/dl|mg\\/l(?!og)|ratio|mg\\/dl|mg\\/dL|g\\/dl|g\\/dL|g\\/l|mmol\\/l|mmol\\/L|mmol\\/mol|meq\\/l|mEq\\/L|u\\/l|U\\/L|iu\\/l|IU\\/L|µiu\\/ml|uiu\\/ml|µIU\\/mL|uIU\\/mL|miu\\/l|mIU\\/L|ng\\/dl|ng\\/dL|ng\\/ml|ng\\/mL|pg\\/ml|pg\\/mL|µg\\/dl|ug\\/dl|µg\\/dL|ug\\/dL|nmol\\/l|nmol\\/L|pmol\\/l|pmol\\/L|µmol\\/l|umol\\/l|µmol\\/L|umol\\/L|million\\/µl|million\\/ul|million\\/cumm|mill\\/cumm|lakh\\/µl|lakh\\/ul|lakhs\\/cumm|lakh\\/cumm|10\\^3\\/µl|10\\^3\\/ul|10\\^6\\/µl|10\\^6\\/ul|thou\\/ul|\\/cumm|cells\\/cumm|\\/µl|\\/ul|\\/hpf|\\/lpf|%|fl|pg)";
 
 function escapeRe(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-const ALIASES: { re: RegExp; def: BiomarkerDef; alias: string }[] = BIOMARKERS.flatMap((def) =>
-  [def.name, def.shortName ?? "", ...def.aliases]
-    .filter((a) => a && a.length >= 2)
-    .map((alias) => ({
-      alias,
-      def,
-      // Alias at line start, followed by a separator (space, colon, bracket, dot).
-      re: new RegExp(`^\\s*${escapeRe(alias)}(?=[\\s:(\\[.,-]|$)`, "i"),
-    })),
-).sort((a, b) => b.alias.length - a.alias.length);
+type Alias = { re: RegExp; def: BiomarkerDef; alias: string };
+function aliasTable(defs: BiomarkerDef[], keep: (alias: string) => boolean = () => true): Alias[] {
+  return defs
+    .flatMap((def) =>
+      [def.name, def.shortName ?? "", ...def.aliases]
+        .filter((a) => a && a.length >= 2 && keep(a))
+        .map((alias) => ({
+          alias,
+          def,
+          // Alias at line start, followed by a separator (space, colon, bracket, dot).
+          re: new RegExp(`^\\s*${escapeRe(alias)}(?=[\\s:(\\[.,-]|$)`, "i"),
+        })),
+    )
+    .sort((a, b) => b.alias.length - a.alias.length);
+}
+const ALIASES = aliasTable(BIOMARKERS.filter((d) => !d.urineOnly));
+const URINE_DEFS = BIOMARKERS.filter((d) => d.category === "URINE");
+/** Inside a urine section, urine tests win ("Glucose Nil" is urine glucose). */
+const URINE_ALIASES = aliasTable(URINE_DEFS);
+/** Urine test names that can't be mistaken for a blood test, recognised anywhere. */
+const URINE_ANYWHERE = aliasTable(URINE_DEFS, (a) =>
+  /urine|specific gravity|sp\.? ?gravity|ketone|nitrite|esterase|pus cell|epithelial|hyaline|occult blood|bile pigment/i.test(
+    a,
+  ),
+);
+
+/** Headings that start a urine section, and ones that start some other section. */
+const URINE_HEADING =
+  /\b(urine|urinalysis|routine examination of urine|physical examination|chemical examination|microscopic examination)\b/i;
+const OTHER_HEADING =
+  /\b(haematology|hematology|biochemistry|complete blood count|cbc|lipid|liver function|kidney function|renal function|thyroid|serology|immunology|hormones?|blood sugar|glucose tolerance|coagulation|cardiac)\b/i;
+
+/**
+ * Results written as words: "Nil", "Negative", "Pale yellow", "2-4" (cells per field),
+ * "1:80" (a titre) or "No malarial parasite seen".
+ */
+const WORD_VALUE =
+  /^(no\s+[a-z ]{0,40}?\bseen|not\s+seen|nil|negative|positive|absent|present|trace|not\s+detected|detected|non[\s-]?reactive|reactive|no\s+growth(?:\s+after\s+\d+\s+\w+)?|growth\s+of\s+[a-z .]{3,40}|clear|slightly\s+turbid|turbid|hazy|cloudy|pale\s+yellow|light\s+yellow|dark\s+yellow|straw(?:\s+yellow)?|yellow|amber|red|brown|colou?rless|normal|few|occasional|plenty|numerous|many|moderate|\+{1,4}|[1-4]\s*\+|1\s*:\s*\d+|\d+\s*[-–]\s*\d+|\d+(?:\.\d+)?)(?![a-z])/i;
+
+/** Parse a word result, its unit (/hpf) and the normal value printed after it. */
+function parseWordRow(rest: string, unitRe: RegExp): RowParts | null {
+  rest = rest.replace(/^\s*(\([^)]*\)|\[[^\]]*\])\s*/, "").replace(/^[\s:.-]+/, "");
+  const m = WORD_VALUE.exec(rest);
+  if (!m) return null;
+  const value = m[1].replace(/\s+/g, " ").trim();
+  rest = rest.slice(m[0].length).trim();
+  let unit: string | null = null;
+  const u = unitRe.exec(rest);
+  if (u) {
+    unit = normaliseUnit(u[1]);
+    rest = rest.slice(u[0].length).trim();
+  }
+  const ref = rest
+    .replace(/^[\s:-]+/, "")
+    .slice(0, 40)
+    .trim();
+  return { value, labFlag: null, unit, refText: ref || null };
+}
 
 function normaliseUnit(u: string | undefined | null): string | null {
   if (!u) return null;
@@ -99,6 +146,8 @@ function normaliseUnit(u: string | undefined | null): string | null {
     "umol/l": "µmol/L",
     "µmol/l": "µmol/L",
     "miu/l": "mIU/L",
+    "/hpf": "/hpf",
+    "/lpf": "/lpf",
   };
   return map[u.toLowerCase()] ?? u;
 }
@@ -390,6 +439,28 @@ function plausibleRow(row: RowParts) {
 }
 
 /** Title for a report from the kinds of tests found on it. */
+/** Short category names for report titles ("Liver function & kidney function"). */
+const REPORT_NAMES: Record<BiomarkerCategory, string> = {
+  CBC: "Complete blood count",
+  CBC_MORPHOLOGY: "Complete blood count",
+  SUGAR: "Blood sugar",
+  LIPID: "Lipid profile",
+  VITAMINS: "Vitamins",
+  HORMONES: "Hormones",
+  IRON: "Iron studies",
+  LIVER: "Liver function",
+  KIDNEY: "Kidney function",
+  ELECTROLYTES: "Electrolytes",
+  MINERALS: "Minerals",
+  OTHER: "Lab report",
+  CLOTTING: "Clotting tests",
+  HEART: "Heart tests",
+  URINE: "Urine analysis",
+  MALARIA: "Malaria test",
+  TYPHOID: "Typhoid test",
+  DENGUE: "Dengue test",
+};
+
 export function reportNameFor(candidates: { biomarkerCode: string | null }[]): string {
   const counts = new Map<BiomarkerCategory, number>();
   for (const c of candidates) {
@@ -397,7 +468,9 @@ export function reportNameFor(candidates: { biomarkerCode: string | null }[]): s
     if (def && def.category !== "OTHER")
       counts.set(def.category, (counts.get(def.category) ?? 0) + 1);
   }
-  const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => CATEGORY_LABELS[c]);
+  const top = [
+    ...new Set([...counts.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => REPORT_NAMES[c])),
+  ];
   if (!top.length) return "Lab report";
   if (top.length === 1) return top[0];
   if (top.length === 2) return `${top[0]} & ${top[1].toLowerCase()}`;
@@ -420,14 +493,56 @@ export function parseLabText(
     .split(/\r?\n/)
     .map((l) => stripMarker((fromPhoto ? fixOcrLine(l) : l).replace(/\s+/g, " ").trim()));
 
+  let inUrine = false;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (line.length < 3 || line.length > 200 || FURNITURE.test(line)) continue;
-    const hit = ALIASES.find((a) => a.re.test(line));
+    // Section headings ("URINE ROUTINE EXAMINATION", "HAEMATOLOGY") carry no numbers.
+    if (line.length < 70 && !/\d/.test(line)) {
+      if (URINE_HEADING.test(line)) inUrine = true;
+      else if (OTHER_HEADING.test(line)) inUrine = false;
+    }
+    const hit = inUrine
+      ? (URINE_ALIASES.find((a) => a.re.test(line)) ?? ALIASES.find((a) => a.re.test(line)))
+      : (ALIASES.find((a) => a.re.test(line)) ?? URINE_ANYWHERE.find((a) => a.re.test(line)));
 
     if (hit) {
       const afterName = line.replace(hit.re, "");
-      if (DATE_AFTER_VALUE.test(afterName.replace(/^[\s:.-]+/, ""))) continue;
+      // (A titre like "1:160" isn't a time of day.)
+      if (
+        DATE_AFTER_VALUE.test(afterName.replace(/^[\s:.-]+/, "")) &&
+        !(hit.def.qualitative && /^[\s:.-]*1\s*:\s*\d+\b/.test(afterName))
+      )
+        continue;
+      // Results written in words (urine, smear, rapid tests) and descriptions (morphology).
+      if (hit.def.qualitative) {
+        const word =
+          hit.def.category === "CBC_MORPHOLOGY"
+            ? (() => {
+                const text = afterName.replace(/^[\s:.-]+/, "").trim();
+                return /[a-z]{3}/i.test(text)
+                  ? { value: text.slice(0, 120), labFlag: null, unit: null, refText: null }
+                  : null;
+              })()
+            : parseWordRow(afterName, unitRe);
+        if (word && !/^\d+(?:\.\d+)?$/.test(word.value)) {
+          if (seen.has(hit.def.code)) continue;
+          seen.add(hit.def.code);
+          candidates.push({
+            testName: hit.def.name,
+            biomarkerCode: hit.def.code,
+            value: word.value,
+            unit: word.unit ?? (hit.def.units[0] === "text" ? null : (hit.def.units[0] ?? null)),
+            refText: word.refText,
+            refLow: null,
+            refHigh: null,
+            labFlag: null,
+            confidence: fromPhoto ? 0.55 : 0.85,
+            sourceLine: line.slice(0, 160),
+          });
+          continue;
+        }
+      }
       // Tables sometimes put the value on the next line.
       let row = parseRow(afterName, unitRe);
       let sourceLine = line;
@@ -523,7 +638,11 @@ export function candidatesFromResults(
     const testName = r.testName.replace(/\s+/g, " ").trim().slice(0, 120);
     const value = r.value.replace(/\s+/g, " ").trim().slice(0, 40);
     if (!testName || !value) continue;
-    const def = matchBiomarker(testName) ?? ALIASES.find((a) => a.re.test(testName))?.def;
+    let def = matchBiomarker(testName) ?? ALIASES.find((a) => a.re.test(testName))?.def;
+    // "Glucose: Nil" is a urine result, not blood sugar.
+    const urine = matchBiomarker(testName, { urine: true });
+    if (urine?.category === "URINE" && (!def || (!def.qualitative && !/^[<>]?\s*\d/.test(value))))
+      def = urine;
     const key = def?.code ?? testName.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);

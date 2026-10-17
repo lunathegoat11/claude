@@ -5,7 +5,7 @@ import { db, type Tx } from "@/server/db";
 import { AppError, notFound } from "@/server/errors";
 import { parseZonedInput } from "@/lib/format";
 import { computeLabFlag, parseReferenceRange } from "@/lib/lab-range";
-import { getBiomarker, matchBiomarker } from "@/lib/catalog/biomarkers";
+import { getBiomarker, matchBiomarker, qualitativeFlag } from "@/lib/catalog/biomarkers";
 import { formatTestName } from "@/lib/test-name";
 import { RANGE_VERSION, chooseRange, flagAgainst, regionFor } from "@/lib/catalog/standard-ranges";
 import { labPanelSchema, type LabPanelInput } from "@/lib/validation/health";
@@ -73,7 +73,9 @@ export function normaliseResult(r: LabPanelInput["results"][number], who: RangeF
   }
   const def = r.biomarkerCode ? getBiomarker(r.biomarkerCode) : matchBiomarker(r.testName);
   const unit = r.unit ?? def?.units[0] ?? null;
-  const reportFlag: LabFlag = computeLabFlag(valueNumeric, refLow, refHigh, r.labFlag ?? null);
+  const reportFlag: LabFlag =
+    (valueNumeric === null && !r.labFlag ? qualitativeFlag(def, r.value) : null) ??
+    computeLabFlag(valueNumeric, refLow, refHigh, r.labFlag ?? null);
   return {
     testName: def?.name ?? formatTestName(r.testName),
     biomarkerCode: def?.code ?? null,
@@ -447,6 +449,7 @@ export async function reapplyRanges(opts: { userId?: string } = {}) {
         refLow: true,
         refHigh: true,
         flag: true,
+        valueText: true,
         stdText: true,
         observedAt: true,
         user: { select: { profile: { select: RANGE_PROFILE } } },
@@ -460,7 +463,9 @@ export async function reapplyRanges(opts: { userId?: string } = {}) {
       // Without a standard range, the report's range decides (as when it was saved).
       const reportFlag: LabFlag = r.stdText
         ? computeLabFlag(value, toNum(r.refLow), toNum(r.refHigh), null)
-        : r.flag;
+        : value === null && r.flag === "UNKNOWN"
+          ? (qualitativeFlag(def, r.valueText) ?? r.flag)
+          : r.flag;
       await db.labResult.update({
         where: { id: r.id },
         data: {

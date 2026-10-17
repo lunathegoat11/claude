@@ -45,7 +45,7 @@ describe("reading real-world report layouts", () => {
 
   it("finds the date (Indian day-first) and names the report", () => {
     expect(r.collectedAt).toBe("2026-07-03");
-    expect(r.reportName).toBe("Complete blood count & vitamins & minerals");
+    expect(r.reportName).toBe("Complete blood count & vitamins");
     expect(reportNameFor([])).toBe("Lab report");
   });
 });
@@ -78,7 +78,7 @@ describe("results read by an AI model", () => {
     expect(c).toHaveLength(3);
     expect(c[0]).toMatchObject({ biomarkerCode: "HBA1C", refLow: 4, refHigh: 5.6 });
     expect(c[1].warnings?.[0]).toMatch(/decimal point/);
-    expect(c[2]).toMatchObject({ biomarkerCode: null, value: "Pale yellow" });
+    expect(c[2]).toMatchObject({ biomarkerCode: "U_COLOR", value: "Pale yellow" });
   });
 
   it("accepts only real, past dates", () => {

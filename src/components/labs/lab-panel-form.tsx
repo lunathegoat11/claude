@@ -12,12 +12,16 @@ import { Input, NativeSelect } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   BIOMARKERS,
+  byName,
   PANEL_TEMPLATES,
   getBiomarker,
   matchBiomarker,
 } from "@/lib/catalog/biomarkers";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/client";
+
+/** Test-name suggestions, alphabetical (urine tests have "(urine)" in their names). */
+const SUGGESTIONS = [...BIOMARKERS].sort(byName);
 
 export interface ResultRow {
   key: string;
@@ -110,7 +114,13 @@ export function LabPanelForm({
     if (!name) setName(t.name);
     const existing = new Set(rows.map((r) => r.biomarkerCode).filter(Boolean));
     const blank = rows.filter((r) => r.testName || r.value);
-    setRows([...blank, ...t.codes.filter((c) => !existing.has(c)).map((c) => emptyRow(c))]);
+    // Template tests in alphabetical order, like everywhere else.
+    const codes = t.codes
+      .filter((c) => !existing.has(c))
+      .map((c) => getBiomarker(c)!)
+      .sort(byName)
+      .map((b) => b.code);
+    setRows([...blank, ...codes.map((c) => emptyRow(c))]);
   }
 
   function update(key: string, patch: Partial<ResultRow>) {
@@ -266,7 +276,7 @@ export function LabPanelForm({
         </div>
 
         <datalist id="biomarkers">
-          {BIOMARKERS.map((b) => (
+          {SUGGESTIONS.map((b) => (
             <option key={b.code} value={b.name} />
           ))}
         </datalist>

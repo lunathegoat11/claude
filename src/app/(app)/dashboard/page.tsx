@@ -1,3 +1,4 @@
+import { sortByCategory } from "@/lib/lab-groups";
 import { ledgerRange } from "@/lib/lab-range";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -60,8 +61,8 @@ export default async function DashboardPage({
     ? await getLabPanel(user.id, data.recentPanels[0].id).catch(() => null)
     : null;
   const latestRows = latest
-    ? [...latest.results]
-        // Results outside the printed range first, then the rest in report order.
+    ? sortByCategory(latest.results)
+        // Results outside their range first, then the rest by category and name.
         .sort((a, b) => Number(isOut(b.flag)) - Number(isOut(a.flag)))
         .slice(0, 6)
     : [];
